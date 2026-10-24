@@ -1,0 +1,24 @@
+import { Physics } from 'phaser';
+
+export class Player extends Physics.Arcade.Sprite {
+    constructor(scene, x, y, texture) {
+        super(scene, x, y, texture);
+
+        scene.add.existing(this);
+
+        scene.physics.add.existing(this);
+
+        this.setCollideWorldBounds(true);
+
+        this.velocidade = 300;
+    }
+
+    mover(direcaoX, direcaoY) {
+        const intensity = Math.max(1, Math.hypot(direcaoX, direcaoY));
+        this.setVelocity(
+            direcaoX * this.velocidade / intensity,
+            direcaoY * this.velocidade / intensity
+        );
+    }
+
+}

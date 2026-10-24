@@ -1,0 +1,36 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Browser integration checks: generated screenshots and temporary comparison
+/tmp/pet-educa-check-*/
+/tmp/walk-editor-check-*/
+/tmp/walk-editor-static-check.mjs
+
+# Capturas e relatório do teste visual do passeio
+/tmp/walk-ui-validation/
+/tmp/walk-animations-validation/
+
+# Capturas e relatório do jogo de alimentação
+/tmp/food-ui-validation/
