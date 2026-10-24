@@ -81,7 +81,7 @@ Atalhos existentes, conferidos no código:
 
 Ambiente: Windows, Node `v24.19.0`, npm `11.17.0`, Vite instalado pelo lockfile `6.4.3`, Phaser `4.0.0`. `node_modules` não existia. `npm.cmd ci --no-audit --no-fund` instalou 28 pacotes sem alterar versões/lockfile. O npm avisou que o postinstall de esbuild não estava aprovado na política de scripts; não foi alterada essa política, e build/dev funcionaram. O PowerShell bloqueia `npm.ps1`; usou-se `npm.cmd` sem mudar a política do sistema.
 
-Somente os scripts sem telemetria foram usados. `log.js` não foi executado. Servidor: `npm.cmd run dev-nolog -- --host 127.0.0.1`, porta 8080. Nenhum serviço foi publicado.
+Somente os scripts sem telemetria foram usados. `log.js` não foi executado. Servidor: `npm.cmd run dev-nolog -- --host 127.0.0.1`, porta 8080, encerrado ao terminar as verificações. Nenhum serviço foi publicado.
 
 | Comando | Resultado atual |
 | --- | --- |
@@ -134,6 +134,7 @@ Evidências atuais fora de `public`: `tmp/walk-ui-validation/`, `tmp/walk-animat
 - Os snapshots/hashes L1, L2 e do rascunho manual não representam integralmente o conteúdo atual. Sua falha foi medida antes de qualquer mudança no jogo; não é regressão introduzida pela etapa 0 nem justificativa para restaurar assets antigos.
 - O catálogo de assets menciona `scripts/build_runtime_asset_catalog.py`, ausente neste checkout, como já relatado na documentação de integração. Catálogo, fontes dos assets, manifestos, licenças, créditos, arquivos de template e artefatos históricos permanecem preservados; não se deduz descarte seguro pelo nome.
 - O aviso de chunk grande é anterior à organização. Não houve otimização/configuração nesta etapa.
+- Ao recolher a saída final do servidor Vite, foram observados avisos repetidos sobre importar `public/assets/quiz-saci/quiz-saci-assets-manifest.json` a partir de JavaScript. O import já existe em `src/game/data/quizSaciAssets.js` na entrada. Classificação: achado anterior à organização, a investigar em etapa autorizada; build e verificações atuais de navegador passaram, com zero erros de execução/console/assets nos relatórios. Não foi corrigido.
 - Não foram executados testes em celular físico, GPU de hardware ou renderizador Canvas real. A emulação não substitui esses cenários. Não são apresentados como validação executada.
 - Relatos de execuções em datas anteriores, contidos nos outros documentos, são contexto histórico. Apenas as execuções descritas acima foram feitas agora; nenhuma comparação Git com o repositório antigo foi inventada.
 
