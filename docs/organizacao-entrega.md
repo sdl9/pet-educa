@@ -2,7 +2,7 @@
 
 ## Escopo e fluxo de branches
 
-Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base, diagnóstico e recuperação. O ajuste de branches fornecido pela usuária prevalece sobre a orientação anterior de criar `organizacao-entrega`.
+Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base, diagnóstico e recuperação. A etapa 1, autorizada posteriormente, está registrada na seção final. Os limites específicos da etapa 0 abaixo são históricos. O ajuste de branches fornecido pela usuária prevalece sobre a orientação anterior de criar `organizacao-entrega`.
 
 - Trabalhar somente na branch existente da etapa solicitada, conferindo-a antes de editar.
 - A etapa 0 usa `etapa-0`; nenhuma branch foi criada ou trocada.
@@ -13,8 +13,9 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | Etapa | Branch | Commit de entrada | Commit de conclusão técnica | Pendências |
 | --- | --- | --- | --- | --- |
 | 0 | `etapa-0` | `dd334db2a1ffae306ce45c91bc04526821a76ac7` | `a06f1159a7caae3c41ae24eab78fc881b08c5347` | Expectativas históricas divergentes; aparelho físico e GPU de hardware não verificados |
+| 1 | `etapa-1` | `140655f14ba60b65a98bfe469c34ee24c0fe9ef5` | A registrar após o commit local dos testes | Intermitência temporal observada no teste preservado de animações; cobertura física/hardware permanece pendente |
 
-O commit de conclusão técnica acima contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registram seu SHA e complementam o encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final de registro pode ser consultado com `git log -1 --format=%H -- docs/organizacao-entrega.md`; todos esses commits pertencem à etapa 0. Não há autorização para executar a etapa 1.
+O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
 ## Identidade e estado de entrada
 
@@ -141,3 +142,64 @@ Evidências atuais fora de `public`: `tmp/walk-ui-validation/`, `tmp/walk-animat
 Conferência de preservação: os 306 arquivos de entrada foram comparados novamente com seus SHA-256, sem divergências. A única alteração de entrega é este documento; implementação, assets, configurações funcionais, testes e lockfile permaneceram byte a byte iguais à entrada. Nenhum comportamento fora do escopo foi alterado.
 
 Status da **etapa 0: aprovada tecnicamente para estabelecimento da linha de base e recuperação**, com as falhas anteriores e limitações de cobertura explicitadas. Isso não declara toda a suíte histórica aprovada nem valida aparelho físico/GPU de hardware. As pendências históricas ficam para decisão em etapas posteriores autorizadas. A etapa 1 não foi iniciada.
+
+## Etapa 1 — testes do comportamento atual
+
+Execução em 24/10/2026 (America/Sao_Paulo), após autorização explícita da usuária. Branch de entrada e trabalho: `etapa-1`, já existente, no HEAD `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. Branch conferida antes de editar; nenhuma branch criada ou trocada. A raiz e os URLs de leitura/envio de `origin` continuam sendo os registrados na etapa 0. Árvore inicial limpa: nenhum arquivo novo não ignorado, staged, unstaged ou removido. Nenhum AGENTS.md aplicável encontrado.
+
+### Linha de base e recuperação
+
+O HEAD inicial corresponde exatamente ao encerramento documental da etapa 0. `git diff 140655f14ba60b65a98bfe469c34ee24c0fe9ef5 HEAD` estava vazio, e os 306 hashes de arquivos da linha de base original foram conferidos sem divergência antes das mudanças. As duas falhas antigas foram inspecionadas nos scripts e relacionadas às execuções reais já registradas na etapa 0; esse relato anterior não é apresentado como uma nova execução dos originais nesta etapa.
+
+Recuperação própria, fora do checkout: `$env:TEMP\pet-educa-etapa-1-20261024`.
+
+- `entrada.bundle`: referência de entrada `etapa-1`, histórico completo alcançável, `git bundle verify` aprovado. SHA-256: `EBF05FEB146135185CB6D517CDF5A692724AE993DED0C119690E5F2A88842B9E`.
+- `entrada-bytes/`: 307 arquivos de entrada, incluindo o documento da etapa 0, copiados com caminhos preservados e hashes dos bytes de cada cópia conferidos.
+- `arquivos-entrada.json`, `estado-entrada.txt`, `staged.patch` e `unstaged.patch`: inventário e estado separado do índice/árvore, sem alterações ou remoções na entrada.
+- Para recuperar: conferir hash e bundle, clonar o bundle em uma pasta nova e comparar arquivos específicos com `entrada-bytes/` e o manifesto. Não aplicar restauração ampla sobre trabalho posterior. Não houve stash, reset, clean, importação do histórico antigo ou alteração de remotes.
+
+### Mudanças permitidas e comparação adotada
+
+Os testes `src/game/ui/petEducaUI.browser-check.mjs` e `src/game/dev/WalkLayoutEditor.browser-check.mjs` foram movidos para `tests/petEducaUI.browser-check.mjs` e `tests/WalkLayoutEditor.browser-check.mjs`. Imports HTTP das cenas continuam apontando para os arquivos reais em `src`; caminhos de assets e hashes continuam relativos à raiz de execução. Nenhuma cena foi renomeada.
+
+No menu, confirmou-se `SaciGame` no registro e no terceiro cartão de `PET_EDUCA_UI` antes de atualizar a expectativa histórica. O teste agora exige três cartões interativos, cada destino, rodada inicial do quiz zerada e 15 perguntas, bordas/ícones/rótulos, teclado com seleção circular e Enter/Espaço, toque emulado e retorno pelos controles reais dos três jogos. Medidas, textos da Intro, fontes, filtragem, contatos simultâneos, listeners, limpeza e erros/timeout de fontes foram preservados. A inicialização de toque usa página nova para refletir a detecção inicial do Phaser.
+
+No editor, a política identifica por referência somente jogador, Saci, coração e proprietários explícitos do HUD, incluindo descendentes dos containers. Nenhum filtro por prefixo, profundidade, invisibilidade ou exclusão genérica de texturas foi introduzido. O multiconjunto do cenário retém duplicatas e objetos inesperados. A comparação preserva posição, dimensões, escala, origem, profundidade, rotação, alpha, visibilidade e frames estáticos. Apenas fases válidas dos três sprites animados e X/espelhamento horizontal do tutor no percurso declarado são normalizados; a âncora do editor é exigida, e Y e demais propriedades continuam comparados. A política completa está em [testes-navegador.md](testes-navegador.md), com quatro testes unitários que provocam diferenças deliberadas para garantir sua rejeição.
+
+As assertions de seleção, arraste, snap, Shift, grupos/offsets, exportação por download real, hashes oficiais, terreno não selecionável, descarte ao recarregar e retorno à cena jogável foram mantidas. Foram acrescentados cancelamento e perda de captura, com mouse CDP e eventos enviados ao handler do canvas real. Não se afirma que esses eventos são cancelamento de hardware. O teste original era interrompido na igualdade total antes de alcançar essas verificações.
+
+Novos comandos em `package.json`: `test:menu`, `test:walk-editor`, `test:scene-comparison` e `test:browser`. Os comandos existentes de quiz, passeio, animações e alimentação não foram alterados. Os arquivos desses testes também permanecem byte a byte iguais à entrada. Nenhuma dependência, versão, lockfile ou configuração funcional foi modificada. A documentação explica as variáveis antigas, o fallback compatível `WALK_EDGE_PATH` no menu e o erro explícito de navegador ausente.
+
+Arquivos da etapa: os dois testes movidos; `tests/helpers/walkSceneComparison.mjs`; `tests/walkSceneComparison.test.js`; `package.json` (somente scripts); `docs/testes-navegador.md`; nota sobre testes atuais em `docs/pet-educa-ui.md`; este registro. Os relatos antigos e seus nomes de comandos foram preservados como históricos, com orientação atual no início da documentação.
+
+### Verificação desta etapa
+
+Servidor local: `npm.cmd run dev-nolog -- --host 127.0.0.1`, sem `log.js`, encerrado ao concluir a validação. Dependências já presentes pelo `npm ci` da etapa 0; nenhuma instalação nova. Navegador real: Edge headless/WebGL (SwiftShader), fora da sandbox conforme limitação já comprovada na etapa 0. Menu em 1280 × 720/DPR 1 e 740 × 360/DPR 2; emulação habilitada antes da abertura da página de toque. Editor mantém a janela 1600 × 1000 prevista no script. Passeio/alimentação mantêm 1280 × 720 e 844 × 390.
+
+| Verificação executada agora | Resultado |
+| --- | --- |
+| `npm.cmd run test:quiz` | 19/19 passaram; objetos simulados e lógica, sem renderização real |
+| `npm.cmd run test:scene-comparison` | 4/4 passaram; política rejeita diferenças úteis, sem alegação visual |
+| `npm.cmd run build-nolog` | Passou; aviso anterior de chunk acima de 500 kB |
+| `npm.cmd run test:menu` | Passou no navegador real: três cartões, teclado/toque, retornos, geometria, fontes, reentradas e cenários de erro |
+| `npm.cmd run test:walk-editor` | Passou no navegador real: 1595 objetos do cenário compartilhado, geometria/invariantes, seleção/arraste/cancelamento, download, recarga e dados oficiais intactos |
+| `npm.cmd run test:walk-ui` | Passou; teste existente preservado, incluindo diálogos, conclusão, menu e resposta/avanço no quiz |
+| `npm.cmd run test:walk-animations` | Passou; teste existente preservado, incluindo percurso, colisões, reentrada e editor |
+| `npm.cmd run test:food-ui` | Passou; teste existente preservado, incluindo término, scores, resultado e reinício |
+| `npm.cmd run test:browser` | Última execução completa passou, código 0: menu, editor, passeio, animações e alimentação; tentativas anteriores detalhadas abaixo |
+| Executável inexistente, menu/editor e fallback legado do menu | Três casos terminaram com código 1, mensagens explícitas e variável correta; nenhum falso sucesso |
+| `node --check` nos dois testes movidos; `git diff --check` | Passaram |
+
+A primeira execução agregada passou pelo menu e alcançou as novas verificações do editor, mas parou no ponto fixo antigo do teste de terreno. Os arrastes adicionais haviam ocupado essa coordenada com o hidrante; a tentativa de serializar a seleção completa produziu erro CDP de cadeia de referências. O teste passou a usar `(800, 600)`, ponto fixo do caminho vertical, com assertion explícita de ausência de objeto selecionável antes do gesto, e compara o ID selecionado com null. A assertion de não seleção e igualdade integral do rascunho após arraste do terreno foi preservada. A repetição do editor passou; nenhuma alteração de produção foi necessária.
+
+Uma execução agregada intermediária passou menu/editor/passeio e falhou em `tests/walkAnimations.browser-check.mjs:194`: após uma espera fixa de 650 ms, a animação do tutor ainda estava pausada. O teste preservado passou tanto na execução isolada atual quanto contra uma cópia da entrada, e a última execução agregada completa também passou sem qualquer alteração de teste ou produção entre essas tentativas. Classificação: intermitência de uma assertion temporal em teste preexistente e inalterado; a causa exata não foi comprovada. Não se afirma reprodução da falha na entrada nem correção dessa intermitência, e nenhuma assertion foi removida ou relaxada. Ela permanece pendência explícita para investigação futura autorizada.
+
+Para essa conferência adicional, `baseline-runtime/` no diretório externo contém 267 arquivos do aplicativo de entrada, todos comparados por SHA-256, e reutiliza as dependências instaladas por junction. Um servidor temporário na porta 8081 usou essas fontes. As primeiras tentativas não validaram o jogo: o watcher nativo do Windows encerrou uma delas (`fs-event.c`), e o alias 8.3 da pasta temporária causou 403 do Vite em outra. O lançador temporário passou a usar o caminho longo, polling e allowlist limitada à própria cópia e às dependências; nenhum arquivo de configuração do checkout foi modificado. A execução final do teste preservado contra essa cópia passou. O servidor adicional também foi encerrado.
+
+Evidências e logs estão em `$env:TEMP\pet-educa-etapa-1-20261024`: `test-browser.log` (primeira tentativa), `test-editor-final.log`, `test-browser-final.log` (intermitência), `test-animations-baseline-caminho-longo.log` (entrada) e `test-browser-conclusao.log` (suíte completa aprovada). Capturas/JSONs atuais, inclusive download real do editor, foram copiados com hashes conferidos para `evidencias/`; nenhuma captura ou perfil entra no commit. Capturas do menu em celular horizontal e de seleção composta no editor foram abertas e inspecionadas visualmente.
+
+Preservação final: 302 dos 307 arquivos de entrada, fora dos cinco caminhos explicitamente permitidos para alteração/movimentação (`package.json`, dois testes antigos e dois documentos existentes), mantiveram seus hashes. Isso inclui produção, assets, configurações Vite, lockfile e todos os testes existentes de quiz, passeio, animações e alimentação. A revisão de diff e arquivos novos confirmou somente os oito arquivos lógicos da etapa (contando cada movimentação como um arquivo), sem artefatos gerados. Não há alteração de comportamento funcional do jogo.
+
+As falhas históricas L1/L2/manual em `tmp` não foram corrigidas, regeneradas ou incluídas no comando atual: são snapshots antigos documentados na etapa 0, fora dos dois testes solicitados. Os avisos de chunk e do import de manifesto em `public` permanecem achados anteriores. Não foram executados celular físico, GPU de hardware ou renderizador Canvas real. Essas limitações não são substituídas pelos doubles do quiz.
+
+Status da **etapa 1: candidata com validação pendente**. A implementação dos testes solicitados está concluída e a última suíte agregada passou, mas permanece pendente esclarecer a intermitência observada no teste preservado de animações. Sua causa não foi comprovada nem sua falha reproduzida na cópia de entrada; portanto, ela não é descartada como limitação do ambiente ou declarada corrigida apenas por uma repetição verde. O SHA de conclusão da implementação será acrescentado em um commit documental posterior, evitando referência circular ao próprio commit. A etapa 2 não foi iniciada; sem push, merge, publicação ou modificações de produção.

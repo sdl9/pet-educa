@@ -1,4 +1,4 @@
-// Start npm run dev-nolog, then: node src/game/ui/petEducaUI.browser-check.mjs
+// Start npm run dev-nolog, then npm run test:menu from the repository root.
 // Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,8 +8,12 @@ import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 
 const baseURL = process.env.PET_EDUCA_URL ?? 'http://127.0.0.1:8080';
-const edgePath = process.env.PET_EDUCA_EDGE_PATH ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-await fs.access(edgePath);
+const edgePath = process.env.PET_EDUCA_EDGE_PATH ?? process.env.WALK_EDGE_PATH ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+try {
+    await fs.access(edgePath);
+} catch {
+    throw new Error(`Navegador não encontrado em ${edgePath}. Defina PET_EDUCA_EDGE_PATH ou WALK_EDGE_PATH com o executável de um Chromium instalado; consulte docs/testes-navegador.md. Teste não executado.`);
+}
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
     'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
@@ -47,6 +51,10 @@ async function connect(url) {
     let counter = 0;
     const pending = new Map();
     const events = [];
+    ws.addEventListener('close', () => {
+        for (const call of pending.values()) call.reject(new Error('Conexão do navegador encerrada'));
+        pending.clear();
+    });
     ws.addEventListener('message', ({ data }) => {
         const message = JSON.parse(data);
         if (message.id) {
@@ -60,7 +68,11 @@ async function connect(url) {
         send(method, params = {}) {
             return new Promise((resolve, reject) => {
                 const id = ++counter;
-                pending.set(id, { resolve, reject });
+                const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Sem resposta do navegador: ${method}`)); }, 10000);
+                pending.set(id, {
+                    resolve: value => { clearTimeout(timer); resolve(value); },
+                    reject: error => { clearTimeout(timer); reject(error); }
+                });
                 ws.send(JSON.stringify({ id, method, params }));
             });
         }
@@ -126,6 +138,7 @@ try {
         const p = await point(x,y);
         if (touch) {
             await page.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{...p,id:1,radiusX:1,radiusY:1}]});
+            await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
             await page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
         } else {
             await page.send('Input.dispatchMouseEvent',{type:'mousePressed',...p,button:'left',buttons:1,clickCount:1});
@@ -137,10 +150,36 @@ try {
         await page.send('Input.dispatchKeyEvent',{type:'keyDown',code,key,windowsVirtualKeyCode:virtual});
         await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
         await page.send('Input.dispatchKeyEvent',{type:'keyUp',code,key,windowsVirtualKeyCode:virtual});
+        await evaluate('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
     };
     const returnMenu = async () => {
-        await evaluate('void __checkedScene.scene.start("MainMenu")');
+        const scene = (await active())[0];
+        if (scene === 'FoodGame') {
+            await until(() => evaluate('__checkedScene.uiReady'), 'Food UI not ready');
+            await key('Escape','Escape',27);
+        } else if (scene === 'WalkGameLearning') {
+            await click(1172,44);
+        } else if (scene === 'SaciGame') {
+            await until(() => evaluate('Boolean(__checkedScene.quizUI?.exitMenu)'), 'Quiz UI not ready');
+            await key('Escape','Escape',27);
+        } else {
+            throw new Error(`No tested menu return for ${scene}`);
+        }
         await waitScene('MainMenu');
+    };
+    const readyGame = async target => {
+        await waitScene(target);
+        if (target === 'FoodGame') {
+            await until(() => evaluate('__checkedScene.uiReady'), 'Food UI not ready');
+            assert.equal(await evaluate('__checkedScene.jogoComecou'), false);
+        } else if (target === 'WalkGameLearning') {
+            assert.ok(await evaluate('Boolean(__checkedScene.player.body && __checkedScene.walkCollisions && __checkedScene.dialogueSystem)'));
+        } else if (target === 'SaciGame') {
+            await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator && __checkedScene.round)'), 'Quiz round not ready');
+            assert.equal(await evaluate('__checkedScene.round.index'), 0);
+            assert.equal(await evaluate('__checkedScene.round.hits'), 0);
+            assert.equal(await evaluate('__checkedScene.round.total'), 15);
+        }
     };
     const assertFrame = async () => {
         const frame = await evaluate('(()=>{const c=__checkedScene.game.canvas,r=c.getBoundingClientRect();return {w:c.width,h:c.height,x:r.x,y:r.y,displayW:r.width,displayH:r.height,viewportW:innerWidth,viewportH:innerHeight}})()');
@@ -173,10 +212,11 @@ try {
     await assertFrame(); await screenshot('apresentacao-pc-1280x720.png');
     await click(504,564); await waitScene('MainMenu');
     const menu = await geometry();
-    assert.deepEqual(menu.texts.map(o=>o.text),['Pet Educa','Jogo da Alimentação','Passeio Consciente','Quiz do Saci','Indisponível']);
+    assert.equal(await evaluate('Boolean(__checkedScene.scene.manager.keys.SaciGame)'), true, 'Quiz scene is registered');
+    assert.deepEqual(menu.texts.map(o=>o.text),['Pet Educa','Jogo da Alimentação','Passeio Consciente','Quiz do Saci']);
     const cards=menu.images.filter(o=>o.key==='pet-educa-ui-card');
     assert.equal(cards.length,3);
-    assert.deepEqual(cards.map(o=>[o.x,o.y,o.width,o.height,o.interactive]),[[156,194,704,128,true],[156,344,704,128,true],[156,494,704,128,false]]);
+    assert.deepEqual(cards.map(o=>[o.x,o.y,o.width,o.height,o.interactive]),[[156,194,704,128,true],[156,344,704,128,true],[156,494,704,128,true]]);
     assert.deepEqual(menu.images.filter(o=>['pet-educa-ui-food','pet-educa-ui-walk','pet-educa-ui-saci'].includes(o.key)).map(o=>[o.key,o.x,o.y,o.width,o.height]),[
         ['pet-educa-ui-food',176,210,96,96],['pet-educa-ui-walk',176,360,96,96],['pet-educa-ui-saci',176,510,96,96]
     ]);
@@ -187,7 +227,7 @@ try {
     console.log('PASS opening, exact text/accents, local fonts/variable weight, approved geometry, three cards and nearest filtering');
 
     for (const [x,y] of [[157,195],[859,321],[220,255],[440,255]]) {
-        await click(x,y); await waitScene('FoodGame');
+        await click(x,y); await readyGame('FoodGame');
         assert.equal(await evaluate('__checkedScene.jogoComecou'),false);
         // O retorno existente do FoodGame segue funcionando.
         await key('Escape','Escape',27); await waitScene('MainMenu');
@@ -201,21 +241,37 @@ try {
         assert.equal((await geometry()).count,menu.count);
         assert.equal((await geometry()).keydown,menu.keydown);
     }
-    await click(220,558); assert.deepEqual(await active(),['MainMenu']);
-    await click(400,558); assert.deepEqual(await active(),['MainMenu']);
-    await key('ArrowDown','ArrowDown',40); await key('Enter','Enter',13); await waitScene('WalkGameLearning');
-    await returnMenu(); await key('Space',' ',32); await waitScene('FoodGame');
-    await key('Escape','Escape',27); await waitScene('MainMenu');
+    for (const [x,y] of [[157,495],[859,621],[220,558],[400,558]]) {
+        await click(x,y); await readyGame('SaciGame'); await returnMenu();
+        assert.equal((await geometry()).count,menu.count);
+        assert.equal((await geometry()).keydown,menu.keydown);
+    }
+    // Every reentry resets focus to the first card. Exercise all three choices,
+    // forward/backward wrapping, Enter and Space without programmatic starts.
+    for (const [arrows, activation, target] of [
+        [[], ['Space',' ',32], 'FoodGame'],
+        [['ArrowDown'], ['Enter','Enter',13], 'WalkGameLearning'],
+        [['ArrowDown','ArrowDown'], ['Enter','Enter',13], 'SaciGame'],
+        [['ArrowUp'], ['Space',' ',32], 'SaciGame'],
+        [['ArrowDown','ArrowDown','ArrowDown'], ['Enter','Enter',13], 'FoodGame']
+    ]) {
+        for (const arrow of arrows) await key(arrow,arrow,arrow === 'ArrowUp' ? 38 : 40);
+        await key(...activation); await readyGame(target); await returnMenu();
+        assert.equal((await geometry()).count,menu.count);
+        assert.equal((await geometry()).keydown,menu.keydown);
+    }
     for (let i=0;i<3;i++) {
         await evaluate('void __checkedScene.scene.start("Intro")'); await waitScene('Intro');
         assert.equal((await geometry()).count,intro.count); assert.equal((await geometry()).keydown,intro.keydown);
         await key('Enter','Enter',13); await waitScene('MainMenu');
     }
-    console.log('PASS mouse at borders/icons/labels, correct minigames, disabled quiz, keyboard and repeated scene cleanup');
+    console.log('PASS three available cards: mouse at borders/icons/labels, destinations, real menu returns, keyboard wrapping and repeated cleanup');
 
     await page.send('Emulation.setDeviceMetricsOverride',{width:740,height:360,deviceScaleFactor:2,mobile:true});
     await page.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:3});
-    await evaluate('void __checkedScene.scene.start("Intro")'); await waitScene('Intro');
+    // Phaser detects touch capabilities at startup; use a fresh page after
+    // enabling emulation instead of retaining a desktop-initialized game.
+    await page.send('Page.navigate',{url:baseURL+'/'}); await waitScene('Intro');
     const mobileFrame = await assertFrame(); await screenshot('apresentacao-mobile-740x360.png');
     // Vários contatos simultâneos não podem iniciar o menu duas vezes.
     await evaluate('window.__menuStarts=0; void __checkedScene.scene.manager.keys.MainMenu.events.on("start",()=>window.__menuStarts++)');
@@ -224,13 +280,16 @@ try {
     await page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     await waitScene('MainMenu'); assert.equal(await evaluate('__menuStarts'),1);
     await screenshot('menu-mobile-740x360.png');
-    for (const [y,target] of [[194,'FoodGame'],[344,'WalkGameLearning']]) {
+    for (const [y,target] of [[194,'FoodGame'],[344,'WalkGameLearning'],[494,'SaciGame']]) {
         for (const [x,dy] of [[157,1],[859,127],[220,61],[440,61]]) {
-            await click(x,y+dy,true); await waitScene(target); await returnMenu();
+            await click(x,y+dy,true); await readyGame(target);
+            await click(target === 'SaciGame' ? 1124 : 1172, target === 'SaciGame' ? 80 : 44, true);
+            await waitScene('MainMenu');
+            assert.equal((await geometry()).count,menu.count);
+            assert.equal((await geometry()).keydown,menu.keydown);
         }
     }
-    await click(220,558,true); assert.deepEqual(await active(),['MainMenu']);
-    console.log('PASS 740x360 landscape fit, emulated touch at borders/icons/labels and one transition for simultaneous contacts');
+    console.log('PASS 740x360 landscape fit, all three cards and menu returns by emulated touch, one transition for simultaneous contacts');
 
     await page.send('Emulation.setDeviceMetricsOverride',{width:1280,height:720,deviceScaleFactor:1,mobile:false});
     await page.send('Emulation.setTouchEmulationEnabled',{enabled:false});

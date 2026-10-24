@@ -22,7 +22,11 @@
     "test:quiz": "node --test tests/saciQuiz*.test.js",
     "test:walk-ui": "node tests/walkUI.browser-check.mjs",
     "test:walk-animations": "node tests/walkAnimations.browser-check.mjs",
-    "test:food-ui": "node tests/foodGameUI.browser-check.mjs"
+    "test:food-ui": "node tests/foodGameUI.browser-check.mjs",
+    "test:menu": "node tests/petEducaUI.browser-check.mjs",
+    "test:walk-editor": "node tests/WalkLayoutEditor.browser-check.mjs",
+    "test:scene-comparison": "node --test tests/walkSceneComparison.test.js",
+    "test:browser": "npm run test:menu && npm run test:walk-editor && npm run test:walk-ui && npm run test:walk-animations && npm run test:food-ui"
   },
   "devDependencies": {
     "terser": "^5.39.0",

@@ -1,4 +1,4 @@
-// Run from the repository root: node src/game/dev/WalkLayoutEditor.browser-check.mjs
+// Start npm run dev-nolog, then npm run test:walk-editor from the repository root.
 // Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -6,10 +6,15 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
+import { sharedScenerySnapshot } from './helpers/walkSceneComparison.mjs';
 
 const baseURL = process.env.WALK_EDITOR_URL ?? 'http://127.0.0.1:8080';
 const edgePath = process.env.WALK_EDGE_PATH ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-await fs.access(edgePath);
+try {
+    await fs.access(edgePath);
+} catch {
+    throw new Error(`Navegador não encontrado em ${edgePath}. Defina WALK_EDGE_PATH com o executável de um Chromium instalado; consulte docs/testes-navegador.md. Teste não executado.`);
+}
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
     'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
@@ -46,6 +51,10 @@ async function connect(url) {
     let counter = 0;
     const pending = new Map();
     const events = [];
+    ws.addEventListener('close', () => {
+        for (const call of pending.values()) call.reject(new Error('Conexão do navegador encerrada'));
+        pending.clear();
+    });
     ws.addEventListener('message', ({ data }) => {
         const message = JSON.parse(data);
         if (message.id) {
@@ -59,7 +68,11 @@ async function connect(url) {
         send(method, params = {}) {
             return new Promise((resolve, reject) => {
                 const id = ++counter;
-                pending.set(id, { resolve, reject });
+                const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Sem resposta do navegador: ${method}`)); }, 10000);
+                pending.set(id, {
+                    resolve: value => { clearTimeout(timer); resolve(value); },
+                    reject: error => { clearTimeout(timer); reject(error); }
+                });
                 ws.send(JSON.stringify({ id, method, params }));
             });
         }
@@ -96,20 +109,51 @@ try {
         });
         return attached.result.value;
     }
-    const snapshot = () => evaluate(`__checkedScene.children.list.filter(o => o.texture).map(o => ({ key:o.texture.key,frame:o.frame.name,x:o.x,y:o.y,scaleX:o.scaleX,scaleY:o.scaleY,originX:o.originX,originY:o.originY,depth:o.depth }))`);
+    const snapshot = () => evaluate(`(() => {
+        const s = __checkedScene, roles = new Map();
+        const own = (object, role) => {
+            if (!object) return;
+            roles.set(object, role);
+            if (object.list) object.list.forEach(child => own(child, role));
+        };
+        // Explicit gameplay owners. No texture/depth/visibility wildcard.
+        own(s.player, 'player'); own(s.saci, 'saci'); own(s.saci?.coracao, 'heart');
+        for (const object of s.touchControls?.visuals ?? []) own(object, 'hud');
+        own(s.dialogueSystem?.progressUI, 'hud'); own(s.dialogueSystem?.panel, 'hud');
+        own(s.interactionSystem?.prompt, 'hud'); own(s.menuUI, 'hud');
+        const result = [];
+        const visit = object => {
+            if (object.texture) result.push({role:roles.get(object) ?? 'scenery',
+                key:object.texture.key,frame:object.frame.name,x:object.x,y:object.y,
+                width:object.width,height:object.height,scaleX:object.scaleX,scaleY:object.scaleY,
+                originX:object.originX,originY:object.originY,depth:object.depth,
+                flipX:object.flipX,flipY:object.flipY,rotation:object.rotation,
+                visible:object.visible,alpha:object.alpha});
+            if (object.list) object.list.forEach(visit);
+        };
+        s.children.list.forEach(visit);
+        return result;
+    })()`);
     await page.send('Page.navigate', { url: `${baseURL}/` });
     await until(() => attach('Intro', '/src/game/scenes/Intro.js'), 'Normal route did not start Intro');
     console.log('PASS normal route -> Intro');
     await page.send('Page.navigate', { url: `${baseURL}/?walkLearning` });
     await until(() => attach('WalkGameLearning', '/src/game/scenes/WalkGameLearning.js'), 'WalkGameLearning did not start');
-    const learning = await snapshot();
+    const gameplay = await snapshot();
+    for (const role of ['player', 'saci', 'heart']) {
+        assert.equal(gameplay.filter(object => object.role === role).length, 1, `Explicit ${role} owner`);
+    }
+    assert.ok(gameplay.some(object => object.role === 'hud'), 'Gameplay HUD is identified');
+    const learning = sharedScenerySnapshot(gameplay, 'gameplay');
     console.log('PASS ?walkLearning -> WalkGameLearning');
     await page.send('Page.navigate', { url: `${baseURL}/?walkLayoutEditor` });
     await until(() => attach('WalkLayoutEditor', '/src/game/dev/WalkLayoutEditor.js'), 'WalkLayoutEditor did not start');
     await until(() => evaluate(`Boolean(__checkedScene.draft && document.querySelector('aside'))`), 'Editor did not finish creating');
     await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
-    assert.deepEqual(await snapshot(), learning, 'Editor must create the identical runtime visuals');
-    console.log('PASS ?walkLayoutEditor -> same runtime visuals, editor active');
+    const editor = await snapshot();
+    assert.ok(editor.every(object => object.role === 'scenery'), 'Editor contains no gameplay visuals');
+    assert.deepEqual(sharedScenerySnapshot(editor, 'editor'), learning, 'Editor must share all scenery invariants');
+    console.log('PASS ?walkLayoutEditor -> shared scenery, explicit gameplay exclusions and animation invariants');
     const original = await evaluate('__checkedScene.draft.exportDraft()');
     assert.equal(original.ambientAssets.length, 24);
     assert.equal(original.compositions.length, 3);
@@ -185,12 +229,33 @@ try {
     await drag('composition:booth','walk-booth-front',-32,32);
     await drag('composition:water','walk-water-bowl',32,32);
     await drag('ambient:4','plaza-tree-young-canopy',32,16);
+    for (const eventType of ['pointercancel', 'lostpointercapture']) {
+        const p = await select('ambient:21', 'plaza-fire-hydrant');
+        await mouse('mousePressed', p.x, p.y, {button:'left',buttons:1,clickCount:1});
+        await mouse('mouseMoved', p.x + 16*p.ratioX, p.y, {button:'left',buttons:1});
+        assert.equal(await evaluate('Boolean(__checkedScene.drag?.started)'), true);
+        // CDP drives the mouse; cancellation itself is dispatched to the real
+        // canvas handler because CDP has no mouse pointercancel command.
+        await evaluate(`(() => {const s=__checkedScene;s.game.canvas.dispatchEvent(new PointerEvent(${JSON.stringify(eventType)},
+            {pointerId:s.drag.pointerId,pointerType:'mouse',bubbles:true}));})()`);
+        assert.equal(await evaluate('__checkedScene.drag'), null, `${eventType} ends drag`);
+        const stopped = await evaluate('__checkedScene.draft.exportDraft()');
+        await mouse('mouseMoved', p.x + 48*p.ratioX, p.y, {button:'left',buttons:1});
+        await mouse('mouseReleased', p.x + 48*p.ratioX, p.y, {button:'left',buttons:0});
+        const after = await evaluate('__checkedScene.draft.exportDraft()');
+        stopped.date = after.date;
+        assert.deepEqual(after, stopped, `${eventType} prevents further movement`);
+    }
+    console.log('PASS pointercancel and lostpointercapture stop drag without further draft changes');
     const beforeTerrain = await evaluate('JSON.stringify(__checkedScene.draft.exportDraft())');
-    const ground = await evaluate(`(() => {const e=__checkedScene,p=e.cameras.main.matrixCombined.transformPoint(800,780),r=e.game.canvas.getBoundingClientRect();return{x:r.left+p.x*r.width/e.scale.width,y:r.top+p.y*r.height/e.scale.height}})()`);
+    // The hydrant has moved during the drag/cancellation cases. Use a fixed
+    // clear point farther up the vertical path, and verify the precondition.
+    assert.equal(await evaluate('Boolean(__checkedScene.pick({x:800,y:600}))'), false, 'Path fixture has no editable object');
+    const ground = await evaluate(`(() => {const e=__checkedScene,p=e.cameras.main.matrixCombined.transformPoint(800,600),r=e.game.canvas.getBoundingClientRect();return{x:r.left+p.x*r.width/e.scale.width,y:r.top+p.y*r.height/e.scale.height}})()`);
     await mouse('mousePressed',ground.x,ground.y,{button:'left',buttons:1,clickCount:1});
     await mouse('mouseMoved',ground.x+40,ground.y-20,{button:'left',buttons:1});
     await mouse('mouseReleased',ground.x+40,ground.y-20,{button:'left',buttons:0});
-    assert.equal(await evaluate('__checkedScene.selected'),null,'Paths must not be selectable');
+    assert.equal(await evaluate('__checkedScene.selected?.record.id ?? null'),null,'Paths must not be selectable');
     const changed = await evaluate('__checkedScene.draft.exportDraft()');
     const preGround=JSON.parse(beforeTerrain);preGround.date=changed.date;
     assert.deepEqual(preGround,changed,'Dragging terrain must not change the draft');
@@ -212,7 +277,7 @@ try {
     await evaluate("void __checkedScene.scene.start('WalkGameLearning')");
     await until(()=>attach('WalkGameLearning','/src/game/scenes/WalkGameLearning.js'),'Returning to learning failed');
     assert.equal(await evaluate("Boolean(document.querySelector('aside'))"),false);
-    assert.deepEqual(await snapshot(),learning);
+    assert.deepEqual(sharedScenerySnapshot(await snapshot(), 'gameplay'),learning);
     const errors=page.events.filter(e=>e.method==='Runtime.exceptionThrown');
     assert.deepEqual(errors,[], 'Runtime exceptions');
     const consoleErrors=page.events.filter(e=>e.method==='Runtime.consoleAPICalled'&&e.params.type==='error');
