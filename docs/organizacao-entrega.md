@@ -12,9 +12,9 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 
 | Etapa | Branch | Commit de entrada | Commit de conclusão técnica | Pendências |
 | --- | --- | --- | --- | --- |
-| 0 | `etapa-0` | `dd334db2a1ffae306ce45c91bc04526821a76ac7` | A registrar após o commit local deste diagnóstico | Expectativas históricas divergentes; aparelho físico e GPU de hardware não verificados |
+| 0 | `etapa-0` | `dd334db2a1ffae306ce45c91bc04526821a76ac7` | `a06f1159a7caae3c41ae24eab78fc881b08c5347` | Expectativas históricas divergentes; aparelho físico e GPU de hardware não verificados |
 
-O SHA de conclusão será registrado em um commit documental posterior, para evitar a referência circular de um commit conter seu próprio SHA. Não há autorização para executar a etapa 1.
+O commit de conclusão técnica acima contém o diagnóstico e a linha de base completos. Este registro acrescenta seu SHA em um commit exclusivamente documental posterior, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final de registro pode ser consultado com `git log -1 --format=%H -- docs/organizacao-entrega.md`; os dois commits pertencem à etapa 0. Não há autorização para executar a etapa 1.
 
 ## Identidade e estado de entrada
 
@@ -125,7 +125,7 @@ O diagnóstico temporário teve tentativas parciais: duas expressões de inspeç
 
 Referências geométricas preservadas: mundo do passeio `1600 × 896`, início do jogador `(800, 832)`, escala `1,5`, velocidade `200`; fonte `(800, 470)`, escala `1,25`; tutor começa em `(544, 368)`, escala `1,8`, percorre X `448–640` a `48 px/s`, pausas de `320 ms`; editor com painel lógico de `300` px. Menu: três cartões em `(156, 194/344/494)`, `704 × 128`. Quiz: painéis das respostas `1032 × 112`, y `248/368/488`, molduras em escala 2. Nenhuma dessas medidas foi alterada.
 
-Evidências atuais fora de `public`: `tmp/walk-ui-validation/`, `tmp/walk-animations-validation/`, `tmp/food-ui-validation/`, `tmp/pet-educa-check-Wt6Zlm/` e `tmp/walk-editor-check-VFP2Xp/`. São saídas locais ignoradas pelo Git; seus PNGs/JSONs foram copiados com comparação de hashes para `evidencias-checks-atuais/` no diretório externo da etapa. Os diagnósticos complementares já gravam diretamente em `fluxo-real/`, fora do checkout. Os logs definitivos dos checks antigos L1/L2 terminam em `-bytes.log`; os demais logs de comando também estão nesse diretório externo. `evidencias-sha256.json` inventaria os PNGs/JSONs atuais por hash. Nenhum perfil, cache, `dist`, `node_modules`, screenshot ou backup integra os commits.
+Evidências atuais fora de `public`: `tmp/walk-ui-validation/`, `tmp/walk-animations-validation/`, `tmp/food-ui-validation/`, `tmp/pet-educa-check-Wt6Zlm/` e `tmp/walk-editor-check-VFP2Xp/`. São saídas locais ignoradas pelo Git; seus PNGs/JSONs foram copiados com comparação de hashes para `evidencias-checks-atuais/` no diretório externo da etapa. Os diagnósticos complementares já gravam diretamente em `fluxo-real/`, fora do checkout. Os logs definitivos dos checks antigos L1/L2 terminam em `-bytes.log`; os demais logs de comando também estão nesse diretório externo. `evidencias-sha256.json` inventaria 61 PNGs/JSONs atuais por hash. Nenhum perfil, cache, `dist`, `node_modules`, screenshot ou backup integra os commits.
 
 ## Diagnóstico e pendências
 
