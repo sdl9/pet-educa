@@ -14,7 +14,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | --- | --- | --- | --- | --- |
 | 0 | `etapa-0` | `dd334db2a1ffae306ce45c91bc04526821a76ac7` | `a06f1159a7caae3c41ae24eab78fc881b08c5347` | Expectativas históricas divergentes; aparelho físico e GPU de hardware não verificados |
 
-O commit de conclusão técnica acima contém o diagnóstico e a linha de base completos. Este registro acrescenta seu SHA em um commit exclusivamente documental posterior, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final de registro pode ser consultado com `git log -1 --format=%H -- docs/organizacao-entrega.md`; os dois commits pertencem à etapa 0. Não há autorização para executar a etapa 1.
+O commit de conclusão técnica acima contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registram seu SHA e complementam o encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final de registro pode ser consultado com `git log -1 --format=%H -- docs/organizacao-entrega.md`; todos esses commits pertencem à etapa 0. Não há autorização para executar a etapa 1.
 
 ## Identidade e estado de entrada
 
