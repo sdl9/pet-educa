@@ -25,6 +25,29 @@ Com a velocidade de 500 px/s, ficam cerca de 250 pixels entre os centros.
 As alturas continuam aleatórias, mas os pares simultâneos que podiam se
 sobrepor foram removidos. A sequência recomeça a cada partida.
 
+## Ciclo de vida dos alimentos — etapa 2
+
+Na etapa 2, cada partida passou a possuir um grupo físico de alimentos e um
+único overlap entre esse grupo e o jogador. `FoodObjects.criar(cena, tipo, grupo)`
+continua criando e configurando cada sprite; não há reaproveitamento de itens.
+Os valores anteriores são aplicados depois dos defaults do grupo para preservar
+velocidade, escala, corpo e ausência de gravidade.
+
+A coleta remove e destrói o membro antes de pontuar, impedindo contagem dupla.
+Após a atualização física, o alimento é destruído somente quando
+`getBounds().right < 0`: considera-se a imagem inteira, inclusive a parte que
+ultrapassa o corpo de colisão. Fim do tempo, Menu e shutdown limpam grupo, itens,
+detector, referências e timers da partida. O resultado mantém seus textos e
+controles; os alimentos remanescentes são descartados ao encerrar a partida.
+
+O teste `npm.cmd run test:food-ui` preserva as verificações anteriores e acrescenta
+coleta real pelo overlap, idempotência, reação vermelha, limite do último pixel,
+uma rodada de 60 segundos sem aceleração e rodada reaberta. Mede alimentos,
+corpos, fila de detectores e itens fora da tela em cada frame da rodada completa.
+O relatório `tmp/food-ui-validation/report.json` contém a seção `lifecycle`.
+As medições e verificações datadas da etapa estão em
+[organizacao-entrega.md](organizacao-entrega.md).
+
 Abra pelo menu: Jogo da Alimentação. Execute o Vite com npm.cmd run dev-nolog.
 Para repetir a validação no navegador, execute npm.cmd run test:food-ui
 com o servidor na porta 8080. O teste usa o Edge instalado em modo headless;

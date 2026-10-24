@@ -2,7 +2,7 @@
 
 ## Escopo e fluxo de branches
 
-Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base, diagnóstico e recuperação. A etapa 1, autorizada posteriormente, está registrada na seção final. Os limites específicos da etapa 0 abaixo são históricos. O ajuste de branches fornecido pela usuária prevalece sobre a orientação anterior de criar `organizacao-entrega`.
+Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base, diagnóstico e recuperação. As etapas posteriores autorizadas estão registradas em suas próprias seções. Os limites específicos da etapa 0 abaixo são históricos. O ajuste de branches fornecido pela usuária prevalece sobre a orientação anterior de criar `organizacao-entrega`.
 
 - Trabalhar somente na branch existente da etapa solicitada, conferindo-a antes de editar.
 - A etapa 0 usa `etapa-0`; nenhuma branch foi criada ou trocada.
@@ -15,6 +15,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 0 | `etapa-0` | `dd334db2a1ffae306ce45c91bc04526821a76ac7` | `a06f1159a7caae3c41ae24eab78fc881b08c5347` | Expectativas históricas divergentes; aparelho físico e GPU de hardware não verificados |
 | 1 | `etapa-1` | `140655f14ba60b65a98bfe469c34ee24c0fe9ef5` | `947b2cb2d1e6a0ff9ddb63bb0830b53aebea6c4e` | Pendência temporal encerrada pelo complemento abaixo; cobertura física/hardware permanece pendente |
 | 1 — complemento de retomada | `etapa-1` | `77317bf82076adffea050f1d1e5060f2d60f32eb` | `28ecef3aa571d1ef8eecce6d9c476798559bacb1` | Sem pendência de sincronização identificada; limites da captura histórica detalhados abaixo |
+| 2 | `etapa-2` | `4edf6a8bb46f1013ece46173d9932e0ce39baf8b` | A registrar após o commit local da etapa | Sem falha funcional identificada; limites físicos/hardware permanecem |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -276,3 +277,92 @@ Evidências externas: `diagnostico-8080/traces.json`, `diagnostico-8081/traces.j
 Preservação conferida por SHA-256: os outros 308 arquivos versionados de entrada estão intactos, incluindo produção, assets, Vite, package.json, lockfile e demais testes. Nenhuma dependência, versão, tolerância de movimento ou configuração funcional foi alterada. Ambos os servidores locais de validação foram encerrados. Os limites de aparelho físico, GPU de hardware e Canvas real continuam sem validação, sem relação com a demonstração de sincronização no Edge real.
 
 Status atual da **etapa 1 após este complemento: aprovada tecnicamente**, com a pendência de sincronização encerrada por demonstração causal, correção restrita ao teste, validação sob bloqueio controlado, controle negativo e suíte completa aprovada. Os estados candidatos e suas execuções anteriores acima permanecem como histórico. O log antigo não permite atribuir o frame, a modalidade de input ou a carga exatos do episódio passado; essa limitação foi mantida explicitamente e não confundida com causa indeterminada do mecanismo reproduzido. O commit `28ecef3aa571d1ef8eecce6d9c476798559bacb1` contém a correção e a investigação; este registro acrescenta seu SHA em commit documental posterior, sem referência circular ao próprio commit. Sem avanço à etapa 2, push, merge, publicação ou reescrita de commits.
+
+## Etapa 2 — ciclo de vida da alimentação
+
+Execução autorizada em 24/10/2026 (America/Sao_Paulo). Branch existente conferida antes de editar: `etapa-2`, HEAD `4edf6a8bb46f1013ece46173d9932e0ce39baf8b`, encerramento documental da etapa 1. Raiz `D:/ARQUIVOS/Documents/pet-educa`; `origin` de leitura/envio `https://github.com/sdl9/pet-educa.git`, ambos inalterados. Árvore inicial limpa, sem arquivos novos não ignorados, staged, unstaged ou remoções. Nenhum AGENTS.md aplicável encontrado. Nenhuma branch criada/trocada; commits anteriores preservados. A referência histórica antiga não foi importada.
+
+### Recuperação e inspeção da entrada
+
+Recuperação fora do checkout em `$env:TEMP\pet-educa-etapa-2-20261024`:
+
+- `entrada.bundle`, com a referência de entrada `etapa-2`, passou em `git bundle verify`. SHA-256: `630DC06C528AF62979E21B3325089125F0E438B1B96B79DDEE3AFA5BDBA26990`.
+- `entrada-bytes/` contém os 310 arquivos versionados, com caminhos preservados e hashes de cada cópia verificados contra a origem. `arquivos-entrada.json` registra esses hashes.
+- `estado-entrada.txt`, `staged.patch` e `unstaged.patch` registram branch/HEAD e índice/árvore separados, sem alterações na entrada. Não havia arquivos locais alterados/novos não ignorados a preservar separadamente. Arquivos ignorados desconhecidos não foram limpos ou varridos.
+- Para recuperar: conferir o hash e o bundle, cloná-lo em pasta nova e comparar arquivos específicos com `entrada-bytes/`; não restaurar amplamente sobre trabalho posterior.
+
+Foram inspecionados o contrato, registro anterior, `package.json`, Vite, registro de cenas/menu, `FoodGame`, `FoodObjects`, `Player`, teste e documentação de alimentação. A versão instalada é Phaser **4.0.0**. O export ESM usado pelo Vite é `dist/phaser.esm.js`; foram conferidos os métodos relevantes também nesse bundle, além dos fontes instalados de `PhysicsGroup`, `Group`, `Collider`, `World`, `ProcessQueue`, `GameObject`, `Body`, `Clock` e `TimerEvent`.
+
+Na entrada, cada evento de spawn criava um sprite e um overlap separado. A coleta destruía o sprite, mas não o detector que o referenciava; itens não coletados continuavam andando para a esquerda indefinidamente. Fim do tempo parava física/timers, e o shutdown geral do Phaser só então descartava a cena. Uma medição no aplicativo real, feita **antes de editar**, mostrou:
+
+| Tempo de jogo | Alimentos vivos | Totalmente fora à esquerda | Corpos físicos | Overlaps ativos |
+| --- | --- | --- | --- | --- |
+| 2 s | 4 | 0 | 5 | 4 |
+| 4 s | 6 | 1 | 7 | 8 |
+| 6 s | 8 | 2 | 9 | 12 |
+| 8 s | 9 | 4 | 10 | 16 |
+| 10 s | 13 | 7 | 14 | 20 |
+| 12 s | 14 | 9 | 15 | 24 |
+
+São amostras observadas, com coletas naturais e sorteios de altura/textura, não contagens determinísticas de todos os itens em outras execuções. O crescimento dos detectores acompanha cada spawn, inclusive quando o item foi coletado.
+
+### Mudança limitada ao ciclo de vida
+
+- `FoodGame` cria um grupo físico e um único overlap jogador × grupo ao iniciar a partida, depois da guarda de início único. A fábrica mantém responsabilidade pela criação: `FoodObjects.criar(cena, tipo, grupo)` cria um sprite novo pelo grupo e aplica os mesmos parâmetros. Nenhum pooling foi introduzido.
+- Na versão instalada, `PhysicsGroup.createCallbackHandler` aplica defaults ao adicionar/criar membros, incluindo velocidade inicial. A fábrica aplica origem, escala, tamanho/offset do corpo, gravidade e velocidade **depois** da criação no grupo; assim os defaults não zeram os −500 px/s.
+- A coleta exige item ativo pertencente ao grupo atual. A remoção do grupo e a destruição ocorrem antes da pontuação, impedindo chamadas duplicadas ou reentrantes de pontuar o mesmo item. Pontuação e efeitos permanecem iguais.
+- O descarte usa `getBounds().right < 0` no `postupdate`, considerando dimensões visuais reais. O teste posiciona um alimento com a borda visual em +1 px e o corpo já fora da tela: ele permanece. Ao passar a borda visual para −1 px, ele deve ser destruído e sair do grupo.
+- `limparPartida` é idempotente e usado no fim do tempo, Menu e shutdown. Para os timers, `remove(false)` agenda encerramento sem callback e `destroy()` libera callback/scope/args; as referências da cena são anuladas. A reação vermelha também libera seu TimerEvent ao cancelar.
+- O overlap é destruído e suas referências liberadas; o grupo é destruído com os filhos. O descarte periódico é desregistrado. A destruição do GameObject libera o corpo pelo fluxo de `Body.destroy`/`World.postUpdate`; o teste observa tanto corpos habilitados quanto eventuais corpos aguardando a fila do Phaser.
+
+O Phaser remove colliders por `ProcessQueue`: depois de `Collider.destroy`, o objeto fica inativo, sem world, objetos ou callback, embora uma entrada inerte possa aguardar o próximo passo físico. Como o resultado pausa a física, o teste distingue essa entrada de um detector ativo; o shutdown limpa a fila e a reentrada cria outro World. Não foram manipuladas filas privadas em produção para forçar contagens. Durante a partida, o teste exige exatamente **uma entrada e um detector ativo**, sem crescimento por spawn; após término exige zero detectores ativos e referências do collider liberadas.
+
+### Comportamento preservado e comparação efetiva
+
+Frequência de 500 ms; sequência começa em bom e alterna bom/ruim; velocidade −500 px/s; nascimento em X=`scale.width+50` (1330 no canvas de 1280), Y aleatório inteiro 440–630; mesmas listas de texturas; origem `(0,5; 0,5)`, escala 2, corpo de origem 30 × 30 (60 × 60 exibidos), offset `(1,1)` e gravidade desabilitada. O grupo não reconfigura o jogador.
+
+Uma segunda medição real, com o mesmo roteiro da entrada e saída separada, confirmou igualdade integral do JSON de configuração efetiva: score inicial 0, contador 60, delays 500/1000 ms, jogador `(160,654)`, escala 2, origem `(0,5;61/64)`, velocidade 300, corpo 100 × 100, offset `(7,11)` e limites `(48,330,1184,370)`, além das três animações com seus frames, taxas e durações. O teste confirma +1/−1, animação de comer, cor `0xffb3b3` e reação de 400 ms. Nenhum controle, rótulo, painel ou texto foi reorganizado. Ao finalizar, os alimentos remanescentes agora são descartados, como parte da limpeza solicitada, mantendo resultado e controles existentes.
+
+Na medição após a correção, aos 12 segundos havia **6 alimentos, nenhum fora da tela, 7 corpos e 1 overlap**. Os scores e alturas sorteadas não foram comparados como valores fixos entre execuções independentes.
+
+### Verificação significativa
+
+O teste existente de alimentação foi ampliado somente para o ciclo de vida; suas verificações de layout, resultado, controles, teclado/toque, cancelamento, score e reentrada foram mantidas. A criação direta de itens dos casos de score passou a fornecer o grupo. A guarda de início duplo também compara identidades do grupo e overlap.
+
+Além dos dois casos anteriores de término acelerando apenas o TimerEvent do contador, o teste agora percorre uma rodada com **60 ticks normais, sem acelerar timer ou física**, instrumentando o callback real do spawn para observar os parâmetros de criação. Um sampler de `postupdate` registra os recursos em cada frame. Após essa rodada, reabre outra por pelo menos seis segundos de jogo (mais que o tempo de travessia), confirma score/tempo reiniciados, mesmos limites de recursos e sai por Escape. Saída durante partida, resultado e reentrada por toque continuam exercitados.
+
+Primeira execução aprovada da rodada completa:
+
+| Medida | Observado |
+| --- | --- |
+| Spawns / duração configurada | 120 / 60 segundos de jogo |
+| Tempo real do roteiro de rodada | 60.575 ms, incluindo polling e verificações |
+| Frames observados na partida | 3.586 |
+| Máximo de alimentos vivos | 6 |
+| Máximo de corpos físicos, incluindo jogador | 7 |
+| Máximo de overlaps ativos / entradas na fila durante jogo | 1 / 1 |
+| Máximo de alimentos totalmente fora da tela retidos | 0 |
+| Recursos no resultado, após filas do Phaser | 0 alimentos, 0 overlaps ativos, 1 corpo do jogador |
+| World anterior após saída pelo Menu | 0 corpos, 0 overlaps ativos |
+
+O limite de seis itens corresponde à travessia de cerca de `(1330+32)/500 = 2,724 s`, com um nascimento a cada 0,5 s. Não é limite imposto à jogabilidade: a produção destrói por borda visual e não limita capacidade ou altera spawn. Os testes também verificam coleta pelo overlap real, coleta duplicada, destruição/saída do grupo, preservação do último pixel, timers sem callbacks após limpeza e ausência de alimentos em cena fora do grupo.
+
+A execução final agregada repetiu a rodada completa: 120 spawns, 3.586 frames, aproximadamente 60.639 ms reais do roteiro e os mesmos máximos de 6 itens, 7 corpos, 1 detector e 0 alimentos fora da tela. As rodadas reabertas mantiveram o limite após a travessia inicial; os casos de resultado positivo/negativo e reentrada por toque passaram.
+
+| Verificação desta etapa | Resultado |
+| --- | --- |
+| Medição real da entrada e após a correção | Antes: 14/9/15/24; depois: 6/0/7/1 (itens/fora/corpos/overlaps, aos 12 s); configuração efetiva idêntica |
+| `npm.cmd run test:food-ui` | Passou, incluindo rodada natural completa, rodada reaberta, início duplo, coleta, término e recursos liberados |
+| `npm.cmd run test:quiz` | 19/19 passaram; doubles/lógica, não renderização visual |
+| `npm.cmd run test:scene-comparison` | 4/4 passaram; política de comparação |
+| `npm.cmd run build-nolog` | Passou; aviso anterior de chunk acima de 500 kB |
+| `node --check` dos três arquivos JavaScript alterados; `git diff --check` | Passaram |
+| `npm.cmd run test:browser` | Passou, código 0: menu, editor, passeio, animações e alimentação ampliada |
+
+O navegador é Edge headless real/WebGL (SwiftShader), com mouse/teclado e toque emulado em 1280 × 720 e 844 × 390 no teste de alimentação. Não houve celular físico, GPU de hardware ou Canvas real. A inspeção da versão instalada e as observações reais substituem suposições sobre APIs; não se usaram doubles para comprovar descarte físico ou renderização.
+
+Evidências fora de `public`: saídas ignoradas `tmp/food-ui-validation/` e diretório externo da etapa. Neste último, `baseline/baseline.json`, `baseline.log`, `apos-correcao/baseline.json`, `apos-correcao.log`, `food-primeira-execucao/report.json`, `test-food-ui.log` e `test-browser-final.log` preservam medições e resultados separados. `medir-entrada.mjs` e `medir-correcao.mjs` são diagnósticos temporários externos; não entram no produto. Nenhum perfil de navegador, captura, cache, `dist` ou backup entra no commit.
+
+Arquivos da etapa: `src/game/scenes/FoodGame.js`, `src/game/objects/FoodObjects.js`, `tests/foodGameUI.browser-check.mjs`, `docs/food-game-ui.md` e este registro. Os outros 305 arquivos de entrada foram conferidos por SHA-256, sem divergência. Nenhuma dependência, versão, lockfile, asset, configuração Vite, nome/registro de cena ou teste dos outros jogos foi modificado. Sem pooling, refatoração adicional de UI ou ajuste de dificuldade. O servidor de validação foi encerrado; os avisos anteriores de chunk grande e de import do manifesto em `public` permaneceram, sem novo erro identificado. Capturas das instruções e do resultado da rodada completa foram abertas e inspecionadas visualmente.
+
+Status da **etapa 2: aprovada tecnicamente**, com suíte completa aprovada, evidências de retenção limitada, detector único e limpeza em término/saída/reentrada, sem falha nova identificada. O SHA da conclusão será acrescentado em commit documental posterior. A etapa 3 não foi iniciada. Sem push, merge, publicação ou reescrita dos commits anteriores.

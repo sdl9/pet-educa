@@ -37,6 +37,9 @@ export class FoodGame extends Scene {
         this.timerSpawn = null;
         this.timerTonalidadeRuim = null;
         this.resultadoUI = null;
+        this.alimentos = null;
+        this.overlapAlimentos = null;
+        this.events.once('shutdown', this.limparPartida, this);
         this.menuKeys = this.input.keyboard.addKeys({
             continuar: 'ENTER',
             menu: 'ESC'
@@ -140,10 +143,32 @@ export class FoodGame extends Scene {
         this.botaoMenu.setEnabled(false);
         this.touchControls?.setEnabled(false);
         this.player?.mover(0, 0);
-        this.timerJogo?.remove(false);
-        this.timerSpawn?.remove(false);
-        this.cancelarTonalidadeRuim();
+        this.limparPartida();
         this.scene.start('MainMenu');
+    }
+
+    limparPartida() {
+        this.timerJogo?.remove(false);
+        this.timerJogo?.destroy();
+        this.timerJogo = null;
+        this.timerSpawn?.remove(false);
+        this.timerSpawn?.destroy();
+        this.timerSpawn = null;
+        this.cancelarTonalidadeRuim();
+        this.events.off('postupdate', this.descartarAlimentosForaDaTela, this);
+        this.overlapAlimentos?.destroy();
+        this.overlapAlimentos = null;
+        this.alimentos?.destroy(true);
+        this.alimentos = null;
+    }
+
+    descartarAlimentosForaDaTela() {
+        if (!this.alimentos) return;
+        // postupdate ocorre depois que o Arcade atualiza a posição dos sprites.
+        // A borda visual inteira deve ter atravessado a esquerda, não só o corpo.
+        for (const item of this.alimentos.getChildren().slice()) {
+            if (item.getBounds().right < 0) this.alimentos.remove(item, false, true);
+        }
     }
 
     iniciarJogo() {
@@ -204,6 +229,11 @@ export class FoodGame extends Scene {
             this.events.off('pause', this.onInputInterrupted);
         });
 
+        this.alimentos = this.physics.add.group();
+        this.overlapAlimentos = this.physics.add.overlap(
+            this.player, this.alimentos, this.capturarItem, null, this
+        );
+        this.events.on('postupdate', this.descartarAlimentosForaDaTela, this);
         this.iniciarSpawn();
         this.iniciarTimer();
 
@@ -253,9 +283,7 @@ export class FoodGame extends Scene {
         if (!this.jogoComecou || this.jogoFinalizado || this.uiNavigating) return;
         // Bloqueia movimento e pontuação antes de construir o resultado.
         this.jogoFinalizado = true;
-        this.timerJogo.remove(false);
-        this.timerSpawn.remove(false);
-        this.cancelarTonalidadeRuim();
+        this.limparPartida();
         this.touchControls.setEnabled(false);
         this.player.mover(0, 0);
         this.player.anims.stop();
@@ -270,26 +298,30 @@ export class FoodGame extends Scene {
         ).container;
     }
 
-    capturarItem(player, item) { //estudar dps pq n this.capturaritem e pq this.capturaritem ta dentro de iniciarspawn
-        if (this.jogoFinalizado || this.uiNavigating) return;
-        if (item.tipo == 'bom') {
+    capturarItem(player, item) {
+        if (!this.jogoComecou || this.jogoFinalizado || this.uiNavigating
+            || !item?.active || !this.alimentos?.contains(item)) return;
+        const tipo = item.tipo;
+        // Retira a posse antes de destruir/pontuar, inclusive em chamadas repetidas.
+        this.alimentos.remove(item, false, true);
+        if (tipo == 'bom') {
             this.score += 1;
             this.playerComendo = true;
             this.player.anims.play('food-dog-eat');
         }
 
-        if (item.tipo === 'ruim') {
+        if (tipo === 'ruim') {
             this.score -= 1;
             this.aplicarTonalidadeRuim(player);
         }
 
-        item.destroy();
         this.textoScore.setText('Score: ' + this.score);
     }
 
     cancelarTonalidadeRuim() {
         if (this.timerTonalidadeRuim) {
             this.time.removeEvent(this.timerTonalidadeRuim);
+            this.timerTonalidadeRuim.destroy();
             this.timerTonalidadeRuim = null;
         }
     }
@@ -310,15 +342,8 @@ export class FoodGame extends Scene {
             delay: 500,
             callback: () => {
                 if (this.jogoFinalizado || this.uiNavigating) return;
-                const alimento = FoodObjects.criar(this, proximoTipo);
+                FoodObjects.criar(this, proximoTipo, this.alimentos);
                 proximoTipo = proximoTipo === 'bom' ? 'ruim' : 'bom';
-                this.physics.add.overlap(
-                    this.player,
-                    alimento,
-                    (player, item) => {
-                        this.capturarItem(player, item);
-                    }
-                );
             },
             loop: true
         });

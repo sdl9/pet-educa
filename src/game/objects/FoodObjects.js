@@ -7,12 +7,14 @@ const TEXTURAS = {
 };
 
 export default class FoodObjects {
-    static criar(cena, tipo) {
+    static criar(cena, tipo, grupo) {
         const x = cena.scale.width + 50;
         const y = PhaserMath.Between(440, 630);
         const texturas = TEXTURAS[tipo];
         const textura = texturas[PhaserMath.Between(0, texturas.length - 1)];
-        const item = cena.physics.add.sprite(x, y, textura).setOrigin(0.5).setScale(2);
+        // O grupo cria o corpo antes de aplicarmos os valores do alimento.
+        // Assim seus defaults não sobrescrevem a velocidade definida abaixo.
+        const item = grupo.create(x, y, textura).setOrigin(0.5).setScale(2);
 
         item.tipo = tipo;
         // 30 pixels de origem viram os 60 pixels da colisao anterior na escala 2.
