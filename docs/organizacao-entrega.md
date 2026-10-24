@@ -13,7 +13,8 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | Etapa | Branch | Commit de entrada | Commit de conclusão técnica | Pendências |
 | --- | --- | --- | --- | --- |
 | 0 | `etapa-0` | `dd334db2a1ffae306ce45c91bc04526821a76ac7` | `a06f1159a7caae3c41ae24eab78fc881b08c5347` | Expectativas históricas divergentes; aparelho físico e GPU de hardware não verificados |
-| 1 | `etapa-1` | `140655f14ba60b65a98bfe469c34ee24c0fe9ef5` | `947b2cb2d1e6a0ff9ddb63bb0830b53aebea6c4e` | Intermitência temporal observada no teste preservado de animações; cobertura física/hardware permanece pendente |
+| 1 | `etapa-1` | `140655f14ba60b65a98bfe469c34ee24c0fe9ef5` | `947b2cb2d1e6a0ff9ddb63bb0830b53aebea6c4e` | Pendência temporal encerrada pelo complemento abaixo; cobertura física/hardware permanece pendente |
+| 1 — complemento de retomada | `etapa-1` | `77317bf82076adffea050f1d1e5060f2d60f32eb` | A registrar após o commit local da investigação | Sem pendência de sincronização identificada; limites da captura histórica detalhados abaixo |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -203,3 +204,75 @@ Preservação final: 302 dos 307 arquivos de entrada, fora dos cinco caminhos ex
 As falhas históricas L1/L2/manual em `tmp` não foram corrigidas, regeneradas ou incluídas no comando atual: são snapshots antigos documentados na etapa 0, fora dos dois testes solicitados. Os avisos de chunk e do import de manifesto em `public` permanecem achados anteriores. Não foram executados celular físico, GPU de hardware ou renderizador Canvas real. Essas limitações não são substituídas pelos doubles do quiz.
 
 Status da **etapa 1: candidata com validação pendente**. A implementação dos testes solicitados está concluída e a última suíte agregada passou, mas permanece pendente esclarecer a intermitência observada no teste preservado de animações. Sua causa não foi comprovada nem sua falha reproduzida na cópia de entrada; portanto, ela não é descartada como limitação do ambiente ou declarada corrigida apenas por uma repetição verde. O commit `947b2cb2d1e6a0ff9ddb63bb0830b53aebea6c4e` reúne a implementação e os resultados; este registro acrescenta seu SHA em commit documental posterior, evitando referência circular ao próprio commit. A etapa 2 não foi iniciada; sem push, merge, publicação ou modificações de produção.
+
+## Complemento da etapa 1 — investigação da retomada do tutor
+
+Investigação autorizada em 24/10/2026, exclusivamente para a pendência acima. Branch conferida antes de editar: `etapa-1`, HEAD de entrada `77317bf82076adffea050f1d1e5060f2d60f32eb`, árvore limpa. Os commits `947b2cb` e `77317bf` foram preservados. Raiz e URLs de leitura/envio de `origin` conferidos e inalterados; nenhum AGENTS.md aplicável encontrado. Nenhuma branch criada/trocada e nenhuma etapa 2 executada.
+
+### Recuperação deste complemento
+
+Diretório externo: `$env:TEMP\pet-educa-tutor-investigacao-20261024`. `entrada.bundle` contém a referência de entrada e passou em `git bundle verify`; SHA-256 `D5E5868BE0667ABA652FF20F1A872BF485B79FF5C3C5DE2FE43C225F94FB7C5F`. Os 310 arquivos versionados de entrada foram copiados, com caminhos e hashes conferidos, para `entrada-bytes/`. `arquivos-entrada.json`, `estado-entrada.txt`, `staged.patch` e `unstaged.patch` registram o estado limpo e recuperável, inclusive o índice separado da árvore. Nenhum arquivo local alterado/novo não ignorado existia na entrada.
+
+O bundle da entrada anterior `140655f` também foi novamente verificado, com o mesmo SHA-256 registrado na etapa 1. A cópia isolada `baseline-runtime/` daquela recuperação contém 267 arquivos do aplicativo, todos novamente comparados com seus hashes de entrada sem divergência. Ela foi servida na porta local 8081, enquanto o checkout atual usou 8080. Não houve checkout, importação de histórico ou substituição de arquivos atuais. Para recuperar, conferir o bundle e cloná-lo em uma pasta nova; os bytes locais exatos estão em `entrada-bytes/`. Não restaurar amplamente sobre trabalho posterior.
+
+### Assertion e condições conhecidas
+
+A falha histórica está em `tests/walkAnimations.browser-check.mjs:194` na versão de entrada: `assert.equal((await tutorState()).paused,false)`, depois de `await pause(650)` em Node. A verificação anterior exigia deslocamento menor que 35 px. O caso abre e conclui um diálogo real, verifica que o tutor ficou congelado e espera sua retomada.
+
+O laço cobre direita/E, esquerda/Espaço, direita/toque e centro/E. Três casos possuem pausa de extremidade de 320 ms, e o último não. Na ocorrência histórica, o teste rodava no Edge headless/WebGL (SwiftShader), dentro da sequência menu → editor → passeio → animações. O log registra `true !== false`, sem erro de execução do navegador; não guardava o caso exato do laço, frames, deltas ou carga naquele instante. Portanto, não é possível reconstruir o frame ou o bloqueio específico daquela ocorrência. As reproduções abaixo demonstram o mecanismo em experimentos controlados; não inventam telemetria histórica.
+
+### Causa demonstrada: preparo de estado e relógios diferentes
+
+O teste montava `reset(x, x===640 ? -1 : 1, 320)`. Isso coloca o tutor na extremidade **com direção de saída e pausa ainda pendente**. O controlador real retém a direção de chegada durante a pausa e só a inverte ao consumir os 320 ms. O diagnóstico congelou o avanço automático, chamou o próprio controlador da cena real com deltas conhecidos e registrou os estados, sem substituir a implementação por doubles.
+
+| Estado em X=640 | Direção inicial | Após 320 ms entregues ao controlador | Após 500 ms | Início da retomada |
+| --- | --- | --- | --- | --- |
+| Preparo antigo do teste, pausa 320 | −1 | X=640, direção +1, pausa novamente 320, animação pausada | X=640, pausa 140, ainda pausada | Pausa acaba em 640 ms; em 650 ms X=639,52 |
+| Chegada produzida pelo controlador real, pausa 320 | +1 | X=640, direção −1, pausa 0, animação liberada | X=631,36, em movimento | Uma única pausa de 320 ms |
+
+Na extremidade X=448 ocorre o caso simétrico. As quatro séries (duas extremidades × preparo antigo/natural), comparadas em 0, 319, 320, 321, 500, 639, 640 e 650 ms, tiveram posição, direção, pausa e estado de animação idênticos entre o checkout atual e a cópia `140655f`. A chegada também foi derivada a partir de X=544 com 2000 ms de avanço pelo controlador, confirmando a direção correta e a pausa original de 320 ms.
+
+O segundo problema é de sincronização: `setTimeout` de Node mede relógio real, enquanto `WalkGameLearning.update(time, delta)` passa **delta** ao tutor, não o timestamp absoluto. O Phaser instalado calcula `rawDelta`, aplica limitação/suavização em `TimeStep.smoothDelta` e entrega esse delta à cena. Um bloqueio de event loop reduz o número de frames e pode deixar o somatório de deltas muito abaixo do tempo real. `Systems.step` emite `postupdate(time, delta)` após o update da cena com esse mesmo delta. Isso foi conferido nos arquivos locais da dependência instalada, sem atualizar versões.
+
+Medições no aplicativo real, usando bloqueio de event loop declarado apenas no diagnóstico temporário:
+
+| Aplicativo e condição | Tempo real observado | Delta acumulado / frames | Resultado após a espera antiga |
+| --- | --- | --- | --- |
+| Atual, preparo antigo, bloqueio de 250 ms | 655,2 ms | 415,98 ms / 25 frames | Pausa restante 174,08; `paused=true` |
+| `140655f`, mesmo preparo/bloqueio | 652,8 ms | 432,69 ms / 26 frames | Pausa restante 157,38; `paused=true` |
+| Atual, chegada natural, bloqueio de 450 ms | 667,8 ms | 249,58 ms / 15 frames | Pausa restante 20,52; `paused=true` |
+| `140655f`, chegada natural, mesmo bloqueio | 659,4 ms | 216,43 ms / 13 frames | Pausa restante 53,65; `paused=true` |
+
+Ao observar uma janela fixa de **650 ms de deltas entregues à cena**, o mesmo bloqueio de 450 ms levou cerca de 1083–1099 ms reais e 40 frames nas reproduções, mas o tutor estava efetivamente em movimento, com pausa zero e animação liberada em ambas as extremidades e versões. O experimento não mudou os 320 ms da pausa, os 48 px/s ou as regras de diálogo.
+
+Conclusão causal: há dois defeitos preexistentes no teste — um estado inicial incompatível com a chegada natural e uma espera em relógio diferente do controlador. A carga/escalonamento do navegador revela o segundo defeito; não precisa ser presumida como defeito do jogo. A igualdade dos fontes relevantes entre `140655f` e a entrada deste complemento, e as séries controladas idênticas, afastam uma regressão introduzida pelas mudanças da etapa 1. O controlador retoma corretamente no estado natural. Não foi identificado problema anterior de produção que exigisse correção. A reprodução controlada explica por que a assertion antiga pode falhar; a causa ambiental exata do instante histórico continua não registrada, sem impedir a demonstração dos defeitos do teste.
+
+### Correção mínima e controles
+
+Somente `tests/walkAnimations.browser-check.mjs` e este documento foram modificados:
+
+- As extremidades agora são alcançadas pelo controlador real a partir do centro, com assertions de posição, direção de chegada e pausa de 320 ms, em vez de atribuir direção incompatível com a pausa.
+- A observação continua com orçamento de 650 ms, agora somando os deltas de `postupdate`. O estado é capturado no próprio frame da medição. Não se espera indefinidamente até o estado ficar favorável: após a janela fixa, todas as assertions são avaliadas. Uma cena sem atualizações ou encerrada falha explicitamente; o watchdog de 9 s é apenas limite de infraestrutura, inferior ao timeout CDP já existente de 10 s, não uma tolerância extra de retomada.
+- Foram preservadas a exigência `paused=false`, a limitação de deslocamento **menor que 35 px**, os 320 ms da pausa e todos os demais cenários. Foram acrescentadas exigências de deslocamento não nulo, direção correta e pausa consumida. Relatório inclui deltas, frames, relógio real e deslocamento dos quatro casos.
+- A cópia externa do teste corrigido passou com um bloqueio de event loop de 450 ms em cada uma das quatro retomadas. Mediu 650,03–665,77 ms de cena, 39–40 frames e 1061,7–1079,1 ms reais; deslocamentos de aproximadamente 18,24–18,99 px nas extremidades e 33,61 px no centro, mantendo o limite de 35 px.
+- Controle negativo externo: somente em memória, liberou-se a animação e a pausa sem permitir translação. O teste falhou especificamente com `Tutor deve realmente se mover após o diálogo`, código 1. Assim, animação liberada ou mera passagem de tempo não bastam para aprovação. Essa mutação diagnóstica não foi aplicada a arquivos de produção nem incluída no commit.
+
+### Verificações e evidências do complemento
+
+| Verificação | Resultado |
+| --- | --- |
+| Diagnóstico na cena atual e em `140655f` | Quatro séries de estado idênticas e reprodução controlada da assertion antiga nos dois aplicativos |
+| `npm.cmd run test:walk-animations` corrigido | Passou: quatro retomadas, congelamento em diálogo, percurso, colisões, reentrada e editor |
+| Cópia diagnóstica corrigida, com bloqueios de 450 ms | Passou, sem alterar assertions de comportamento ou limite de 35 px |
+| Controle negativo sem translação | Falhou como exigido, na assertion de movimento real |
+| `npm.cmd run test:quiz` | 19/19 passaram; lógica e doubles de UI, sem alegação de renderização |
+| `npm.cmd run test:scene-comparison` | 4/4 passaram; política de comparação, sem alegação visual |
+| `npm.cmd run build-nolog` | Passou; aviso anterior de chunk acima de 500 kB |
+| `node --check tests/walkAnimations.browser-check.mjs`; `git diff --check` | Passaram |
+| `npm.cmd run test:browser` | Passou, código 0, na ordem da ocorrência histórica: menu → editor → passeio → animações → alimentação |
+
+Evidências externas: `diagnostico-8080/traces.json`, `diagnostico-8081/traces.json`, `diagnostico-atual.log`, `diagnostico-140655f.log`, `validacao-com-bloqueio/report.json`, `validacao-bloqueio.log`, `controle-negativo.log`, `test-animations-corrigido.log` e `test-browser-final.log`, todos dentro do diretório de recuperação deste complemento. Os scripts `investigar-tutor.mjs`, `validar-bloqueio.mjs` e `validar-imobilidade.mjs` ficam nesse mesmo diretório externo para reproduzir os experimentos; não integram o produto ou os testes oficiais. Perfis de navegador não integram evidências, backups ou commits.
+
+Preservação conferida por SHA-256: os outros 308 arquivos versionados de entrada estão intactos, incluindo produção, assets, Vite, package.json, lockfile e demais testes. Nenhuma dependência, versão, tolerância de movimento ou configuração funcional foi alterada. Ambos os servidores locais de validação foram encerrados. Os limites de aparelho físico, GPU de hardware e Canvas real continuam sem validação, sem relação com a demonstração de sincronização no Edge real.
+
+Status atual da **etapa 1 após este complemento: aprovada tecnicamente**, com a pendência de sincronização encerrada por demonstração causal, correção restrita ao teste, validação sob bloqueio controlado, controle negativo e suíte completa aprovada. Os estados candidatos e suas execuções anteriores acima permanecem como histórico. O log antigo não permite atribuir o frame, a modalidade de input ou a carga exatos do episódio passado; essa limitação foi mantida explicitamente e não confundida com causa indeterminada do mecanismo reproduzido. O SHA da conclusão deste complemento será registrado em commit documental posterior. Sem avanço à etapa 2, push, merge, publicação ou reescrita de commits.

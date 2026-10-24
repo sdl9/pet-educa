@@ -54,6 +54,7 @@ async function connect(url) {
 
 let browser, page;
 const passed = [];
+const resumptions = [];
 try {
     const portFile = await until(() => fs.readFile(path.join(profile, 'DevToolsActivePort'), 'utf8'), 'Edge não iniciou');
     const [port, endpoint] = portFile.trim().split(/\r?\n/);
@@ -116,6 +117,25 @@ try {
     const thaw = () => evaluate('__checkedScene.tutorPatrol.update=__checkedScene.tutorPatrol.realUpdate');
     const tick = delta => evaluate('__checkedScene.tutorPatrol.realUpdate(' + delta + ',false)');
     const reset = (x=544, direction=1, pauseMs=0) => evaluate('(()=>{const p=__checkedScene.tutorPatrol;p.sprite.setPosition(' + x + ',368);p.direction=' + direction + ';p.pauseRemaining=' + pauseMs + ';p.realUpdate(0,false);})()');
+    // Observe a fixed window of delivered scene deltas, not a Node wall-clock
+    // sleep. Phaser smooths/clamps delta, so a stalled browser advances less
+    // game time. Success still depends on the assertions after this window.
+    const tutorWindow = milliseconds => evaluate(`new Promise((resolve,reject)=>{
+        const s=__checkedScene,start=performance.now();let elapsed=0,count=0;
+        const cleanup=()=>{clearTimeout(timer);s.events.off('postupdate',step);s.events.off('shutdown',shutdown);};
+        const shutdown=()=>{cleanup();reject(new Error('Cena encerrada durante a verificação de retomada'));};
+        const step=(time,delta)=>{
+            elapsed+=delta;count++;
+            if(elapsed>=${milliseconds}) {
+                const p=s.tutorPatrol;
+                const state={x:p.sprite.x,direction:p.direction,pause:p.pauseRemaining,paused:p.sprite.anims.isPaused};
+                cleanup();resolve({elapsed,frames:count,wallMs:performance.now()-start,state});
+            }
+        };
+        // Watchdog for a stopped scene, not extra allowed tutor movement time.
+        const timer=setTimeout(()=>{cleanup();reject(new Error('Cena não entregou ${milliseconds} ms de atualizações para verificar a retomada'));},9000);
+        s.events.on('postupdate',step);s.events.once('shutdown',shutdown);
+    })`);
     const closeTo = (actual, expected) => assert.ok(Math.abs(actual-expected) < 0.01, `${actual} != ${expected}`);
     const animations = await get('children.list.filter(o=>["plaza-fountain-water","plaza-spring-rider","npc-tutor-cachorro-guia"].includes(o.texture?.key)).map(o=>({key:o.texture.key,w:o.width,h:o.height,origin:[o.originX,o.originY],scale:o.scaleX,frames:o.anims.currentAnim.frames.length,rate:o.anims.currentAnim.frameRate,repeat:o.anims.currentAnim.repeat,x:o.x,y:o.y}))');
     assert.equal(animations.length, 3);
@@ -176,7 +196,13 @@ try {
         await frames(2);
     }
     for(const [x,mode,pauseMs] of [[640,'E',320],[448,'SPACE',320],[640,'TOUCH',320],[544,'E',0]]) {
-        await reset(x,x===640?-1:1,pauseMs);
+        // Reach endpoints through the controller: pending pause retains the
+        // incoming direction and flips it only when the 320 ms pause ends.
+        await reset(544,x===448?-1:1);
+        if(pauseMs) await tick(2000);
+        const arrival=await tutorState();
+        assert.equal(arrival.x,x);assert.equal(arrival.pause,pauseMs);
+        assert.equal(arrival.direction,x===448?-1:1);
         await approach('guia');
         if(mode==='TOUCH') { await viewport(844,390,true); await frames(6); await approach('guia'); await touch(1050,650); }
         else await key(mode==='E'?'KeyE':'Space',mode==='E'?'e':' ',mode==='E'?69:32);
@@ -189,9 +215,15 @@ try {
         await shot('dialogue-'+mode.toLowerCase());
         if(mode==='TOUCH') await touch(1112,652); else await key('Space',' ',32);
         assert.equal(await get('dialogueSystem.isOpen()'),false);
-        await pause(650);
-        assert.ok(Math.abs((await tutorState()).x-stopped.x)<35);
-        assert.equal((await tutorState()).paused,false);
+        const window=await tutorWindow(650);
+        const resumed=window.state;
+        const displacement=resumed.x-stopped.x;
+        assert.ok(Math.abs(displacement)<35);
+        assert.equal(resumed.paused,false);
+        assert.ok(Math.abs(displacement)>0,'Tutor deve realmente se mover após o diálogo');
+        assert.equal(Math.sign(displacement),pauseMs ? -stopped.direction : stopped.direction,'Tutor retoma na direção esperada');
+        assert.equal(resumed.pause,0);
+        resumptions.push({x,mode,pauseMs,...window,displacement});
         await freeze();
     }
     pass('E, espaço e toque; diálogo congela passos no trajeto e pausas nas extremidades, retomada sem salto');
@@ -220,7 +252,7 @@ try {
         (e.method==='Runtime.consoleAPICalled'&&e.params.type==='error')||
         (e.method==='Network.responseReceived'&&e.params.response.status>=400&&e.params.response.url.includes('/assets/')));
     assert.deepEqual(failures,[]);
-    await fs.writeFile(path.join(output,'report.json'),JSON.stringify({passed:true,checks:passed,errors:failures},null,2));
+    await fs.writeFile(path.join(output,'report.json'),JSON.stringify({passed:true,checks:passed,resumptions,errors:failures},null,2));
 } catch (error) {
     console.error(error);
     if (page) {
