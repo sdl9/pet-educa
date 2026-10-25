@@ -18,7 +18,7 @@ try {
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
     'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
-    'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGameLearning.js',
+    'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGame.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))
 ];
 const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.map(async file => [file,
@@ -138,14 +138,14 @@ try {
     await until(() => attach('Intro', '/src/game/scenes/Intro.js'), 'Normal route did not start Intro');
     console.log('PASS normal route -> Intro');
     await page.send('Page.navigate', { url: `${baseURL}/?walkLearning` });
-    await until(() => attach('WalkGameLearning', '/src/game/scenes/WalkGameLearning.js'), 'WalkGameLearning did not start');
+    await until(() => attach('WalkGame', '/src/game/scenes/WalkGame.js'), 'WalkGame did not start');
     const gameplay = await snapshot();
     for (const role of ['player', 'saci', 'heart']) {
         assert.equal(gameplay.filter(object => object.role === role).length, 1, `Explicit ${role} owner`);
     }
     assert.ok(gameplay.some(object => object.role === 'hud'), 'Gameplay HUD is identified');
     const learning = sharedScenerySnapshot(gameplay, 'gameplay');
-    console.log('PASS ?walkLearning -> WalkGameLearning');
+    console.log('PASS ?walkLearning -> WalkGame');
     await page.send('Page.navigate', { url: `${baseURL}/?walkLayoutEditor` });
     await until(() => attach('WalkLayoutEditor', '/src/game/dev/WalkLayoutEditor.js'), 'WalkLayoutEditor did not start');
     await until(() => evaluate(`Boolean(__checkedScene.draft && document.querySelector('aside'))`), 'Editor did not finish creating');
@@ -274,8 +274,8 @@ try {
     await until(()=>evaluate('Boolean(__checkedScene.draft)'), 'Editor reload not ready');
     const reset=await evaluate('__checkedScene.draft.exportDraft()');original.date=reset.date;
     assert.deepEqual(reset,original,'Reload must discard the provisional changes');
-    await evaluate("void __checkedScene.scene.start('WalkGameLearning')");
-    await until(()=>attach('WalkGameLearning','/src/game/scenes/WalkGameLearning.js'),'Returning to learning failed');
+    await evaluate("void __checkedScene.scene.start('WalkGame')");
+    await until(()=>attach('WalkGame','/src/game/scenes/WalkGame.js'),'Returning to learning failed');
     assert.equal(await evaluate("Boolean(document.querySelector('aside'))"),false);
     assert.deepEqual(sharedScenerySnapshot(await snapshot(), 'gameplay'),learning);
     const errors=page.events.filter(e=>e.method==='Runtime.exceptionThrown');

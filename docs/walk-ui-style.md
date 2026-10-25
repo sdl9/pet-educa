@@ -1,6 +1,9 @@
 # Interface do Passeio Consciente
 
-A cena usada pelo menu continua sendo `WalkGameLearning`. Abra pelo menu
+A cena definitiva usada pelo menu é `WalkGame` (`src/game/scenes/WalkGame.js`).
+Na etapa 3, recebeu o código funcional antes chamado `WalkGameLearning`,
+sem alterar regras ou apresentação; o protótipo antigo foi retirado.
+As referências ao nome anterior na validação abaixo são históricas. Abra pelo menu
 ou execute `npm.cmd run dev-nolog` e acesse `http://localhost:8080/?walkLearning`.
 
 O botão **Menu**, fixo no canto superior direito, permanece disponível durante
@@ -85,7 +88,7 @@ O build mantém o aviso de chunk maior que 500 kB.
 As capturas foram inspecionadas visualmente. Não houve teste em um celular físico
 ou GPU de hardware. O fallback Canvas foi verificado por testes simulados do quiz;
 a renderização real desta etapa foi WebGL. Os arquivos de diálogos, mapa,
-WalkPlayer, Saci e PNGs permaneceram sem alterações. A cena WalkGameLearning
+WalkPlayer, Saci e PNGs permaneceram sem alterações. A cena então chamada WalkGameLearning
 recebeu somente o botão Menu e o bloqueio de movimento durante a saída.
 A limpeza do direcional no shutdown foi ajustada para não atualizar molduras
 que o Phaser já destruiu.

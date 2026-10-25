@@ -1,5 +1,10 @@
 # Integração das telas do Pet Educa
 
+Na etapa 3, o cartão Passeio Consciente passou a usar a cena definitiva `WalkGame`.
+O nome anterior `WalkGameLearning`, o protótipo `WalkGame` e `FuncoesUI` citados
+no registro histórico abaixo não representam a organização atual. As notas
+pedagógicas retiradas do protótipo estão em [notas-prototipo-passeio.md](notas-prototipo-passeio.md).
+
 Atualização dos testes na etapa 1: os comandos atuais são `npm.cmd run test:menu` e `npm.cmd run test:walk-editor`, com arquivos em `tests/`. A política de comparação do editor, a cobertura dos três cartões atualmente utilizáveis e a seleção do navegador estão em [testes-navegador.md](testes-navegador.md). As descrições e execuções abaixo registram a integração histórica de 09/10/2026, inclusive a indisponibilidade do quiz naquela ocasião; não descrevem o resultado atual da suíte.
 
 A abertura normal segue Boot → Preloader → Intro → MainMenu. O Preloader continua carregando os assets atuais e acrescenta oito texturas exclusivas com prefixo `pet-educa-ui-`. Imagens e fontes locais estão em `public/assets/pet-educa-ui/`, com as duas licenças das fontes preservadas.

@@ -16,6 +16,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 1 | `etapa-1` | `140655f14ba60b65a98bfe469c34ee24c0fe9ef5` | `947b2cb2d1e6a0ff9ddb63bb0830b53aebea6c4e` | Pendência temporal encerrada pelo complemento abaixo; cobertura física/hardware permanece pendente |
 | 1 — complemento de retomada | `etapa-1` | `77317bf82076adffea050f1d1e5060f2d60f32eb` | `28ecef3aa571d1ef8eecce6d9c476798559bacb1` | Sem pendência de sincronização identificada; limites da captura histórica detalhados abaixo |
 | 2 | `etapa-2` | `4edf6a8bb46f1013ece46173d9932e0ce39baf8b` | `093f56271bf2792cb2c3fb4c9c86483c22f401d5` | Sem falha funcional identificada; limites físicos/hardware permanecem |
+| 3 | `etapa-3` | `1ac7801f0ef38182be3e898772b7948832eff270` | A registrar após o commit local da etapa | Scripts históricos divergentes; limites físicos/hardware permanecem |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -366,3 +367,78 @@ Evidências fora de `public`: saídas ignoradas `tmp/food-ui-validation/` e dire
 Arquivos da etapa: `src/game/scenes/FoodGame.js`, `src/game/objects/FoodObjects.js`, `tests/foodGameUI.browser-check.mjs`, `docs/food-game-ui.md` e este registro. Os outros 305 arquivos de entrada foram conferidos por SHA-256, sem divergência. Nenhuma dependência, versão, lockfile, asset, configuração Vite, nome/registro de cena ou teste dos outros jogos foi modificado. Sem pooling, refatoração adicional de UI ou ajuste de dificuldade. O servidor de validação foi encerrado; os avisos anteriores de chunk grande e de import do manifesto em `public` permaneceram, sem novo erro identificado. Capturas das instruções e do resultado da rodada completa foram abertas e inspecionadas visualmente.
 
 Status da **etapa 2: aprovada tecnicamente**, com suíte completa aprovada, evidências de retenção limitada, detector único e limpeza em término/saída/reentrada, sem falha nova identificada. O commit `093f56271bf2792cb2c3fb4c9c86483c22f401d5` contém a implementação e os resultados; este registro acrescenta seu SHA em commit documental posterior, evitando referência circular ao próprio commit. A etapa 3 não foi iniciada. Sem push, merge, publicação ou reescrita dos commits anteriores.
+
+## Etapa 3 — identificação definitiva do passeio
+
+Execução autorizada em 24/10/2026 (America/Sao_Paulo). Branch existente conferida antes de editar: `etapa-3`, HEAD `1ac7801f0ef38182be3e898772b7948832eff270`, árvore limpa, sem arquivos novos não ignorados, staged, unstaged ou remoções. `origin` de leitura e envio continua em `https://github.com/sdl9/pet-educa.git`, na raiz `D:/ARQUIVOS/Documents/pet-educa`. Nenhum AGENTS.md aplicável encontrado. Branch e upstream já existiam; não foram criados, trocados ou publicados. Os commits anteriores foram preservados.
+
+### Recuperação da entrada
+
+Diretório externo: `$env:TEMP\pet-educa-etapa-3-20261024`. `entrada.bundle` contém a referência de entrada `etapa-3` e passou em `git bundle verify`; SHA-256 `BA0DA2091D4915C11B8A5B5F3F2D7A85BD97873C7196AC05AB08D36C46559347`. Os 310 arquivos versionados foram copiados com caminhos e hashes dos bytes verificados em `entrada-bytes/`; `arquivos-entrada.json`, `estado-entrada.txt`, `staged.patch` e `unstaged.patch` preservam o inventário e o estado separado do índice/árvore. Não havia alterações locais não commitadas a separar. Nada ignorado/desconhecido foi limpo.
+
+Para recuperar, conferir o bundle e cloná-lo em uma pasta nova, usando `entrada-bytes/` e o manifesto para bytes locais exatos; não aplicar restauração ampla sobre trabalho posterior. A cópia inclui tanto o protótipo antigo `WalkGame.js` quanto a cena funcional `WalkGameLearning.js`, permitindo recuperar ambos sem colisão de nomes. Nenhum histórico antigo foi importado e o repositório original não foi alterado.
+
+### Conferência dos usos e remoções
+
+Foram lidos menu, Boot/Preloader/Intro, entradas e registro das cenas, os dois arquivos do passeio, cenas de template, utilitários, anotações, testes/ferramentas, documentação e configurações Vite. Buscas incluíram imports estáticos/dinâmicos, strings de cena, chamadas start/launch/run/switch/restart, queries, arrays de registro, caminhos de fontes e referências em scripts/manifestos/CSS/HTML. A conclusão não se baseou apenas em nomes semelhantes.
+
+| Conteúdo de entrada | Evidência de papel/consumo | Tratamento |
+| --- | --- | --- |
+| `WalkGameLearning.js` | Classe/chave usadas pelo cartão Passeio Consciente, Preloader e testes; contém jogador, Saci, colisões, interações, diálogos e tutor | Implementação integral preservada como `WalkGame.js`, classe/chave `WalkGame` |
+| `WalkGame.js` antigo | `create` e instruções estavam comentados; não era destino do menu ou query, apesar do registro | Protótipo retirado antes da movimentação para evitar sobrescrever a cena funcional |
+| `Game.js` | Registrada como `MainGame`, sem entrada ativa por menu/query ou outra cena; sua transição para GameOver estava comentada | Arquivo, import e registro retirados |
+| `GameOver.js` | Só possuía saída para MainMenu; única referência de entrada era o comentário em Game.js | Arquivo, import e registro retirados |
+| `FuncoesJogo.js` | Arquivo de zero bytes, sem imports/consumidores | Retirado |
+| `FuncoesUI.js` | Único import no protótipo removido; suas chamadas ficavam no corpo comentado | Retirado após o protótipo; nenhum consumidor ativo restante |
+
+O método próprio `FoodGame.criarBotaoMenu` tem nome semelhante ao utilitário, mas não o consumia: a alimentação e seus controles foram preservados. `Player`, `WalkPlayer`, `Saci`, sistemas, assets, mapas e dados não foram renomeados nem alterados. `anotacoes.md` permanece byte a byte intacto; comentários pedagógicos e o texto comentado do protótipo foram preservados em [notas-prototipo-passeio.md](notas-prototipo-passeio.md). Licenças, créditos e material original dos assets foram mantidos.
+
+### Equivalência e rotas
+
+Uma comparação exata com a cópia de entrada confirmou que o conteúdo da cena funcional é idêntico após substituir **somente** `export class WalkGameLearning` por `export class WalkGame` e `super('WalkGameLearning')` por `super('WalkGame')`. Não houve divisão, reordenação ou reformatação da cena. Coordenadas, escalas, velocidades, física, diálogos, sete cuidados e animações permanecem no mesmo código. A prova dessa normalização é registrada em `identidade-cena.json` no diretório externo.
+
+O registro contém agora Boot, Preloader, Intro, MainMenu, FoodGame, SaciGame e WalkGame; WalkLayoutEditor continua sendo acrescentado somente em DEV. O menu usa WalkGame. A única alteração na decisão do Preloader foi o nome do destino; condições e precedências das queries foram preservadas, inclusive a espera pelas fontes.
+
+| Query | Dev | Distribuição de produção |
+| --- | --- | --- |
+| Nenhuma | Intro | Intro |
+| `walkLearning` | WalkGame | WalkGame |
+| `walkLayoutEditor` | WalkLayoutEditor | Intro |
+| `walkLayoutEditor&walkLearning` | WalkLayoutEditor | WalkGame |
+| `saciQuiz` | SaciGame, partida | Intro |
+| `quizVisual` | SaciGame, demonstração/inspetor | Intro |
+| `quizVisual&walkLearning` | SaciGame, demonstração/inspetor | WalkGame |
+
+Quatro testes atuais e três scripts históricos de `tmp` receberam somente as substituições explícitas de classe/chave/caminho, incluindo imports dinâmicos, listas de arquivos protegidos, transições e metadados de novas execuções. As assertions e os snapshots/JSONs históricos não foram afrouxados ou regenerados. As ocorrências restantes do nome anterior são registros históricos, o prompt original do pacote de assets e a assertion que exige sua ausência do JavaScript de produção; não são consumidores ativos.
+
+A documentação atual aponta para a cena definitiva e mantém os nomes antigos nos relatos datados. O prompt original em `public/assets/WalkGame_Assets_Animados` foi preservado como material de reprodução da integração; os avisos documentais explicam a correspondência com o nome atual.
+
+### Verificações executadas
+
+Servidores locais de validação: dev por `npm.cmd run dev-nolog -- --host 127.0.0.1 --strictPort` em 8080; distribuição construída por `node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 8081 --strictPort`. Ambos vinculados a localhost; isso não é publicação. `log.js` não foi executado e não houve instalação ou alteração de dependências/versões/lockfile.
+
+Foi acrescentado `npm.cmd run test:walk-routes`, separado da suíte existente, para verificar dev e build real. O teste obtém o Game real do módulo Phaser exportado pelo build, sem modificar produção para expor objetos de teste. Confere o registro completo, 14 combinações ambiente/query e três carregamentos adicionais para fluxo/reentrada/toque (17 no relatório). Em produção, exige ausência do editor/inspetor no registro, nas queries e nos marcadores específicos do JavaScript gerado. O artefato validado continha `index-PpKFtxQj.js` e `phaser-BvVujFYZ.js`.
+
+| Verificação | Resultado atual |
+| --- | --- |
+| Comparação normalizada da cena | Passou: apenas classe e chave diferem da cena funcional de entrada |
+| `npm.cmd run test:quiz` | 19/19 passaram; lógica e doubles de UI, não renderização real |
+| `npm.cmd run test:scene-comparison` | 4/4 passaram; política de comparação |
+| `npm.cmd run build-nolog` | Passou; aviso anterior de chunk acima de 500 kB |
+| `npm.cmd run test:walk-routes` | Passou no Edge real, contra dev e produção: cena, registro, menu/reentrada, teclado/toque, diálogo, Saci/coração, colisores e avanço da fonte/brinquedo/tutor |
+| `npm.cmd run test:browser` | Passou: menu, editor, passeio, animações e alimentação completa/reaberta |
+| `test:walk-ui` dentro da suíte | Confirmou 12 páginas, cinco pontos, sete cuidados, três tópicos, conclusão, PC/toque e menu/reentrada |
+| `test:walk-animations` dentro da suíte | Confirmou frames/taxas, percurso, pausa/retomada sincronizada, colisão física/índice espacial, entrada E/Espaço/toque e reentrada |
+| `test:walk-editor` dentro da suíte | Comparação de 1595 objetos de cenário, seleção/arraste/snap/cancelamento, download real, integridade oficial e descarte por recarga |
+| `node --check` e `git diff --check` | Passaram nos arquivos de código alterados/novo |
+| Scripts históricos L1/L2/manual em cópia isolada | Alcançaram as divergências históricas: hashes L1, layout congelado L2 e 52 elementos contra 41 no manual; nenhum import de cena antiga foi necessário |
+
+Os três scripts históricos foram executados a partir de cópias byte a byte em `ferramentas-isoladas/`, fora do checkout, preservando os relatórios versionados originais. Seus códigos 1 não são apresentados como aprovação: continuam comparando com estados antigos já divergentes antes da organização. Nenhuma expectativa histórica foi alterada para torná-los verdes. Na execução histórica manual também houve aviso de contexto WebGL perdido; ficou registrado como limitação daquela execução e não foi usado como evidência visual aprovada. O novo teste de produção e a suíte atual passaram em suas próprias execuções; não se atribuiu causa não comprovada àquele aviso.
+
+Evidências locais fora de `public`: `tmp/walk-ui-validation/routes/report.json` e capturas de dev/produção, relatórios/capturas dos testes atuais e, no diretório externo da etapa, `test-walk-routes.log`, `test-browser.log`, `historico-l1.log`, `historico-l2.log` e `historico-manual.log`. Capturas, JSONs e build de referência são artefatos locais, sem perfis/cache no commit. O navegador foi Edge headless/WebGL (SwiftShader), com teclado/mouse e toque emulado; aparelho físico, GPU de hardware e Canvas real não foram verificados.
+
+A conferência de hashes preservou os outros 288 arquivos de entrada fora dos 22 caminhos explicitamente alterados/removidos. Isso inclui todos os assets/mapas/dados/sistemas/objetos, cena e teste de alimentação da etapa 2, SaciGame, fontes, licenças, lockfile, Vite e anotações da usuária. Foram adicionados apenas o teste de rotas e as notas preservadas. Nenhuma nova funcionalidade de jogo ou ajuste de regra foi introduzido.
+
+As capturas de produção no PC, toque emulado, conclusão dos sete cuidados e editor foram abertas e inspecionadas. Os dois servidores locais foram encerrados; permaneceu o aviso anterior do manifesto em `public`. Foram copiadas e conferidas por SHA-256 50 evidências e arquivos de referência do build, em `evidencias/` e `distribuicao-verificada/` no diretório externo, com manifesto `evidencias-sha256.json`. A cópia do build contém HTML e JavaScript para conferência, não um pacote completo dos assets. Nenhum perfil de navegador foi arquivado.
+
+Status da **etapa 3: aprovada tecnicamente**, com suíte atual e distribuição real aprovadas, sem falha funcional nova identificada. Os três checks históricos continuam divergentes e a cobertura física/hardware permanece limitada conforme acima. O commit técnico local será registrado em complemento documental, evitando referência circular ao próprio SHA. A etapa 4 não foi iniciada. Sem push, merge, publicação ou reescrita de histórico.

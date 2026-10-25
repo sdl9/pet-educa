@@ -1,5 +1,11 @@
 ﻿# Integração dos assets animados do passeio
 
+Na etapa 3, a cena funcional passou a ser `WalkGame`, em
+`src/game/scenes/WalkGame.js`, mantendo `?walkLearning` como atalho compatível.
+Os nomes de arquivos abaixo e no prompt original do pacote de assets registram
+a integração anterior à renomeação. O pacote original e seus manifestos foram
+preservados integralmente; os scripts atuais usam o caminho definitivo.
+
 Implementação local concluída em 24/10/2026, conforme o prompt em
 `public/assets/WalkGame_Assets_Animados/PROMPT_INTEGRACAO_CODEX.md`.
 

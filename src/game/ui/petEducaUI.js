@@ -27,8 +27,7 @@ export const PET_EDUCA_UI = {
         x: 156, width: 704, height: 128, iconX: 176, labelX: 300, size: 42,
         cards: [
             { y: 194, label: 'Jogo da Alimentação', icon: 'food', scene: 'FoodGame' },
-            // WalkGame é o protótipo comentado; esta é a versão funcional atual.
-            { y: 344, label: 'Passeio Consciente', icon: 'walk', scene: 'WalkGameLearning' },
+            { y: 344, label: 'Passeio Consciente', icon: 'walk', scene: 'WalkGame' },
             { y: 494, label: 'Quiz do Saci', icon: 'saci', scene: 'SaciGame' }
         ],
         unavailable: 'Indisponível'

@@ -68,10 +68,10 @@ export class Preloader extends Scene {
             : import.meta.env.DEV && (params.has('quizVisual') || params.has('saciQuiz'))
             ? 'SaciGame'
             : params.has('walkLearning')
-            ? 'WalkGameLearning'
+            ? 'WalkGame'
             : 'Intro';
 
-        if (['Intro', 'SaciGame', 'WalkGameLearning'].includes(startScene)) {
+        if (['Intro', 'SaciGame', 'WalkGame'].includes(startScene)) {
             openPetEducaScene(this, startScene, this.petEducaFonts, {
                 visualDemo: import.meta.env.DEV && params.has('quizVisual')
             });

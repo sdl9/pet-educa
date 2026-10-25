@@ -130,7 +130,7 @@ try {
     function pass(name) { passed.push(name); console.log('PASS ' + name); }
 
     await viewport(1280, 720);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
     assert.equal(await get('dialogueSystem.bodyText.style.fontFamily'), 'Nunito Sans');
     assert.equal(await get('dialogueSystem.bodyText.style.color'), '#342B24');
     assert.equal(await get('dialogueSystem.panel.scrollFactorX'), 0);
@@ -223,7 +223,7 @@ try {
     pass('Todas as falas com a fonte real, sem corte ou sobreposição (' + allPages.length + ' páginas)');
 
     await viewport(844, 390, true);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
     assert.equal(await get('touchControls.enabled'), true);
     await approach('feevalepet');
     await shot('walk-booth-mobile');
@@ -261,7 +261,7 @@ try {
     pass('Celular horizontal: escala, direcional, toque, cancelamento, bloqueio e reabertura');
 
     await viewport(1280, 720);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
     for (const id of ['guia', 'feevalepet', 'descanso', 'agua']) {
         await approach(id); await click(1050, 650); await click(1112, 652);
         assert.equal(await get('dialogueSystem.isOpen()'), false);
@@ -285,7 +285,7 @@ try {
     await click(1172, 44);
     await until(() => attach('MainMenu'), 'Menu não abriu ao sair do passeio');
     await click(500, 408); // Cartão existente do Passeio Consciente.
-    await until(() => attach('WalkGameLearning'), 'Passeio não reabriu pelo menu');
+    await until(() => attach('WalkGame'), 'Passeio não reabriu pelo menu');
     assert.equal(await get('dialogueSystem.completedLessons.size'), 0);
     await approach('guia'); await click(1050,650);
     assert.equal(await get('menuButton.visible'), true);
@@ -294,7 +294,7 @@ try {
     pass('Menu no PC durante exploração/diálogo e reentrada pelo cartão');
 
     await viewport(844,390,true);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
     await touch(1172,44,true);
     assert.equal(await get('sys.isActive()'), true);
     await approach('veterinaria'); await touch(1050,650);
@@ -303,7 +303,7 @@ try {
     await touch(1172,44);
     await until(() => attach('MainMenu'), 'Menu por toque não abriu durante diálogo');
     await touch(500,408);
-    await until(() => attach('WalkGameLearning'), 'Passeio não reabriu por toque');
+    await until(() => attach('WalkGame'), 'Passeio não reabriu por toque');
     assert.equal(await get('menuButton.enabled'), true);
     assert.equal(await get('dialogueSystem.isOpen()'), false);
     await touch(1172,44);

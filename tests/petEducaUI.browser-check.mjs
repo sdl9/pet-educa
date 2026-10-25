@@ -17,7 +17,7 @@ try {
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
     'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
-    'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGameLearning.js',
+    'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGame.js',
     'src/game/scenes/FoodGame.js', 'src/game/main.js', 'src/game/dev/WalkLayoutEditor.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))
 ];
@@ -157,7 +157,7 @@ try {
         if (scene === 'FoodGame') {
             await until(() => evaluate('__checkedScene.uiReady'), 'Food UI not ready');
             await key('Escape','Escape',27);
-        } else if (scene === 'WalkGameLearning') {
+        } else if (scene === 'WalkGame') {
             await click(1172,44);
         } else if (scene === 'SaciGame') {
             await until(() => evaluate('Boolean(__checkedScene.quizUI?.exitMenu)'), 'Quiz UI not ready');
@@ -172,7 +172,7 @@ try {
         if (target === 'FoodGame') {
             await until(() => evaluate('__checkedScene.uiReady'), 'Food UI not ready');
             assert.equal(await evaluate('__checkedScene.jogoComecou'), false);
-        } else if (target === 'WalkGameLearning') {
+        } else if (target === 'WalkGame') {
             assert.ok(await evaluate('Boolean(__checkedScene.player.body && __checkedScene.walkCollisions && __checkedScene.dialogueSystem)'));
         } else if (target === 'SaciGame') {
             await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator && __checkedScene.round)'), 'Quiz round not ready');
@@ -235,7 +235,7 @@ try {
         assert.equal((await geometry()).keydown,menu.keydown);
     }
     for (const [x,y] of [[157,345],[859,471],[220,405],[440,405]]) {
-        await click(x,y); await waitScene('WalkGameLearning');
+        await click(x,y); await waitScene('WalkGame');
         assert.ok(await evaluate('Boolean(__checkedScene.player.body && __checkedScene.walkCollisions && __checkedScene.dialogueSystem)'));
         await returnMenu();
         assert.equal((await geometry()).count,menu.count);
@@ -250,7 +250,7 @@ try {
     // forward/backward wrapping, Enter and Space without programmatic starts.
     for (const [arrows, activation, target] of [
         [[], ['Space',' ',32], 'FoodGame'],
-        [['ArrowDown'], ['Enter','Enter',13], 'WalkGameLearning'],
+        [['ArrowDown'], ['Enter','Enter',13], 'WalkGame'],
         [['ArrowDown','ArrowDown'], ['Enter','Enter',13], 'SaciGame'],
         [['ArrowUp'], ['Space',' ',32], 'SaciGame'],
         [['ArrowDown','ArrowDown','ArrowDown'], ['Enter','Enter',13], 'FoodGame']
@@ -280,7 +280,7 @@ try {
     await page.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
     await waitScene('MainMenu'); assert.equal(await evaluate('__menuStarts'),1);
     await screenshot('menu-mobile-740x360.png');
-    for (const [y,target] of [[194,'FoodGame'],[344,'WalkGameLearning'],[494,'SaciGame']]) {
+    for (const [y,target] of [[194,'FoodGame'],[344,'WalkGame'],[494,'SaciGame']]) {
         for (const [x,dy] of [[157,1],[859,127],[220,61],[440,61]]) {
             await click(x,y+dy,true); await readyGame(target);
             await click(target === 'SaciGame' ? 1124 : 1172, target === 'SaciGame' ? 80 : 44, true);
@@ -293,7 +293,7 @@ try {
 
     await page.send('Emulation.setDeviceMetricsOverride',{width:1280,height:720,deviceScaleFactor:1,mobile:false});
     await page.send('Emulation.setTouchEmulationEnabled',{enabled:false});
-    await page.send('Page.navigate',{url:baseURL+'/?walkLearning'}); await waitScene('WalkGameLearning');
+    await page.send('Page.navigate',{url:baseURL+'/?walkLearning'}); await waitScene('WalkGame');
     await page.send('Page.navigate',{url:baseURL+'/?walkLayoutEditor'});
     await waitScene('WalkLayoutEditor');
     assert.ok(await evaluate('Boolean(__checkedScene.draft && document.querySelector("aside"))'));

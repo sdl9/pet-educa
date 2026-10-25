@@ -143,7 +143,7 @@ try {
     await until(()=>attach('Intro'),'Normal route did not start Intro');
     console.log('PASS normal route -> Intro');
     await page.send('Page.navigate',{url:baseURL+'/?walkLearning'});
-    await until(()=>attach('WalkGameLearning'),'WalkGameLearning did not start');
+    await until(()=>attach('WalkGame'),'WalkGame did not start');
     await page.send('Page.bringToFront'); await waitFrames(3);
     const baseline=JSON.parse(await fs.readFile('tmp/walk-player-l1-validation/baseline.json','utf8'));
     const initial=await snapshot();
@@ -219,7 +219,7 @@ try {
     assert.deepEqual(errors,[],'Console/browser errors');
     assert.deepEqual(await hashes(),originalFiles,'Browser validation mutated protected files');
     const report={passed:true,url:baseURL+'/?walkLearning',
-        routes:{normal:'Intro',walkLearning:'WalkGameLearning',walkLayoutEditor:'WalkLayoutEditor'},
+        routes:{normal:'Intro',walkLearning:'WalkGame',walkLayoutEditor:'WalkLayoutEditor'},
         tests:{directions:Object.keys(directionalResults),diagonals:Object.keys(diagonalResults),
             stopOnRelease:true,rapidDirectionChanges:true,animations:true,lastDirection:true,
             depthByFeetY:true,worldBounds:{width:1600,height:896},layoutUnchanged:true},

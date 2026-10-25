@@ -20,9 +20,58 @@ Em outro terminal, execute:
 | `npm.cmd run test:walk-animations` | Animações, percurso do tutor, colisões, diálogos, reentrada e editor; teste existente preservado |
 | `npm.cmd run test:food-ui` | Instruções, partida, término, score, menu e reinício; teste existente preservado |
 | `npm.cmd run test:browser` | Os cinco comandos de navegador acima, em sequência; para na primeira falha |
+| `npm.cmd run test:walk-routes` | Verificação adicional de rotas em dev e na distribuição construída, cena definitiva, Saci/coração, animações e ausência das ferramentas em produção |
 | `npm.cmd run build-nolog` | Build de produção sem executar `log.js` |
 
 `test:browser` exige o servidor já iniciado; não instala ou baixa navegador, não inicia um servidor oculto e não executa os testes unitários. Rode também `test:quiz`, `test:scene-comparison`, `build-nolog` e `git diff --check` na verificação da etapa.
+
+## Verificar a distribuição de produção — etapa 3
+
+A cena definitiva é `WalkGame`, em `src/game/scenes/WalkGame.js`. O atalho
+compatível `?walkLearning` continua abrindo essa cena. Os testes e seus imports
+dinâmicos usam o novo arquivo, classe e chave. Os scripts históricos de `tmp`
+também tiveram essas referências atualizadas; seus baselines antigos continuam
+preservados, com as divergências já documentadas em `organizacao-entrega.md`.
+
+Além do servidor de desenvolvimento na porta 8080, construa e sirva o build
+localmente em outro terminal, sem publicar:
+
+```powershell
+npm.cmd run build-nolog
+node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 8081 --strictPort
+```
+
+Com ambos os servidores ativos, execute `npm.cmd run test:walk-routes`.
+Esse comando é separado de `test:browser`, para preservar o uso deste último
+com apenas o servidor de desenvolvimento. `WALK_UI_URL` seleciona a URL dev
+(padrão `http://127.0.0.1:8080`) e `WALK_PROD_URL` a distribuição construída
+(padrão `http://127.0.0.1:8081`). `WALK_EDGE_PATH` mantém a seleção do navegador.
+Build ou servidor ausente provoca falha explícita; não é skip ou aprovação.
+
+O teste adicional inspeciona o JavaScript gerado e o registro real de cenas.
+Em produção, obtém o Game real pelo construtor exportado do chunk Phaser,
+independentemente do nome minificado; não adiciona globals ao código do produto.
+Confere a mesma política anterior das queries:
+
+| Query | Desenvolvimento | Produção |
+| --- | --- | --- |
+| Nenhuma | Intro | Intro |
+| `walkLearning` | WalkGame | WalkGame |
+| `walkLayoutEditor` | WalkLayoutEditor | Intro |
+| `walkLayoutEditor&walkLearning` | WalkLayoutEditor | WalkGame |
+| `saciQuiz` | SaciGame, partida | Intro |
+| `quizVisual` | SaciGame, demonstração/inspetor | Intro |
+| `quizVisual&walkLearning` | SaciGame, demonstração/inspetor | WalkGame |
+
+Exercita também menu → passeio → menu/reentrada, teclado nos dois ambientes,
+Saci/coração, colisores e avanço dos três sprites animados. Na produção, testa
+toque emulado, direcional, diálogo real do tutor, conclusão e reentrada sem
+progresso residual. A suíte existente continua verificando os sete cuidados,
+colisões detalhadas, editor, animações, controles e os demais jogos.
+
+Capturas e relatório adicional ficam em `tmp/walk-ui-validation/routes/`, já
+ignorado pelo Git. Toque emulado e WebGL/SwiftShader continuam sem substituir
+aparelho físico, GPU de hardware ou Canvas real.
 
 ## Selecionar o navegador e a URL
 

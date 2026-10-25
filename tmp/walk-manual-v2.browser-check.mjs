@@ -13,7 +13,7 @@ await fs.access(edgePath);
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
     'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
-    'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGameLearning.js',
+    'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGame.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))
 ];
 const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.map(async file => [file,
@@ -103,9 +103,9 @@ try {
     await until(() => attach('Intro', '/src/game/scenes/Intro.js'), 'Normal route did not start Intro');
     console.log('PASS normal route -> Intro');
     await page.send('Page.navigate', { url: `${baseURL}/?walkLearning` });
-    await until(() => attach('WalkGameLearning', '/src/game/scenes/WalkGameLearning.js'), 'WalkGameLearning did not start');
+    await until(() => attach('WalkGame', '/src/game/scenes/WalkGame.js'), 'WalkGame did not start');
     const learning = await snapshot();
-    console.log('PASS ?walkLearning -> WalkGameLearning');
+    console.log('PASS ?walkLearning -> WalkGame');
     await evaluate('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
     const learningShot = await page.send('Page.captureScreenshot', { format: 'png' });
     await fs.writeFile(path.join(output, 'walk-learning-manual-v2.png'), Buffer.from(learningShot.data, 'base64'));
@@ -276,8 +276,8 @@ try {
     await until(()=>evaluate('Boolean(__checkedScene.draft)'), 'Editor reload not ready');
     const reset=await evaluate('__checkedScene.draft.exportDraft()');original.date=reset.date;
     assert.deepEqual(reset,original,'Reload must discard the provisional changes');
-    await evaluate("void __checkedScene.scene.start('WalkGameLearning')");
-    await until(()=>attach('WalkGameLearning','/src/game/scenes/WalkGameLearning.js'),'Returning to learning failed');
+    await evaluate("void __checkedScene.scene.start('WalkGame')");
+    await until(()=>attach('WalkGame','/src/game/scenes/WalkGame.js'),'Returning to learning failed');
     assert.equal(await evaluate("Boolean(document.querySelector('aside'))"),false);
     assert.deepEqual(await snapshot(),learning);
     const errors=page.events.filter(e=>e.method==='Runtime.exceptionThrown');
@@ -286,7 +286,7 @@ try {
     const logErrors=page.events.filter(e=>e.method==='Log.entryAdded'&&e.params.entry.level==='error');
     assert.deepEqual(consoleErrors,[], 'Console errors');
     assert.deepEqual(logErrors,[], 'Browser log errors');
-    report.routes={normal:'Intro',walkLearning:'WalkGameLearning',walkLayoutEditor:'WalkLayoutEditor'};
+    report.routes={normal:'Intro',walkLearning:'WalkGame',walkLayoutEditor:'WalkLayoutEditor'};
     report.consoleErrors=[]; report.browserErrors=[]; report.editorSelectionDragExportPassed=true;
     await fs.writeFile(path.join(output,'validation-report.json'),JSON.stringify(report,null,2));
     console.log(JSON.stringify({passed:true,runtimeImages:learning.length,ambientAssets:24,compositions:3,download:path.join(downloads,'walk-layout-draft.json'),screenshots:output,learningUnchanged:true},null,2));

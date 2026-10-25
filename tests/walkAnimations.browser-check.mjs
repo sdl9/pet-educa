@@ -111,7 +111,7 @@ try {
     function pass(name) { passed.push(name); console.log('PASS ' + name); }
 
     await viewport(1280, 720);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
     const tutorState = () => evaluate('(()=>{const {tutorPatrol,interactions}=__checkedScene;return ({x:tutorPatrol.sprite.x,y:tutorPatrol.sprite.y,flip:tutorPatrol.sprite.flipX,direction:tutorPatrol.direction,pause:tutorPatrol.pauseRemaining,paused:tutorPatrol.sprite.anims.isPaused,frame:tutorPatrol.sprite.frame.name,interaction:interactions.find(i=>i.id==="guia").x});})()');
     const freeze = () => evaluate('(()=>{const p=__checkedScene.tutorPatrol;p.realUpdate=p.update;p.update=()=>{};})()');
     const thaw = () => evaluate('__checkedScene.tutorPatrol.update=__checkedScene.tutorPatrol.realUpdate');
@@ -230,7 +230,7 @@ try {
     await viewport(1280,720);
     await reset(448,-1); await tick(4000);
     await get('scene.start("MainMenu");void 0'); await until(()=>attach('MainMenu'),'Menu não abriu');
-    await get('scene.start("WalkGameLearning");void 0'); await until(()=>attach('WalkGameLearning'),'Passeio não reabriu');
+    await get('scene.start("WalkGame");void 0'); await until(()=>attach('WalkGame'),'Passeio não reabriu');
     const restarted=await tutorState();
     assert.ok(restarted.x>=544&&restarted.x<555); assert.equal(restarted.y,368); assert.equal(restarted.direction,1); assert.equal(restarted.flip,false);
     assert.equal(await get('walkCollisions.staticBodies.getChildren().filter(z=>z.name.startsWith("npc-tutor")).length'),1);

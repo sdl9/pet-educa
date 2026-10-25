@@ -113,7 +113,7 @@ try {
     await until(()=>attach('Intro'),'Normal route must start Intro');
     console.log('PASS normal route -> Intro');
     await page.send('Page.navigate',{url:baseURL+'/?walkLearning'});
-    await until(()=>attach('WalkGameLearning'),'Learning did not start');
+    await until(()=>attach('WalkGame'),'Learning did not start');
     await evaluate('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))');
     const learning=await snapshot();
     const learningCamera=await camera();
@@ -173,8 +173,8 @@ try {
         assert.deepEqual(await camera(),baseline.editorCamera,'Editor camera unchanged');
         await capture('editor-preserved.png');
         // Re-enter the learning scene to ensure animation registration is idempotent.
-        await evaluate("void __checkedScene.scene.start('WalkGameLearning')");
-        await until(()=>attach('WalkGameLearning'),'Learning re-entry failed');
+        await evaluate("void __checkedScene.scene.start('WalkGame')");
+        await until(()=>attach('WalkGame'),'Learning re-entry failed');
         assert.deepEqual(await snapshot(),learning,'No duplication on re-entry');
         assert.equal(await evaluate('__checkedScene.player.anims.isPlaying'),false);
     }
@@ -186,7 +186,7 @@ try {
     assert.deepEqual(errors,[],'Console or browser errors');
     assert.deepEqual(await hashes(),originalFiles,'No protected file mutation during tests');
     const report={passed:true,baselineMode,url:baseURL+'/?walkLearning',player:playerReport,
-        routes:{normal:'Intro',walkLearning:'WalkGameLearning',walkLayoutEditor:'WalkLayoutEditor'},
+        routes:{normal:'Intro',walkLearning:'WalkGame',walkLayoutEditor:'WalkLayoutEditor'},
         layoutUnchanged:true,cameraUnchanged:true,protectedFilesUnchanged:true,consoleErrors:errors,warnings,
         screenshot:baselineMode?'before-l1.png':'walk-player-l1.png'};
     await fs.writeFile(path.join(output,baselineMode?'baseline-report.json':'validation-report.json'),JSON.stringify(report,null,2));
