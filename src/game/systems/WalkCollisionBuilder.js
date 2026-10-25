@@ -6,8 +6,8 @@ export class WalkCollisionBuilder {
         this.objectZones = new WeakMap();
     }
 
-    build({ player, stageMap, prototypeLayout, visualRegistry }) {
-        this.createTerrainCollisions(prototypeLayout);
+    build({ player, stageMap, layout, visualRegistry }) {
+        this.createTerrainCollisions(layout);
         this.createAmbientCollisions(stageMap, visualRegistry);
         this.createEducationalCollisions(visualRegistry);
 

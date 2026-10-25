@@ -235,7 +235,7 @@ try {
     assert.ok(restarted.x>=544&&restarted.x<555); assert.equal(restarted.y,368); assert.equal(restarted.direction,1); assert.equal(restarted.flip,false);
     assert.equal(await get('walkCollisions.staticBodies.getChildren().filter(z=>z.name.startsWith("npc-tutor")).length'),1);
     assert.equal(await get('children.list.filter(o=>o.texture?.key==="npc-tutor-cachorro-guia").length'),1);
-    assert.equal(await evaluate('import("/src/game/data/walkStage18Map.json").then(m=>m.default.interactions.find(i=>i.id==="guia").x)'),544);
+    assert.equal(await evaluate('import("/src/game/data/walkMap.json").then(m=>m.default.interactions.find(i=>i.id==="guia").x)'),544);
     await get('cameras.main.stopFollow().centerOn(800,448).setZoom(0.8);void 0'); await frames(4); await shot('plaza-animated');
     pass('Saída e reentrada restauram o início; JSON compartilhado intacto; sem sprites ou colisores duplicados');
 

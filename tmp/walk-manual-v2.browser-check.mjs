@@ -12,7 +12,7 @@ const edgePath = process.env.WALK_EDGE_PATH ?? 'C:/Program Files (x86)/Microsoft
 await fs.access(edgePath);
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
-    'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
+    'src/game/data/walkMap.json', 'public/assets/walk/walkLayout.json',
     'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGame.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))
 ];
@@ -110,8 +110,8 @@ try {
     const learningShot = await page.send('Page.captureScreenshot', { format: 'png' });
     await fs.writeFile(path.join(output, 'walk-learning-manual-v2.png'), Buffer.from(learningShot.data, 'base64'));
     const approved = JSON.parse(await fs.readFile('docs/layout/walk-layout-draft-manual-v2.json', 'utf8'));
-    const officialStage = JSON.parse(await fs.readFile('src/game/data/walkStage18Map.json', 'utf8'));
-    const officialPrototype = JSON.parse(await fs.readFile('public/assets/walk/walk-prototype-layout.json', 'utf8'));
+    const officialStage = JSON.parse(await fs.readFile('src/game/data/walkMap.json', 'utf8'));
+    const officialPrototype = JSON.parse(await fs.readFile('public/assets/walk/walkLayout.json', 'utf8'));
     const records = [...approved.ambientAssets, ...approved.compositions, ...approved.standalone];
     const position = ({x,y}) => ({x,y});
     const close = (actual, expected, label) => assert.ok(Math.abs(actual-expected)<1e-9, label+': '+actual+' != '+expected);

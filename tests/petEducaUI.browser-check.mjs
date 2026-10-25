@@ -16,7 +16,7 @@ try {
 }
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
-    'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
+    'src/game/data/walkMap.json', 'public/assets/walk/walkLayout.json',
     'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGame.js',
     'src/game/scenes/FoodGame.js', 'src/game/main.js', 'src/game/dev/WalkLayoutEditor.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))

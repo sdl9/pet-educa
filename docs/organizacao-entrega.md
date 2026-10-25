@@ -17,6 +17,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 1 — complemento de retomada | `etapa-1` | `77317bf82076adffea050f1d1e5060f2d60f32eb` | `28ecef3aa571d1ef8eecce6d9c476798559bacb1` | Sem pendência de sincronização identificada; limites da captura histórica detalhados abaixo |
 | 2 | `etapa-2` | `4edf6a8bb46f1013ece46173d9932e0ce39baf8b` | `093f56271bf2792cb2c3fb4c9c86483c22f401d5` | Sem falha funcional identificada; limites físicos/hardware permanecem |
 | 3 | `etapa-3` | `1ac7801f0ef38182be3e898772b7948832eff270` | `cdb772ff1f4d58778aefc3b8ebdc4248b107388e` | Scripts históricos divergentes; limites físicos/hardware permanecem |
+| 4 | `etapa-4` | `baa91259e4ab0bad8066d11d149e374e4d6973bc` | A registrar após o commit local da etapa | Scripts históricos divergentes; limites físicos/hardware permanecem |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -442,3 +443,80 @@ A conferência de hashes preservou os outros 288 arquivos de entrada fora dos 22
 As capturas de produção no PC, toque emulado, conclusão dos sete cuidados e editor foram abertas e inspecionadas. Os dois servidores locais foram encerrados; permaneceu o aviso anterior do manifesto em `public`. Foram copiadas e conferidas por SHA-256 50 evidências e arquivos de referência do build, em `evidencias/` e `distribuicao-verificada/` no diretório externo, com manifesto `evidencias-sha256.json`. A cópia do build contém HTML e JavaScript para conferência, não um pacote completo dos assets. Nenhum perfil de navegador foi arquivado.
 
 Status da **etapa 3: aprovada tecnicamente**, com suíte atual e distribuição real aprovadas, sem falha funcional nova identificada. Os três checks históricos continuam divergentes e a cobertura física/hardware permanece limitada conforme acima. O commit técnico local `cdb772ff1f4d58778aefc3b8ebdc4248b107388e` contém a implementação e os resultados; este complemento documental registra seu SHA sem referência circular ao próprio commit. A etapa 4 não foi iniciada. Sem push, merge, publicação ou reescrita de histórico.
+
+## Etapa 4 — contratos e metadados da configuração do passeio
+
+Execução autorizada em 24/10/2026 (America/Sao_Paulo). Antes de editar: branch existente `etapa-4`, HEAD `baa91259e4ab0bad8066d11d149e374e4d6973bc`, raiz `D:/ARQUIVOS/Documents/pet-educa`, `origin` de leitura/envio `https://github.com/sdl9/pet-educa.git`. Árvore e índice limpos, sem arquivos novos não ignorados ou remoções. Nenhum AGENTS.md aplicável encontrado no checkout/ancestrais. Não houve criação/troca de branch, mudança de remotes ou acesso ao original. A entrada contém os commits concluídos da etapa 3. O objeto histórico `9ea98986d7807b6dde50f1e36d07da01de398876` continua ausente localmente; nenhum histórico foi importado para compará-lo.
+
+### Recuperação e registro antes da edição
+
+Diretório externo `$env:TEMP\pet-educa-etapa-4-20261024`. `entrada.bundle` passou em `git bundle verify`, contém a referência `etapa-4` na entrada e o histórico alcançável; SHA-256 `58DC36BDEEC7DE37E033DC7A59F78C1CA0D30B6D7F11568D0362F0BF38A52A76`. Os 307 arquivos versionados foram copiados com caminhos e SHA-256 de cada cópia conferidos, em `entrada-bytes/` e `arquivos-entrada.json`. `estado-entrada.txt`, `staged.patch` e `unstaged.patch` guardam os estados separados; os dois patches são vazios porque não havia mudanças locais. Arquivos ignorados/desconhecidos não foram varridos ou limpos.
+
+Para recuperar, verificar o bundle/hash e cloná-lo em uma pasta nova; conferir os bytes exatos pelo manifesto e `entrada-bytes/`, sem restauração ampla sobre trabalho posterior. Os caminhos antigos dos dois JSONs permanecem na cópia de entrada. Não havia trabalho não commitado a reaplicar.
+
+Antes de mover os arquivos, foram gravados `dados-entrada.json` (dois JSONs completos, estado real e distinção dos campos) e `antes/state.json`, `antes/gameplay.png`, `antes/editor.png`. Mundo, terreno, todas as posições, controles, escalas, colisões, interações e sete cuidados têm seus dados de entrada preservados. Os valores efetivos e seus consumidores estão em [configuracao-passeio.md](configuracao-passeio.md).
+
+### Usos reais, alterações e limites
+
+Foram conferidos catálogo, módulo de animações, manifesto público, Preloader, cena definitiva, builders visuais/físicos, WalkPlayer, tutor, sistemas de entrada/diálogo, editor/rascunho, testes, scripts e documentação. A busca incluiu imports dinâmicos, preload indireto pelo catálogo, strings de cache, paths de arquivos e referências de origem em exports. Não foi feita substituição em snapshots/relatórios históricos de `tmp`, nem no prompt original dos assets.
+
+- `src/game/data/walkStage18Map.json` passou a `walkMap.json`, preservando **todos os bytes**. Continua sendo o contrato de composição/interações/cuidados.
+- `public/assets/walk/walk-prototype-layout.json` passou a `walkLayout.json`. Continua sendo o contrato separado de mundo/terreno/placements; não foi fundido com o mapa ou redesenhado.
+- Catálogo/manifesto e consumidores usam `walk-layout` para o cache JSON e `walk/walkLayout.json` para preload. O Preloader continua chamando o mesmo carregador indireto; a textura de imagem `walk-map` não mudou.
+- Identificadores locais `walkStage18Map` e `prototypeLayout` foram substituídos pelos nomes atuais nos consumidores, sem mudar algoritmos ou reformatar os builders/cena.
+- O `purpose` do layout agora informa que é a fonte vigente da praça. Foram removidos somente `player` (X 800, Y 784, velocidade 240, frames 64 × 64, sem consumidor) e `controls.debugKey: C` (nenhuma implementação de debug). C continua funcionando como o terceiro tópico do diálogo. Os metadados restantes foram preservados e identificados como descritivos, inclusive `stage: 18` do mapa.
+- Início real `(800, 832)` continua em `WalkGame`, velocidade 200, escala 1,5 e origem `(0.5, 61/64)` continuam em `WalkPlayer`. Frame 64 × 64 vem do catálogo, corpo fonte 28 × 28/offset `(18,34)` do manifesto, corpo efetivo 42 × 42. Não se migraram esses valores para configuração nova.
+- O formato do editor continua `walk-layout-draft`, versão 1, mesmas propriedades e nome de download. Somente `sources.ambient`/`sources.placements` mudaram de caminho, inclusive no rascunho de referência em `docs/layout`. Teste do editor preserva todas as verificações anteriores e acrescenta assertions de contrato/fontes/campos mortos.
+- Busca por geradores/scripts/fontes confirmou que `scripts/build_runtime_asset_catalog.py` não existe; não foi encontrada outra fonte reproduzível do catálogo completo. O cabeçalho e a documentação agora declaram manutenção manual. Só cabeçalho e entrada do layout mudaram no catálogo; nenhum gerador novo ou regravação do inventário.
+
+Não houve alteração de coordenadas, valores úteis, camadas de arte, imagens/fontes, frames/taxas, geometria de colisão, interações, textos educativos, perguntas/respostas, regras, pontuação, duração, rotas ou política DEV. `Player`, `WalkPlayer`, `Saci`, nomes de cenas, mapas de outros jogos e animações foram preservados. Sem dependências, versões, lockfile ou configuração Vite alterados. `log.js` não foi executado.
+
+### Comparação de dados e aplicativo real
+
+O diagnóstico externo `medir-estado.mjs` foi usado contra o mesmo aplicativo dev antes/depois, com viewport 1280 × 720, mouse e Edge headless/WebGL (SwiftShader). Para uma captura inicial determinística, um listener de criação registrou o início natural do jogador/tutor e suspendeu **somente no diagnóstico** o avanço da patrulha e as três animações de cenário no primeiro frame. Nenhuma coordenada foi reposicionada e nenhum hook foi acrescentado ao produto. O movimento e as animações sem essa suspensão são verificados separadamente pela suíte existente.
+
+`comparar-estado.mjs` passou e gravou `comparacao.json`:
+
+| Comparação | Evidência |
+| --- | --- |
+| Mapa | Bytes exatamente iguais após a movimentação |
+| Layout | Deep equality após excluir apenas `player`, `controls.debugKey` e substituir `purpose`; todos os demais dados iguais |
+| Manifesto/código/scripts/rascunho | Manifesto com as duas referências previstas; 11 arquivos iguais à entrada após substituições específicas de nomes/caminhos |
+| Jogador/mundo/câmeras | Mesmos valores; mundo 1600 × 896, início `(800,832)`, velocidade 200, escala 1,5, câmera do jogo scroll `(160,176)`, zoom 1 e lerp `(0.15,0.15)` |
+| Colisões/interações | 37 zonas com mesmas posições, dimensões e nomes; mesmo collider e todas as interações/cuidados iguais |
+| Visuais/export do editor | Mesmos 1606 objetos superiores texturizados no jogo, 1595 visuais no editor e mesmas propriedades/draft; somente duas origens atualizadas, data omitida na coleta |
+| Captura do jogo | PNG antes/depois idêntico; SHA-256 `0c3392778825b90e19c6ba7b05265391a52d9b9ef7707d323d4a7e81079e3780` |
+| Captura do editor | PNG antes/depois idêntico; SHA-256 `14e1d1b77836cabd74a1db0e9a4d54f6677cbc7697ef4c3012a91a885708f474` |
+
+A comparação normalizou somente as chaves UUID das quatro texturas de Text do direcional `VirtualDPad`: up/down/left/right, nos índices 1602–1605, coordenadas e depth 20002 conferidos explicitamente. A versão local do Phaser cria essas chaves por UUID em `Text.js`; nenhum objeto ou outra propriedade foi excluído. A igualdade dos PNGs foi exigida sem normalização. Não foi usado filtro genérico de diferenças.
+
+Durante a preparação, duas execuções do diagnóstico externo falharam por serialização de EventEmitter/API de animação incorreta; foram corrigidas antes da coleta válida. A comparação inicialmente encontrou os quatro UUIDs de Text, cuja origem foi comprovada no código instalado antes da normalização limitada. Um erro de iteração no script de edição também foi detectado: dois builders foram reconstruídos **somente a partir do backup de entrada com a substituição prevista**, conferidos por igualdade exata e sintaxe. O resultado final contém apenas a troca de identificador nesses arquivos; essas falhas de ferramentas não são atribuídas ao jogo ou declaradas como regressões resolvidas por repetição.
+
+### Verificações da etapa
+
+Dev local por `npm.cmd run dev-nolog -- --host 127.0.0.1 --strictPort` (8080) e preview por `node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 8081 --strictPort`. Sem publicação.
+
+| Comando/verificação | Resultado atual |
+| --- | --- |
+| `npm.cmd run test:quiz` | Passou, 19/19; doubles/lógica não são evidência visual |
+| `npm.cmd run test:scene-comparison` | Passou, 4/4 |
+| `npm.cmd run build-nolog` | Passou; aviso anterior de chunk acima de 500 kB |
+| Medição antes/depois + `comparar-estado.mjs` | Passou conforme tabela acima |
+| `npm.cmd run test:browser` | Execução final passou, código 0: menu, editor/export, passeio/conclusão/PC/toque, animações/colisões/reentrada e alimentação completa/reaberta |
+| `npm.cmd run test:walk-routes` | Passou em dev e no build local: 17 carregamentos, PC/toque, rotas, cena e ausência de editor/inspetor em produção |
+| `node --check` | Passou nos 13 arquivos JS/MJS alterados |
+| `git diff --check` | Passou na revisão atual |
+
+A primeira execução agregada passou no menu, mas parou em `WalkGame did not start` no attach por protótipo do teste do editor. A captura mostra a cena aberta, sem exceções de execução registradas. O diagnóstico real `diagnosticar-hmr.mjs` comprovou: `main.js` servido pelo Vite mantido desde a linha de base importava `/src/game/scenes/WalkGame.js?t=1792891703335`; o teste importava `/src/game/scenes/WalkGame.js`. O construtor da cena ativa era igual ao módulo com timestamp e **diferente** do módulo sem timestamp. Isso explica a ausência de instância para o protótipo consultado, sem atribuí-la a falha de abertura do jogo.
+
+Foi reiniciado somente o servidor dev; `diagnostico-hmr-apos-reinicio.json` confirmou URL sem timestamp e igualdade dos dois construtores com a cena ativa. A suíte foi reexecutada sem mudar assertions. `main-servido-antes-reinicio.js`, `diagnostico-hmr.json`, os logs e a captura da primeira execução foram preservados como evidência da condição de ambiente/teste. Não se considera a simples repetição aprovada uma explicação causal.
+
+Os três checks históricos L1/L2/manual não foram reexecutados nesta etapa; seus paths de fonte foram atualizados, preservando assertions e snapshots antigos. As falhas comprovadas na etapa 3 permanecem relatos históricos, não resultados de uma execução atual. Aparelho físico, GPU de hardware e Canvas real não foram verificados.
+
+A comparação dos demais arquivos preservou 287 dos 307 arquivos de entrada, fora dos 20 caminhos existentes explicitamente permitidos na etapa. As adições são os dois novos caminhos dos JSONs movidos e a documentação de configuração. PNGs/fontes, manifestos de colisão, dados de quiz/diálogos, `WalkPlayer`, tutor, controles, FoodGame, testes de alimentação, package.json/lockfile, Vite, licenças, créditos e anotações permanecem com seus hashes de entrada.
+
+Capturas do jogo e do editor foram abertas e inspecionadas. No diretório externo, `evidencias/` guarda 48 PNGs/JSONs copiados com hashes verificados em `evidencias-sha256.json`, incluindo a captura da falha de attach anterior ao reinício. `distribuicao-verificada/` contém HTML, dois chunks JS (`index-4Nx5FXOK.js`, `phaser-BvVujFYZ.js`), layout e manifesto com hashes em `build-sha256.json`; é referência parcial, sem todos os assets. A saída `dist` tem `walkLayout.json` e não tem o caminho antigo. Perfis/cache não foram arquivados ou versionados. O teste de rotas usou 1280 × 720 e 844 × 390 com teclado/mouse/toque emulado; a suíte também usou o viewport próprio do editor e menu móvel 740 × 360.
+
+Logs atuais externos: `medir-antes-final.log`, `medir-depois.log`, `comparar-estado.log`, `test-walk-routes.log`, `test-browser.log` (primeira execução interrompida por HMR), `test-browser-final.log` e os diagnósticos HMR antes/depois. Os servidores dev/preview próprios foram encerrados. Permanecem os avisos anteriores do manifesto em `public` e chunk grande; não houve erro funcional novo identificado. A revisão do diff, dados e arquivos novos confirmou o escopo.
+
+Status da **etapa 4: aprovada tecnicamente**, com dados e capturas de referência equivalentes, suíte atual e produção local aprovadas. A limitação de attach por HMR tem evidência causal e procedimento de servidor documentado; nenhuma assertion foi removida/afrouxada e nenhuma mudança de produção foi feita para contorná-la. O commit técnico local será registrado em complemento documental sem referência circular ao próprio SHA. Sem avanço à etapa 5, push, merge, publicação ou reescrita de commits anteriores.

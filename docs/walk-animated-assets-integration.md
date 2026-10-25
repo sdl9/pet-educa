@@ -6,6 +6,10 @@ Os nomes de arquivos abaixo e no prompt original do pacote de assets registram
 a integração anterior à renomeação. O pacote original e seus manifestos foram
 preservados integralmente; os scripts atuais usam o caminho definitivo.
 
+Na etapa 4, o mapa passou a `src/game/data/walkMap.json` e o layout vigente a
+`public/assets/walk/walkLayout.json`, cache `walk-layout`. Veja os valores e as
+referências históricas em [configuracao-passeio.md](configuracao-passeio.md).
+
 Implementação local concluída em 24/10/2026, conforme o prompt em
 `public/assets/WalkGame_Assets_Animados/PROMPT_INTEGRACAO_CODEX.md`.
 
@@ -44,8 +48,11 @@ Implementação local concluída em 24/10/2026, conforme o prompt em
 | `.gitignore` | Ignora capturas e relatório gerados pelo teste de animações. |
 | `docs/walk-animated-assets-integration.md` | Este registro. |
 
-O gerador mencionado em `walkAssetCatalog.js` não existe neste checkout. O catálogo
-gerado foi preservado; o novo módulo compõe seu inventário e substitui os três
+Na etapa 4, a busca no repositório confirmou a ausência do gerador e de uma fonte
+reproduzível para `walkAssetCatalog.js`. O catálogo passou a ser declarado como
+mantido manualmente, sem instrução de geração. Seu inventário foi preservado,
+com a referência do layout atualizada para `walk/walkLayout.json` (`walk-layout`).
+O módulo de animações compõe seu inventário e substitui os três
 registros estáticos no preload, mantendo as chaves lógicas para colisões e editor.
 Os hashes SHA-256 dos três PNGs de destino conferem com `MANIFESTO_ASSETS.json`.
 As alterações locais preexistentes em `WalkDialogueSystem.js`,

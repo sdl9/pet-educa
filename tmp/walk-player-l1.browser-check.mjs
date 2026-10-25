@@ -15,7 +15,7 @@ const baselineMode = process.argv.includes('--baseline');
 const protectedFiles = [
     'src/game/objects/Player.js', 'src/game/main.js', 'src/game/scenes/Preloader.js',
     'src/game/systems/WalkVisualBuilder.js', 'src/game/dev/WalkLayoutEditor.js', 'src/game/dev/WalkLayoutDraft.js',
-    'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
+    'src/game/data/walkMap.json', 'public/assets/walk/walkLayout.json',
     'src/game/data/walkVisualConfig.js', 'src/game/data/walkAssetCatalog.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))
 ];

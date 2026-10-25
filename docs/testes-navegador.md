@@ -25,6 +25,13 @@ Em outro terminal, execute:
 
 `test:browser` exige o servidor já iniciado; não instala ou baixa navegador, não inicia um servidor oculto e não executa os testes unitários. Rode também `test:quiz`, `test:scene-comparison`, `build-nolog` e `git diff --check` na verificação da etapa.
 
+Depois de editar fontes com o Vite aberto, reinicie o servidor antes da validação
+final. Os testes que localizam instâncias por import dinâmico precisam da mesma
+classe carregada pelo jogo: URLs `?t=...` do HMR podem criar outra identidade de
+módulo e impedir essa localização, mesmo com a cena aberta. A investigação da
+etapa 4 registrou a diferença de construtores antes/depois do reinício; não se
+alteram assertions ou tolerâncias para contorná-la.
+
 ## Verificar a distribuição de produção — etapa 3
 
 A cena definitiva é `WalkGame`, em `src/game/scenes/WalkGame.js`. O atalho
@@ -32,6 +39,13 @@ compatível `?walkLearning` continua abrindo essa cena. Os testes e seus imports
 dinâmicos usam o novo arquivo, classe e chave. Os scripts históricos de `tmp`
 também tiveram essas referências atualizadas; seus baselines antigos continuam
 preservados, com as divergências já documentadas em `organizacao-entrega.md`.
+
+Na etapa 4, as fontes passaram a ser `src/game/data/walkMap.json` e
+`public/assets/walk/walkLayout.json`, com cache JSON `walk-layout`. O teste do
+editor também exige formato de exportação versão 1 intacto, novos caminhos em
+`sources`, integridade oficial e ausência dos campos mortos do jogador/debug.
+Valores efetivos e origem de cada configuração estão em
+[configuracao-passeio.md](configuracao-passeio.md).
 
 Além do servidor de desenvolvimento na porta 8080, construa e sirva o build
 localmente em outro terminal, sem publicar:

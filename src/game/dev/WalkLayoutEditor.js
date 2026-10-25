@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import walkStage18Map from '../data/walkStage18Map.json';
+import walkMap from '../data/walkMap.json';
 import { WalkVisualBuilder } from '../systems/WalkVisualBuilder';
 import { WalkLayoutDraft } from './WalkLayoutDraft';
 
@@ -15,8 +15,8 @@ export class WalkLayoutEditor extends Scene {
             this.scene.start('Intro');
             return;
         }
-        const layout = this.cache.json.get('walk-prototype-layout');
-        this.stage = new WalkVisualBuilder(this).build(walkStage18Map, layout, { includeRegistry: true });
+        const layout = this.cache.json.get('walk-layout');
+        this.stage = new WalkVisualBuilder(this).build(walkMap, layout, { includeRegistry: true });
         this.draft = new WalkLayoutDraft(this.stage.visualRegistry, layout.world);
         this.selected = null;
         this.drag = null;

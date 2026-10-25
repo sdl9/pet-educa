@@ -21,9 +21,9 @@ export class WalkVisualBuilder {
         this.scene = scene;
     }
 
-    build(stageMap, prototypeLayout, { includeRegistry = false } = {}) {
+    build(stageMap, layout, { includeRegistry = false } = {}) {
         registerWalkAnimations(this.scene);
-        this.createModularTerrain(prototypeLayout);
+        this.createModularTerrain(layout);
 
         // Stable source-slot IDs distinguish repeated textures without changing source data.
         const ambientRecords = stageMap.ambientAssets.map((asset, index) => ({
@@ -38,7 +38,7 @@ export class WalkVisualBuilder {
         const ambientObjects = ambientRecords.flatMap((record) => record.objects);
         const educationalElements = this.createEducationalElements(
             stageMap,
-            prototypeLayout
+            layout
         );
         const educationalRecord = (id, group, keys) => {
             const objects = keys.map((key) => educationalElements.find((object) => object.texture.key === key));
@@ -64,8 +64,8 @@ export class WalkVisualBuilder {
                     'walk-drinking-fountain', 'walk-water-bowl'
                 ])
             ] : undefined,
-            width: prototypeLayout.world.width,
-            height: prototypeLayout.world.height
+            width: layout.world.width,
+            height: layout.world.height
         };
     }
 
@@ -156,11 +156,11 @@ export class WalkVisualBuilder {
         ));
     }
 
-    createEducationalElements(stageMap, prototypeLayout) {
+    createEducationalElements(stageMap, layout) {
         const interactionById = new Map(
             stageMap.interactions.map((interaction) => [interaction.id, interaction])
         );
-        const { placements } = prototypeLayout;
+        const { placements } = layout;
         const guide = interactionById.get('guia');
         const volunteer = interactionById.get('feevalepet');
         const veterinarian = interactionById.get('veterinaria');

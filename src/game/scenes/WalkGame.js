@@ -1,5 +1,5 @@
 import { Input, Scene } from 'phaser';
-import walkStage18Map from '../data/walkStage18Map.json';
+import walkMap from '../data/walkMap.json';
 import { WALK_DIALOGUES } from '../data/walkDialogues';
 import { WalkVisualBuilder } from '../systems/WalkVisualBuilder';
 import { WalkCollisionBuilder } from '../systems/WalkCollisionBuilder';
@@ -19,12 +19,12 @@ export class WalkGame extends Scene {
 
     create() {
         this.uiNavigating = false;
-        this.interactions = walkStage18Map.interactions.map(interaction => ({ ...interaction }));
+        this.interactions = walkMap.interactions.map(interaction => ({ ...interaction }));
         const visualBuilder = new WalkVisualBuilder(this);
-        const prototypeLayout = this.cache.json.get('walk-prototype-layout');
+        const layout = this.cache.json.get('walk-layout');
         const stage = visualBuilder.build(
-            walkStage18Map,
-            prototypeLayout,
+            walkMap,
+            layout,
             { includeRegistry: true }
         );
         const collisionManifest = this.cache.json.get(
@@ -50,8 +50,8 @@ export class WalkGame extends Scene {
         );
         this.saci = new Saci(
             this,
-            prototypeLayout.placements.saci.x,
-            prototypeLayout.placements.saci.y
+            layout.placements.saci.x,
+            layout.placements.saci.y
         );
 
         const collisionBuilder = new WalkCollisionBuilder(
@@ -60,8 +60,8 @@ export class WalkGame extends Scene {
         );
         this.walkCollisions = collisionBuilder.build({
             player: this.player,
-            stageMap: walkStage18Map,
-            prototypeLayout,
+            stageMap: walkMap,
+            layout,
             visualRegistry: stage.visualRegistry
         });
 
@@ -98,7 +98,7 @@ export class WalkGame extends Scene {
         this.dialogueSystem = new WalkDialogueSystem(
             this,
             WALK_DIALOGUES,
-            walkStage18Map.requiredLessons
+            walkMap.requiredLessons
         );
         this.interactionSystem = new WalkInteractionSystem(
             this,

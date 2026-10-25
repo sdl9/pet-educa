@@ -1,20 +1,13 @@
 {
   "version": 1,
   "validationStatus": "approved",
-  "purpose": "Molde técnico jogável da Etapa 8; não representa a composição final da praça",
+  "purpose": "Fonte vigente do terreno e dos placements da praça; usada pelo passeio e pelo editor",
   "world": {
     "tileSize": 32,
     "columns": 50,
     "rows": 28,
     "width": 1600,
     "height": 896
-  },
-  "player": {
-    "x": 800,
-    "y": 784,
-    "speed": 240,
-    "frameWidth": 64,
-    "frameHeight": 64
   },
   "terrain": {
     "grassVariantModulo": 17,
@@ -80,7 +73,6 @@
       "WASD",
       "setas"
     ],
-    "touch": true,
-    "debugKey": "C"
+    "touch": true
   }
 }

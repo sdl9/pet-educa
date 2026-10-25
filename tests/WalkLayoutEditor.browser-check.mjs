@@ -17,7 +17,7 @@ try {
 }
 await fs.mkdir(path.resolve('tmp'), { recursive: true });
 const protectedFiles = [
-    'src/game/data/walkStage18Map.json', 'public/assets/walk/walk-prototype-layout.json',
+    'src/game/data/walkMap.json', 'public/assets/walk/walkLayout.json',
     'src/game/data/walkVisualConfig.js', 'src/game/scenes/WalkGame.js',
     ...(await fs.readdir('public/assets/walk', { recursive: true })).filter(f => f.endsWith('.png')).map(f => path.join('public/assets/walk', f))
 ];
@@ -162,6 +162,21 @@ try {
     assert.equal(original.world.height, 896);
     assert.equal(original.tileSize, 32);
     assert.equal(original.version, 1);
+    assert.equal(original.format, 'walk-layout-draft');
+    assert.deepEqual(Object.keys(original).sort(), [
+        'format', 'version', 'date', 'world', 'tileSize', 'sources',
+        'ambientAssets', 'compositions', 'standalone'
+    ].sort(), 'Draft export keeps its version 1 contract');
+    assert.deepEqual(original.sources, {
+        ambient: 'src/game/data/walkMap.json',
+        placements: 'public/assets/walk/walkLayout.json',
+        idPolicy: 'Source array slot + part index; stable while official source order is unchanged.'
+    }, 'Draft references the official sources without changing its format');
+    const layout = await evaluate('__checkedScene.cache.json.get("walk-layout")');
+    assert.deepEqual(original.world, layout.world);
+    assert.equal(Object.hasOwn(layout, 'player'), false, 'Layout does not pretend to configure the runtime player');
+    assert.equal(Object.hasOwn(layout.controls, 'debugKey'), false, 'No obsolete debug shortcut is advertised');
+    assert.equal(await evaluate('__checkedScene.cache.json.has("walk-prototype-layout")'), false);
     assert.ok(Number.isFinite(Date.parse(original.date)));
     assert.equal(original.ambientAssets.filter(a=>a.key==='plaza-tree-large').length,3);
     const takeScreenshot = async (filename) => {

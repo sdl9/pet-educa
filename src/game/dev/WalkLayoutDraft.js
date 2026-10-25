@@ -62,8 +62,8 @@ export class WalkLayoutDraft {
             world: { ...this.world },
             tileSize: this.world.tileSize,
             sources: {
-                ambient: 'src/game/data/walkStage18Map.json',
-                placements: 'public/assets/walk/walk-prototype-layout.json',
+                ambient: 'src/game/data/walkMap.json',
+                placements: 'public/assets/walk/walkLayout.json',
                 idPolicy: 'Source array slot + part index; stable while official source order is unchanged.'
             },
             ambientAssets: this.records.filter((record) => record.sourceIndex !== undefined).map(serialize),
