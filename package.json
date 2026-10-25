@@ -1,19 +1,18 @@
 {
-  "name": "template-vite",
-  "description": "A Phaser 3 template using Vite.",
+  "name": "pet-educa",
+  "description": "Jogo educativo sobre cuidados com animais, com minigames de alimentação, passeio consciente e Quiz do Saci.",
   "version": "1.4.0",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/phaserjs/template-vite.git"
+    "url": "git+https://github.com/sdl9/pet-educa.git"
   },
-  "author": "Phaser Studio <support@phaser.io> (https://phaser.io/)",
   "license": "MIT",
   "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
   "bugs": {
-    "url": "https://github.com/phaserjs/template-vite/issues"
+    "url": "https://github.com/sdl9/pet-educa/issues"
   },
-  "homepage": "https://github.com/phaserjs/template-vite#readme",
+  "homepage": "https://github.com/sdl9/pet-educa#readme",
   "scripts": {
     "dev": "node log.js dev & vite --config vite/config.dev.mjs",
     "build": "node log.js build & vite build --config vite/config.prod.mjs",

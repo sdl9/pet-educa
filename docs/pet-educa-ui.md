@@ -1,15 +1,39 @@
 # Integração das telas do Pet Educa
 
-Na etapa 3, o cartão Passeio Consciente passou a usar a cena definitiva `WalkGame`.
-O nome anterior `WalkGameLearning`, o protótipo `WalkGame` e `FuncoesUI` citados
-no registro histórico abaixo não representam a organização atual. As notas
-pedagógicas retiradas do protótipo estão em [notas-prototipo-passeio.md](notas-prototipo-passeio.md).
+## Estado atual
 
-Atualização dos testes na etapa 1: os comandos atuais são `npm.cmd run test:menu` e `npm.cmd run test:walk-editor`, com arquivos em `tests/`. A política de comparação do editor, a cobertura dos três cartões atualmente utilizáveis e a seleção do navegador estão em [testes-navegador.md](testes-navegador.md). As descrições e execuções abaixo registram a integração histórica de 09/10/2026, inclusive a indisponibilidade do quiz naquela ocasião; não descrevem o resultado atual da suíte.
+O fluxo é Boot → Preloader → Intro → MainMenu. **Os três cartões são utilizáveis**:
+Jogo da Alimentação (`FoodGame`), Passeio Consciente (`WalkGame`) e Quiz do Saci
+(`SaciGame`, 15 perguntas com feedback, avanço manual, resultado e reinício).
+Todos retornam ao menu. Teclado, mouse e toque emulado estão cobertos pela suíte;
+celular físico permanece pendente.
+
+`petEducaUI.js` define textos/estilos/assets comuns; Intro/MainMenu montam as telas.
+Há foco por cima/baixo e Enter/Espaço nos três cartões, trava de navegação única e
+limpeza no shutdown. Fontes locais em `public/assets/pet-educa-ui/fonts` são
+declaradas em `public/style.css`. Preloader aguarda as fontes antes de Intro,
+quiz e passeio; o menu confirma a disponibilidade ao reabrir. `?walkLearning`
+abre a cena definitiva; `?walkLayoutEditor` continua exclusivo de dev.
+
+O cenário/interações usam `src/game/data/walkMap.json`; terreno/placements usam
+`public/assets/walk/walkLayout.json`. O protótipo e `FuncoesUI` foram retirados;
+as notas didáticas estão em [notas-prototipo-passeio.md](notas-prototipo-passeio.md).
+Os pacotes originais ficam em `art-source`, sem alterar os assets efetivos.
+
+Comandos atuais: `npm.cmd run test:menu` e `npm.cmd run test:walk-editor`, em
+`tests/`. Política de comparação, comandos completos e navegador estão em
+[testes-navegador.md](testes-navegador.md). Resultados datados estão no registro
+[organizacao-entrega.md](organizacao-entrega.md).
+
+## Registro histórico da integração de 09/10/2026
+
+O conteúdo desta seção e das subseções seguintes registra aquela execução,
+incluindo caminhos, branch, pendências e quiz indisponível à época. Não é guia
+do estado atual: as cenas/testes foram atualizados nas etapas de organização.
 
 A abertura normal segue Boot → Preloader → Intro → MainMenu. O Preloader continua carregando os assets atuais e acrescenta oito texturas exclusivas com prefixo `pet-educa-ui-`. Imagens e fontes locais estão em `public/assets/pet-educa-ui/`, com as duas licenças das fontes preservadas.
 
-## Navegação
+### Navegação naquela integração
 
 - Jogo da Alimentação: `FoodGame` (tela de instruções existente).
 - Passeio Consciente: `WalkGameLearning` (mapa e interações atuais). A implementação de `WalkGame` está comentada e não é usada pelo menu.
@@ -17,7 +41,7 @@ A abertura normal segue Boot → Preloader → Intro → MainMenu. O Preloader c
 
 Não há quarto cartão. Os métodos existentes de retorno ao menu e de continuar nos minigames foram preservados em `FuncoesUI.js`; somente o menu provisório antigo foi removido.
 
-## Onde editar
+### Organização naquela integração
 
 `src/game/ui/petEducaUI.js` reúne textos, caminhos dos PNGs, famílias, cores, tamanhos e coordenadas lógicas das telas. `Intro.js` monta painel e botão; `MainMenu.js` monta cartões, ícones e o aviso de indisponibilidade. Os arquivos e o intervalo de peso variável da Nunito Sans são declarados pelos `@font-face` em `public/style.css`.
 
@@ -27,7 +51,7 @@ As imagens usam origem (0, 0), escala 1 e filtragem por vizinho mais próximo. A
 
 O botão e os dois cartões disponíveis recebem mouse/toque em toda a área retangular. Ícones e textos não interceptam input. Há uma trava para navegação única e remoção dos listeners de teclado no shutdown. Enter/Espaço abre o menu e ativa uma opção; as setas alternam entre os dois minigames disponíveis, com indicação visual de foco apenas ao usar teclado.
 
-## Validação em 09/10/2026
+### Validação histórica em 09/10/2026
 
 - `npm run build-nolog`: passou; o Vite avisou sobre o tamanho do chunk Phaser.
 - Com `npm run dev-nolog` ativo, `node src/game/ui/petEducaUI.browser-check.mjs`: passou no Edge headless real, usando o aplicativo Vite e sem renderer substituto.

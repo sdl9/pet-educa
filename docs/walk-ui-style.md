@@ -1,5 +1,7 @@
 # Interface do Passeio Consciente
 
+## Estado atual
+
 A cena definitiva usada pelo menu é `WalkGame` (`src/game/scenes/WalkGame.js`).
 Na etapa 3, recebeu o código funcional antes chamado `WalkGameLearning`,
 sem alterar regras ou apresentação; o protótipo antigo foi retirado.
@@ -63,7 +65,7 @@ A rota direta do passeio agora aguarda as fontes já carregadas pelo Preloader.
 Os caminhos dos assets, o registro de cenas, o menu e as outras rotas continuam iguais.
 As regras de movimentação, colisão, conteúdo, condições e recompensas não mudaram.
 
-## Validação
+## Registro histórico da validação desta integração
 
 Com o Vite em execução, rode `npm.cmd run test:walk-ui`.
 O teste usa o Edge instalado em modo headless, sem dependências novas.
@@ -97,7 +99,7 @@ recebeu somente o botão Menu e o bloqueio de movimento durante a saída.
 A limpeza do direcional no shutdown foi ajustada para não atualizar molduras
 que o Phaser já destruiu.
 
-## Arquivos
+## Arquivos da integração histórica
 
 - Novos: `src/game/ui/pixelPanel.js`, `src/game/ui/walkUI.js`,
   `tests/walkUI.browser-check.mjs` e este documento.

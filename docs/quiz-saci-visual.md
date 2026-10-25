@@ -1,6 +1,8 @@
 # Quiz do Saci
 
-A cena continua sendo `SaciGame`, aberta pelo botão **Quiz do Saci** do menu.
+## Estado atual
+
+A cena continua sendo `SaciGame`, aberta pelo botão utilizável **Quiz do Saci** do menu.
 O pacote original de assets está em `art-source/quiz-saci-q4-assets`, fora do build.
 O check histórico `tmp/quiz-visual-validation/check-ui.mjs` passou a
 `tests/quizSaciVisual.check.mjs` (`npm.cmd run test:quiz-visual`); os relatos abaixo
@@ -75,7 +77,12 @@ Canvas mantém a composição por recortes em memória, preservando cantos.
 Nenhum novo asset foi gerado. Código e configuração dos demais minigames
 não foram alterados nesta etapa.
 
-## Verificações executadas
+## Registro histórico das verificações anteriores
+
+O relato abaixo pertence à implementação visual inicial e aos testes daquela
+ocasião, incluindo sua limitação de navegador. As execuções reais posteriores
+estão em [organizacao-entrega.md](organizacao-entrega.md); comandos e requisitos
+atuais estão em [testes-navegador.md](testes-navegador.md).
 
 - `npm.cmd run test:quiz`: 19 testes passaram, sem dependências novas.
 - `tests/saciQuizRound.test.js`: IDs 1–15, três alternativas, gabarito,

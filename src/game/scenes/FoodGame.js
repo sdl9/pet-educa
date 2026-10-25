@@ -245,7 +245,7 @@ export class FoodGame extends Scene {
         this.textoScore = this.add.text(
             32,
             24,
-            'Score: ' + this.score,
+            'Pontos: ' + this.score,
             {
                 fontFamily: 'Arial',
                 fontSize: 28,
@@ -256,7 +256,7 @@ export class FoodGame extends Scene {
         this.textoTimer = this.add.text(
             1048,
             24,
-            'Timer: ' + this.timer,
+            'Tempo: ' + this.timer,
             {
                 fontFamily: 'Arial',
                 fontSize: 28,
@@ -271,7 +271,7 @@ export class FoodGame extends Scene {
             callback: () => {
                 if (this.jogoFinalizado || this.uiNavigating) return;
                 this.timer = Math.max(0, this.timer - 1);
-                this.textoTimer.setText('Timer: ' + this.timer);
+                this.textoTimer.setText('Tempo: ' + this.timer);
                 if (this.timer === 0) this.finalizarJogo();
             },
             loop: true
@@ -292,8 +292,8 @@ export class FoodGame extends Scene {
         this.textoScore.setVisible(false);
         this.textoTimer.setVisible(false);
         this.resultadoUI = this.criarBalao(
-            'Passeio finalizado!',
-            [{ y: 330, text: 'Seu Score: ' + this.score, size: 40 }],
+            'Partida finalizada!',
+            [{ y: 330, text: 'Seus Pontos: ' + this.score, size: 40 }],
             'Menu', () => this.voltarAoMenu()
         ).container;
     }
@@ -315,7 +315,7 @@ export class FoodGame extends Scene {
             this.aplicarTonalidadeRuim(player);
         }
 
-        this.textoScore.setText('Score: ' + this.score);
+        this.textoScore.setText('Pontos: ' + this.score);
     }
 
     cancelarTonalidadeRuim() {

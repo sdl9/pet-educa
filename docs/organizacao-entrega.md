@@ -19,6 +19,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 3 | `etapa-3` | `1ac7801f0ef38182be3e898772b7948832eff270` | `cdb772ff1f4d58778aefc3b8ebdc4248b107388e` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 4 | `etapa-4` | `baa91259e4ab0bad8066d11d149e374e4d6973bc` | `25770691614947c67365f8ae53340b28ccf41fac` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 5 | `etapa-5` | `9fd2c2c0894d6a172ab97afb23976847015e8acb` | `ff0b0f7d36b204a9eb0d5aa7c4a383e9ba4c6651` | Scripts históricos divergentes; limites físicos/hardware permanecem |
+| 6 | `etapa-6` | `4f7d811c8142f75e5ec2e37347701065f1899207` | A registrar após o commit local da etapa | Celular físico, GPU de hardware, Canvas real e publicação manual não verificados |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -580,3 +581,72 @@ Comparação exata dos scripts movidos confirmou que somente raiz, comando comen
 As capturas do jogo/editor foram abertas e inspecionadas. Além das 15 evidências históricas e das coletas antes/depois, `evidencias-atuais/` externo guarda 47 PNGs/JSONs com cópias verificadas em `evidencias-atuais-sha256.json`. Falhas iniciais ficaram separadas em `falhas-ambiente/`, com logs `test-browser.log`/`test-walk-routes.log`; resultados finais estão em `test-browser-final.log`/`test-walk-routes-final.log`. Capturas de testes, perfis, cache, backup e build não entram no novo commit; as prévias autorais dos pacotes de arte são materiais originais já versionados, movidos intactos para `art-source` conforme solicitado. Os dois servidores locais próprios foram encerrados. Os avisos anteriores de manifesto em `public` e chunk grande permanecem, sem erro funcional novo identificado. Navegador real em 1280 × 720/844 × 390, editor em seu viewport próprio e menu móvel 740 × 360; mouse/teclado e toque emulado.
 
 Status da **etapa 5: aprovada tecnicamente**, com índice sem resíduos de `tmp`, arquivos locais preservados, arte de origem recuperável fora de public, build menor e suíte atual aprovada. Os limites ambientais iniciais e falhas históricas estão discriminados acima, sem afrouxar testes. O commit técnico local `ff0b0f7d36b204a9eb0d5aa7c4a383e9ba4c6651` contém a limpeza e os resultados; este complemento documental registra seu SHA sem referência circular ao próprio commit. A etapa 6 não foi iniciada; o ZIP da etapa 7 não foi produzido. Sem push, merge, publicação, reescrita do histórico ou exclusão dos arquivos locais retirados do índice.
+
+## Etapa 6 — apresentação técnica e rótulos
+
+Execução autorizada em 25/10/2026 (America/Sao_Paulo). Branch existente conferida antes de editar: `etapa-6`, HEAD `4f7d811c8142f75e5ec2e37347701065f1899207`; árvore/índice limpos, sem arquivos novos não ignorados ou remoções. Raiz `D:/ARQUIVOS/Documents/pet-educa`; `origin` de leitura/envio `https://github.com/sdl9/pet-educa.git`. Nenhum AGENTS.md aplicável encontrado no checkout/ancestrais. Não houve criação/troca de branch ou alteração de remotes; os commits anteriores permanecem na entrada.
+
+### Recuperação e fontes verificadas
+
+Diretório externo `$env:TEMP\pet-educa-etapa-6-20261025`. `entrada.bundle` passou em `git bundle verify`, preserva a referência `etapa-6` e histórico alcançável; SHA-256 `CD7F003490071A1FD206F335FE97A400354E639974AF4BA5E33C1970870F2F00`. Os 296 arquivos rastreados foram copiados com caminhos e hashes verificados em `entrada-bytes/`, inventário `arquivos-entrada.json`. `estado-entrada.txt`, `staged.patch` e `unstaged.patch` guardam os estados separados; patches vazios porque não havia mudanças locais. Para recuperar, conferir bundle/hash e clonar em pasta nova, confrontando bytes com o inventário; não restaurar amplamente sobre trabalho posterior. Arquivos ignorados/desconhecidos não foram limpos.
+
+Foram lidos README/metadados/lockfile, licença geral, licenças das fontes, materiais de origem pertinentes, registro de cenas/menu/rotas, dados e controles, FoodGame/teste, log.js, Vite e documentação. `log.js` foi apenas lido, não executado. Node local 24.19.0/npm 11.17.0; Phaser resolvido 4.0.0 e Vite 6.4.3. Nenhuma dependência foi instalada/atualizada.
+
+O contexto FeevalePet/Universidade Feevale/Laíssa Dornelles Salles vem dos créditos já presentes na Intro e no pacote das telas, sem afirmar aprovação institucional. O conector GitHub em leitura confirmou `sdl9/pet-educa` público, URL de clone e issues habilitadas. A consulta REST tinha homepage vazia e Pages desabilitado; não foi deduzido endereço de jogo publicado. Somente os campos necessários foram guardados em `repositorio-verificado.json`, sem credenciais/dados privados.
+
+### Documentação e metadados
+
+O README agora descreve o Pet Educa, seus três jogos disponíveis, fluxo/controles atuais, orientação horizontal/resolução lógica 1280 × 720/FIT, requisitos, comandos nolog, build, testes e publicação **manual** do conteúdo completo de dist na raiz de conteúdo HTTP. Explica a necessidade de conferir implantação em subdiretório por causa das referências absolutas de HTML/CSS; não promete suporte ainda não testado. A estrutura distingue cenas/objetos/sistemas/dados/UI, ferramentas DEV, rascunho em memória e execução do jogo. Não há novo contato, link público de jogo ou aprovação institucional inventada.
+
+Nome do pacote passou a `pet-educa`; descrição e repository/homepage/bugs apontam para o projeto real. Homepage é a documentação do repositório, não hospedagem do jogo. O campo author herdado, que identificava Phaser Studio como autor do template, foi retirado dos metadados da aplicação para evitar atribuição enganosa; seus créditos permanecem separados no README e na licença. Não foi inventado novo campo de autoria/contato. Instalação/contribuição usam `sdl9/pet-educa`; menções históricas a `sdl9/proj-pet` foram preservadas.
+
+O lockfile mudou **somente** nos dois campos de nome (raiz e `packages[""]`). Comparação estrutural confirmou as 77 entradas de dependências/resoluções/integrações intactas. Versão 1.4.0, licença MIT, licenseUrl, scripts, dependências e devDependencies não mudaram. `log.js` e scripts originais do template foram preservados; o README orienta `dev-nolog`/`build-nolog`, sem recomendar eliminação do arquivo.
+
+README preserva crédito/copyright do template Phaser Studio, aviso original do logo/personagens de 2011–2025 e separa a engine de Richard Davey/Phaser Studio, as dependências e os créditos do Pet Educa. As licenças SIL OFL 1.1 de Lilita One (Juan Montoreano) e Nunito Sans (The Nunito Sans Project Authors) são referenciadas nos arquivos existentes. Nenhuma autoria de arte ou licença uniforme dos materiais foi presumida.
+
+Os documentos de telas, quiz, passeio, animações e alimentação agora têm estado atual claro e identificam os relatos anteriores como históricos. O quiz atual é utilizável (`SaciGame`, 15 perguntas), o passeio é `WalkGame`, dados são `walkMap.json`/`walkLayout.json`, testes atuais estão em `tests` e ferramentas históricas em `tools/legacy-checks`. Os caminhos e resultados datados das integrações antigas permanecem dentro de seções históricas. Não houve substituição global dos nomes anteriores em registros, fontes de arte ou fixtures.
+
+Não foram encontrados comentários pessoais como `estudar dps` nas fontes atuais. Portanto, nenhum conteúdo foi inventado para transferência; `anotacoes.md`, notas preservadas do protótipo e comentários didáticos continuam com seus bytes. Não houve limpeza cosmética de comentários.
+
+### Rótulos e encaixe da alimentação
+
+A única mudança de produção são seis literais de texto em FoodGame: HUD inicial/atualizações de `Score` para `Pontos`, `Timer` para `Tempo`, título do resultado para `Partida finalizada!` e linha de resultado para `Seus Pontos: X`. Identificadores internos, lógica de pontuação/tempo, valores, coordenadas, estilos, tamanhos, arte, física, duração, spawn e ciclo de vida não mudaram. A equivalência textual do fonte após apenas essas substituições, normalizando somente CRLF/LF, foi comprovada em `documentacao-e-invariantes.json`.
+
+O teste de alimentação atualiza as expectativas e preserva todos os casos anteriores. Acrescenta leitura atômica de Pontos/Tempo para evitar comparar instantes distintos, limites do HUD contra canvas/cronômetro/Menu e encaixe de título/pontos/Menu no resultado. Exercita os resultados +4/−1 já existentes, em PC/toque. Não houve remoção/afrouxamento de assertions ou ajuste de geometria para acomodar textos.
+
+Antes de editar, `medir-rotulos.mjs` externo coletou `antes/labels.json` e quatro PNGs no jogo real; após a alteração, repetiu a coleta em `depois/`. O diagnóstico de rótulos pausa só o contador e provoca o resultado para medir UI; não representa uma rodada manual completa. Incluiu uma sonda auxiliar de HUD em −120 pontos. `comparar-rotulos.mjs` confirmou painéis, botões, posições, fontes/tamanhos, escalas, origens e alturas de linha iguais; diferenças permitidas somente nos textos e larguras intrínsecas. Nenhuma quebra adicional, sobreposição ou corte foi encontrado. Medidas lógicas nos dois viewports:
+
+| Texto | Largura × altura | Fonte/tamanho |
+| --- | --- | --- |
+| `Pontos: 0` / `Pontos: -120` | 119 × 31 / 159 × 31 | Arial 28 |
+| Tempo: 60 | 131 × 31 | Arial 28 |
+| Partida finalizada! | 285 × 39 | Nunito Sans 34 |
+| `Seus Pontos: 4` / `Seus Pontos: -1` | 275 × 46 / 292 × 46 | Nunito Sans 40 |
+
+Capturas de resultado PC, resultado negativo e HUD em toque emulado foram abertas e inspecionadas. A suíte existente também percorreu uma rodada completa sem aceleração e reabriu, preservando pontuação/limpeza e detectores limitados.
+
+### Verificações atuais
+
+Servidores locais próprios: dev 8080 por `dev-nolog -- --host 127.0.0.1 --strictPort`; build servido em 8081 por `node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 8081 --strictPort`. Isso não é publicação. O servidor da coleta de entrada foi encerrado antes das edições de produção e reiniciado depois, evitando identidades HMR distintas.
+
+| Verificação | Resultado executado nesta etapa |
+| --- | --- |
+| Auditoria de README/documentação | Passou: 13 comandos npm existentes, nove links locais e 17 caminhos atuais do README; 22 links locais no conjunto de sete documentos; créditos e metadados conferidos |
+| Lockfile/código | Passou: apenas dois nomes no lockfile, mesmas resoluções; produção difere somente nos seis textos |
+| `test:quiz` | 19/19 passaram, lógica/doubles; não renderização real |
+| `test:quiz-visual` | Passou nas APIs simuladas; não é navegador |
+| `test:scene-comparison` | 4/4 passaram |
+| `build-nolog` | Passou; aviso anterior de chunk acima de 500 kB |
+| `test:distribution` | Passou: 131 arquivos públicos idênticos por SHA-256; sem pacotes de origem, prompts/prévias/perfis/cache ou resíduos temporários rastreados |
+| Medidas reais antes/depois | Passaram em 1280 × 720 e 844 × 390, mouse e toque emulado; fonte/geometria preservadas e rótulos encaixados |
+| `test:browser` | Passou, código 0: menu, editor, passeio, animações e alimentação com rótulos/encaixe, rodada completa e reentrada |
+| `test:walk-routes` | Passou em dev/produção: 17 carregamentos, mesmas rotas, PC/toque, cena definitiva, sem editor/inspetor em produção e sem respostas HTTP 400+ |
+| `node --check`/`git diff --check` | Passaram nos arquivos JS/MJS e diff da etapa |
+
+Foram preservados por SHA-256 os outros 284 arquivos de entrada fora dos 12 caminhos da etapa, incluindo todos os assets/fontes/licenças, art-source, dados, notas, controles, fontes/testes dos demais jogos, Vite e log.js. Nenhuma funcionalidade, dependência ou regra nova foi criada.
+
+Não houve publicação, teste em aparelho físico, GPU de hardware ou Canvas real. WebGL/SwiftShader e toque emulado não substituem essas verificações; a publicação manual foi somente documentada. As três ferramentas históricas não foram reexecutadas nesta etapa; suas divergências anteriores continuam registradas como históricas. Não se declarou validação manual ou aprovação institucional.
+
+Evidências externas: `antes/` e `depois/` com medidas/capturas, `comparacao-rotulos.json`, `documentacao-e-invariantes.json`, `repositorio-verificado.json`, scripts auxiliares e logs `build.log`, `test-browser.log`, `test-walk-routes.log`. `evidencias-atuais/` guarda 47 PNGs/JSONs copiados com hashes verificados em `evidencias-sha256.json`. Nenhum perfil, captura de teste, cache, backup ou dist integra o commit. Os servidores próprios foram encerrados. Permanecem os avisos anteriores de chunk grande e manifesto em `public`, sem falha funcional nova identificada nesta execução.
+
+Status da **etapa 6: aprovada tecnicamente**, com documentação/metadados alinhados, rótulos verificados e suíte aplicável aprovada. O commit técnico local será registrado em complemento documental, evitando referência circular ao próprio SHA. Sem avanço à etapa 7, geração de ZIP candidato, push, merge, publicação ou reescrita de commits anteriores.

@@ -1,5 +1,7 @@
 # Interface do jogo de alimentação
 
+## Estado atual
+
 As instruções do FoodGame reaproveitam apenas o painel da Intro sobre o
 cenário original da alimentação. Não exibem o parque, o título Pet Educa ou
 o retrato do Caramelo. Os textos, o botão Continuar e o Menu são mantidos.
@@ -9,10 +11,12 @@ O container de instruções é destruído ao iniciar, removendo também seu inpu
 A partida só pode começar uma vez por entrada na cena.
 
 Ao chegar a zero, o contador encerra a partida uma única vez. Movimento,
-coletas e geração de alimentos param, preservando o Score final. O mesmo
+coletas e geração de alimentos param, preservando os Pontos finais. O mesmo
 método criarBalao monta o resultado centralizado sobre o jogo, exibindo
-"Passeio finalizado!", "Seu Score: X" e o botão "Menu". Enter também retorna
-ao menu nessa etapa. Reentrar inicia uma nova partida com 60 segundos e Score zero.
+"Partida finalizada!", "Seus Pontos: X" e o botão "Menu". Enter também retorna
+ao menu nessa etapa. Reentrar inicia uma nova partida com 60 segundos e zero pontos.
+O HUD usa "Pontos" e "Tempo". Na etapa 6, somente esses rótulos e os do resultado
+foram corrigidos; posições, fontes, tamanhos, painel e regras foram preservados.
 
 O botão Menu permanece no canto superior direito durante as instruções e
 a partida. Usa o controle já compartilhado com o passeio. Escape também
@@ -48,12 +52,24 @@ O relatório `tmp/food-ui-validation/report.json` contém a seção `lifecycle`.
 As medições e verificações datadas da etapa estão em
 [organizacao-entrega.md](organizacao-entrega.md).
 
+## Comandos atuais
+
 Abra pelo menu: Jogo da Alimentação. Execute o Vite com npm.cmd run dev-nolog.
 Para repetir a validação no navegador, execute npm.cmd run test:food-ui
 com o servidor na porta 8080. O teste usa o Edge instalado em modo headless;
 na sandbox deste ambiente, o navegador precisa ser executado fora dela.
 
-Validação: painel comparado à Intro, cenário próprio preservado e ausência
+## Registros de validação
+
+Etapa 6: `test:food-ui` passou com os rótulos corrigidos e assertions de encaixe do
+HUD e resultado, em PC e toque emulado, preservando os demais casos. A comparação
+real antes/depois confirmou painéis/botões, posições, fontes/escalas e alturas de
+linha iguais; apenas texto/largura intrínseca mudou. Incluiu resultado positivo,
+negativo e uma sonda auxiliar de HUD com −120 pontos. Não houve celular físico.
+Evidências e limites estão no registro datado da etapa 6 em
+[organizacao-entrega.md](organizacao-entrega.md).
+
+Registro histórico da integração anterior: painel comparado à Intro, cenário próprio preservado e ausência
 do parque/título/retrato; medidas reais de texto e botão,
 Menu antes/durante a partida, início único, remoção das instruções, movimento,
 timer/spawn, Enter/Escape, toque emulado, cancelamento e reentrada limpa.
@@ -62,8 +78,8 @@ console/execução ou assets. Não foi usado um celular físico.
 Capturas e relatório ficam em tmp/food-ui-validation. Build-nolog passou.
 O teste também percorre os 60 ticks do contador (acelerando apenas seu
 TimerEvent), confere o resultado, bloqueio de coletas/movimento após o fim,
-Score positivo/negativo, saída por mouse/toque e reinício após a conclusão.
+Pontos positivos/negativos, saída por mouse/toque e reinício após a conclusão.
 
-Arquivos: src/game/scenes/FoodGame.js, tests/foodGameUI.browser-check.mjs,
+Arquivos daquela integração: src/game/scenes/FoodGame.js, tests/foodGameUI.browser-check.mjs,
 package.json, .gitignore e este documento. Intro e componentes compartilhados
-continuam sem alterações nesta etapa.
+continuaram sem alterações naquela integração.

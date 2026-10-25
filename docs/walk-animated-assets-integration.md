@@ -1,5 +1,7 @@
 ﻿# Integração dos assets animados do passeio
 
+## Estado atual
+
 Na etapa 3, a cena funcional passou a ser `WalkGame`, em
 `src/game/scenes/WalkGame.js`, mantendo `?walkLearning` como atalho compatível.
 Os nomes de arquivos abaixo e no prompt original do pacote de assets registram
@@ -30,7 +32,7 @@ com todos os bytes do pacote preservados; não integra mais a pasta pública).
 - O editor usa os sprites animados com as mesmas chaves e dimensões por frame,
   mantendo os objetos disponíveis para arraste, sem executar o percurso.
 
-## Arquivos alterados ou adicionados
+## Arquivos da integração histórica
 
 | Arquivo | Alteração |
 | --- | --- |
@@ -59,7 +61,7 @@ Os hashes SHA-256 dos três PNGs de destino conferem com `MANIFESTO_ASSETS.json`
 As alterações locais preexistentes em `WalkDialogueSystem.js`,
 `tests/walkUI.browser-check.mjs` e `dist.zip` foram preservadas.
 
-## Validação executada
+## Registro histórico da validação da integração
 
 - `npm.cmd run build-nolog`: passou; apenas aviso de chunks maiores que 500 kB.
 - `node tests/walkAnimations.browser-check.mjs`: passou no Edge headless com WebGL/SwiftShader.

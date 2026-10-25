@@ -202,6 +202,19 @@ try {
         }
         pass('Alimentos alternados, com espaçamento horizontal e sem sobreposição');
     }
+    async function checkHUDLabels() {
+        const hud = await evaluate(`(()=>{const s=__checkedScene;return {score:s.score,timer:s.timer,
+            points:{text:s.textoScore.text,bounds:s.textoScore.getBounds()},
+            time:{text:s.textoTimer.text,bounds:s.textoTimer.getBounds()},
+            menu:s.botaoMenu.background.getBounds(),width:s.scale.width,height:s.scale.height};})()`);
+        assert.equal(hud.points.text, 'Pontos: ' + hud.score);
+        assert.equal(hud.time.text, 'Tempo: ' + hud.timer);
+        const points = edges(hud.points.bounds), time = edges(hud.time.bounds);
+        assert.ok(points.x >= 0 && points.y >= 0 && points.bottom <= hud.height, 'Pontos cabem no canvas');
+        assert.ok(points.right <= time.x - 16, 'Pontos não sobrepõem Tempo');
+        assert.ok(time.y >= 0 && time.bottom <= hud.height && time.right <= hud.menu.x - 16, 'Tempo não sobrepõe Menu');
+    }
+
     async function finishFood(mobile = false) {
         await rememberRound();
         // Acelera somente o TimerEvent no teste: percorre os 60 ticks reais do contador.
@@ -214,15 +227,32 @@ try {
             return s.score;
         })()`);
         assert.equal(expected, mobile ? -1 : 4);
+        await checkHUDLabels();
         await until(() => get('jogoFinalizado'), 'Tempo não encerrou a partida');
         assert.equal(await get('timer'), 0);
         assert.equal(await get('physics.world.isPaused'), true);
         assert.equal(await get('touchControls.enabled'), false);
         assert.equal(await get('textoScore.visible || __checkedScene.textoTimer.visible'), false);
         const result = await get('resultadoUI.list.filter(o=>o.type==="Text").map(o=>o.text)');
-        assert.deepEqual(result, ['Passeio finalizado!', 'Seu Score: ' + expected, 'Menu']);
+        assert.deepEqual(result, ['Partida finalizada!', 'Seus Pontos: ' + expected, 'Menu']);
         const bounds = await get('resultadoUI.list.find(o=>o.texture?.key === "pet-educa-ui-panel").getBounds()');
         assert.deepEqual(bounds, layout.panel, 'Resultado deve reaproveitar o balão centralizado');
+        const resultLayout = await evaluate(`(()=>{const {resultadoUI}=__checkedScene;return {
+            button:resultadoUI.list.find(o=>o.texture?.key==='pet-educa-ui-button').getBounds(),
+            texts:resultadoUI.list.filter(o=>o.type==='Text').map(o=>({text:o.text,bounds:o.getBounds()}))};})()`);
+        const panelEdges = edges(bounds), buttonEdges = edges(resultLayout.button);
+        for (const item of resultLayout.texts) {
+            const b = edges(item.bounds);
+            if (item.text === 'Menu') {
+                assert.ok(b.x >= buttonEdges.x && b.right <= buttonEdges.right && b.y >= buttonEdges.y && b.bottom <= buttonEdges.bottom,
+                    'Rótulo Menu cabe no botão do resultado');
+            } else {
+                assert.ok(b.x >= panelEdges.x + 24 && b.right <= panelEdges.right - 24 && b.y >= panelEdges.y + 16 && b.bottom <= buttonEdges.y - 16,
+                    'Texto do resultado cabe no painel sem sobrepor Menu: ' + item.text);
+            }
+        }
+        assert.ok(edges(resultLayout.texts[0].bounds).bottom + 16 <= resultLayout.texts[1].bounds.y,
+            'Título e Pontos do resultado não se sobrepõem');
         assert.equal(await evaluate(`(()=>{
             const s=__checkedScene,ui=s.resultadoUI;
             s.finalizarJogo();
@@ -341,6 +371,7 @@ try {
     assert.equal(await evaluate('(()=>{const s=__checkedScene,p=s.player,t=s.timerJogo,spawn=s.timerSpawn,g=s.alimentos,o=s.overlapAlimentos;s.iniciarJogo();return s.player===p&&s.timerJogo===t&&s.timerSpawn===spawn&&s.alimentos===g&&s.overlapAlimentos===o;})()'), true);
     const hud = await evaluate('({timer:__checkedScene.textoTimer.getBounds(),menu:__checkedScene.botaoMenu.background.getBounds()})');
     assert.ok(edges(hud.timer).right <= hud.menu.x - 16, 'Cronômetro sobrepõe Menu');
+    await checkHUDLabels();
     await shot('food-gameplay-pc');
     await checkCollectionAndExit();
     const oldX = await get('player.x');
@@ -370,7 +401,7 @@ try {
     await openFood();
     await click(640,516);
     await finishFood();
-    pass('Fim em zero, Score final, balão único, partida parada e botão Menu no resultado');
+    pass('Fim em zero, Pontos finais, balão único, partida parada e botão Menu no resultado');
     await fullRound();
 
     await viewport(844,390,true);
@@ -388,6 +419,7 @@ try {
     await touch(640,516);
     assert.equal(await get('jogoComecou'), true);
     assert.equal(await get('touchControls.enabled'), true);
+    await checkHUDLabels();
     await shot('food-gameplay-mobile');
     const touchX = await get('player.x');
     const p = await point(250,532);
@@ -419,7 +451,7 @@ try {
     assert.equal(await get('physics.world.isPaused'), false);
     await touch(1172,44);
     await until(() => attach('MainMenu'), 'Menu não abriu após nova partida');
-    pass('Resultado por toque, Score negativo preservado e nova partida com tempo/pontuação reiniciados');
+    pass('Resultado por toque, Pontos negativos preservados e nova partida com tempo/pontuação reiniciados');
 
     const failures = page.events.filter(e => e.method === 'Runtime.exceptionThrown' ||
         (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error') ||

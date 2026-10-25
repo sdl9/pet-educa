@@ -27,6 +27,11 @@ Em outro terminal, execute:
 
 `test:browser` exige o servidor já iniciado; não instala ou baixa navegador, não inicia um servidor oculto e não executa os testes unitários. Rode também `test:quiz`, `test:scene-comparison`, `build-nolog` e `git diff --check` na verificação da etapa.
 
+Na alimentação, a etapa 6 atualiza as expectativas para `Pontos`, `Tempo`,
+`Partida finalizada!` e `Seus Pontos`. O check preserva os casos anteriores e
+também mede o encaixe do HUD e do resultado, com pontos positivos/negativos em
+PC e toque emulado, sem alterar a geometria para satisfazer o texto.
+
 Depois de editar fontes com o Vite aberto, reinicie o servidor antes da validação
 final. Os testes que localizam instâncias por import dinâmico precisam da mesma
 classe carregada pelo jogo: URLs `?t=...` do HMR podem criar outra identidade de
