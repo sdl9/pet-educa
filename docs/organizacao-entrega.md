@@ -19,7 +19,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 3 | `etapa-3` | `1ac7801f0ef38182be3e898772b7948832eff270` | `cdb772ff1f4d58778aefc3b8ebdc4248b107388e` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 4 | `etapa-4` | `baa91259e4ab0bad8066d11d149e374e4d6973bc` | `25770691614947c67365f8ae53340b28ccf41fac` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 5 | `etapa-5` | `9fd2c2c0894d6a172ab97afb23976847015e8acb` | `ff0b0f7d36b204a9eb0d5aa7c4a383e9ba4c6651` | Scripts históricos divergentes; limites físicos/hardware permanecem |
-| 6 | `etapa-6` | `4f7d811c8142f75e5ec2e37347701065f1899207` | A registrar após o commit local da etapa | Celular físico, GPU de hardware, Canvas real e publicação manual não verificados |
+| 6 | `etapa-6` | `4f7d811c8142f75e5ec2e37347701065f1899207` | `14db4ad86a763c4711ca367d20e5c033ecd087a3` | Celular físico, GPU de hardware, Canvas real e publicação manual não verificados |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -649,4 +649,4 @@ Não houve publicação, teste em aparelho físico, GPU de hardware ou Canvas re
 
 Evidências externas: `antes/` e `depois/` com medidas/capturas, `comparacao-rotulos.json`, `documentacao-e-invariantes.json`, `repositorio-verificado.json`, scripts auxiliares e logs `build.log`, `test-browser.log`, `test-walk-routes.log`. `evidencias-atuais/` guarda 47 PNGs/JSONs copiados com hashes verificados em `evidencias-sha256.json`. Nenhum perfil, captura de teste, cache, backup ou dist integra o commit. Os servidores próprios foram encerrados. Permanecem os avisos anteriores de chunk grande e manifesto em `public`, sem falha funcional nova identificada nesta execução.
 
-Status da **etapa 6: aprovada tecnicamente**, com documentação/metadados alinhados, rótulos verificados e suíte aplicável aprovada. O commit técnico local será registrado em complemento documental, evitando referência circular ao próprio SHA. Sem avanço à etapa 7, geração de ZIP candidato, push, merge, publicação ou reescrita de commits anteriores.
+Status da **etapa 6: aprovada tecnicamente**, com documentação/metadados alinhados, rótulos verificados e suíte aplicável aprovada. O commit técnico local `14db4ad86a763c4711ca367d20e5c033ecd087a3` contém as mudanças e os resultados; este complemento documental registra seu SHA sem referência circular ao próprio commit. Sem avanço à etapa 7, geração de ZIP candidato, push, merge, publicação ou reescrita de commits anteriores.
