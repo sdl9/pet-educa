@@ -11,7 +11,8 @@ Na etapa 4, o mapa passou a `src/game/data/walkMap.json` e o layout vigente a
 referências históricas em [configuracao-passeio.md](configuracao-passeio.md).
 
 Implementação local concluída em 24/10/2026, conforme o prompt em
-`public/assets/WalkGame_Assets_Animados/PROMPT_INTEGRACAO_CODEX.md`.
+`art-source/WalkGame_Assets_Animados/PROMPT_INTEGRACAO_CODEX.md` (movido na etapa 5,
+com todos os bytes do pacote preservados; não integra mais a pasta pública).
 
 ## Comportamento
 

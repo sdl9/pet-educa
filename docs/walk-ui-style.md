@@ -6,6 +6,10 @@ sem alterar regras ou apresentação; o protótipo antigo foi retirado.
 As referências ao nome anterior na validação abaixo são históricas. Abra pelo menu
 ou execute `npm.cmd run dev-nolog` e acesse `http://localhost:8080/?walkLearning`.
 
+O check do quiz citado historicamente em `tmp/quiz-visual-validation/check-ui.mjs`
+foi preservado na etapa 5 como `tests/quizSaciVisual.check.mjs`, comando
+`npm.cmd run test:quiz-visual`. Usa doubles; a evidência de navegador é separada.
+
 O botão **Menu**, fixo no canto superior direito, permanece disponível durante
 a exploração e os diálogos. Ele encerra o movimento e volta ao menu principal.
 

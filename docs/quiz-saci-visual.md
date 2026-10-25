@@ -1,6 +1,10 @@
 # Quiz do Saci
 
 A cena continua sendo `SaciGame`, aberta pelo botão **Quiz do Saci** do menu.
+O pacote original de assets está em `art-source/quiz-saci-q4-assets`, fora do build.
+O check histórico `tmp/quiz-visual-validation/check-ui.mjs` passou a
+`tests/quizSaciVisual.check.mjs` (`npm.cmd run test:quiz-visual`); os relatos abaixo
+mantêm a distinção entre doubles e renderização real.
 Durante as perguntas e o feedback, o botão **Menu** no canto superior direito
 permite sair da partida por mouse, toque ou teclado. Na conclusão, a saída
 continua disponível no botão **Voltar ao menu**.

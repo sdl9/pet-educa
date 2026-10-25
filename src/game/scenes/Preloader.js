@@ -31,9 +31,6 @@ export class Preloader extends Scene {
         this.load.setPath('assets');
         this.petEducaFonts = preloadPetEducaUI(this);
 
-        this.load.image('logo', '2.png');
-        this.load.image('tst', 'tst.png');
-
         this.load.image('foodgame-street-background', 'foodgame/background/foodgame-street-background.png');
         this.load.spritesheet('food-dog-caramelo', 'foodgame/dog/food-dog-caramelo-sheet.png', {
             frameWidth: 64,

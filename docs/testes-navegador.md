@@ -13,6 +13,7 @@ Em outro terminal, execute:
 | Comando | Cobertura |
 | --- | --- |
 | `npm.cmd run test:quiz` | 19 casos de regras e APIs simuladas da UI do quiz; não renderiza navegador |
+| `npm.cmd run test:quiz-visual` | Check de geometria/estados/recortes com doubles, movido de `tmp`; não renderiza navegador |
 | `npm.cmd run test:scene-comparison` | Política de comparação do cenário: rejeita diferenças estáticas, duplicatas, objetos inesperados e geometria incorreta; aceita somente as variações temporais declaradas |
 | `npm.cmd run test:menu` | Intro, três cartões utilizáveis e destinos, mouse nas bordas/ícones/rótulos, teclado, toque emulado, retorno real ao menu, reentradas, fontes e limpeza do editor |
 | `npm.cmd run test:walk-editor` | Cenário compartilhado, seleção, arrastes, snap/Shift, cancelamento, terreno não selecionável, download real, integridade dos arquivos oficiais, descarte por recarga e retorno ao passeio |
@@ -22,6 +23,7 @@ Em outro terminal, execute:
 | `npm.cmd run test:browser` | Os cinco comandos de navegador acima, em sequência; para na primeira falha |
 | `npm.cmd run test:walk-routes` | Verificação adicional de rotas em dev e na distribuição construída, cena definitiva, Saci/coração, animações e ausência das ferramentas em produção |
 | `npm.cmd run build-nolog` | Build de produção sem executar `log.js` |
+| `npm.cmd run test:distribution` | Após o build: bytes de todos os arquivos públicos, catálogo íntegro, ausência de pacotes de origem/prévias/prompts/perfis no pacote e de resíduos temporários no índice |
 
 `test:browser` exige o servidor já iniciado; não instala ou baixa navegador, não inicia um servidor oculto e não executa os testes unitários. Rode também `test:quiz`, `test:scene-comparison`, `build-nolog` e `git diff --check` na verificação da etapa.
 
@@ -130,6 +132,17 @@ O teste do menu foi movido de `src/game/ui` para `tests/petEducaUI.browser-check
 
 Menu: viewports 1280 × 720 (DPR 1) e 740 × 360 (DPR 2, canvas exibido 640 × 360). O toque é habilitado antes de inicializar uma página nova, pois Phaser detecta capacidades na abertura. Passeio e alimentação mantêm seus próprios viewports de linha de base (1280 × 720 e 844 × 390). O editor usa o tamanho de janela já previsto em seu teste e registra capturas reais. Toque é emulado e WebGL pode usar SwiftShader; nenhum desses resultados comprova celular físico, GPU de hardware ou renderizador Canvas real.
 
-Saídas ignoradas pelo Git, fora de `public`: `tmp/pet-educa-check-*`, `tmp/walk-editor-check-*`, `tmp/walk-ui-validation`, `tmp/walk-animations-validation` e `tmp/food-ui-validation`. Os perfis novos ficam no diretório temporário do sistema, fora do checkout; não devem integrar commits ou relatórios de conteúdo privado.
+Toda a pasta `/tmp/` é ignorada pelo Git desde a etapa 5. Saídas, fora de `public`: `tmp/pet-educa-check-*`, `tmp/walk-editor-check-*`, `tmp/walk-ui-validation`, `tmp/walk-animations-validation`, `tmp/food-ui-validation`, `tmp/distribution-validation` e `tmp/legacy-checks`. Os perfis novos ficam no diretório temporário do sistema, fora do checkout; não devem integrar commits ou relatórios de conteúdo privado.
 
 As execuções e resultados datados estão em [organizacao-entrega.md](organizacao-entrega.md). Os relatórios antigos em `tmp/walk-player-l1-validation`, `tmp/walk-player-l2-validation` e `tmp/walk-manual-v2-validation` continuam sendo registros históricos: não foram regenerados nem incluídos na suíte atual. Suas falhas da etapa 0 estão preservadas no diagnóstico.
+
+Na etapa 5, esses relatórios deixaram o índice, mantendo as cópias locais e o
+arquivo externo de evidências. Os três scripts úteis estão em
+`tools/legacy-checks`, com a fixture histórica intacta em
+`tests/fixtures/walk-history/l1-baseline.json`; comandos e limitações estão no
+[README das ferramentas](../tools/legacy-checks/README.md). O check antigo do quiz
+passou a `tests/quizSaciVisual.check.mjs`, comando `test:quiz-visual`. Referências
+datadas a `tmp` nos relatos anteriores indicam sua localização naquela execução.
+Os pacotes originais de arte ficam em [art-source](../art-source/README.md), fora
+do build. O relatório de `test:distribution` fica em
+`tmp/distribution-validation/report.json`.

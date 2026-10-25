@@ -20,6 +20,8 @@
     "dev-nolog": "vite --config vite/config.dev.mjs",
     "build-nolog": "vite build --config vite/config.prod.mjs",
     "test:quiz": "node --test tests/saciQuiz*.test.js",
+    "test:quiz-visual": "node tests/quizSaciVisual.check.mjs",
+    "test:distribution": "node tools/check-distribution.mjs",
     "test:walk-ui": "node tests/walkUI.browser-check.mjs",
     "test:walk-animations": "node tests/walkAnimations.browser-check.mjs",
     "test:food-ui": "node tests/foodGameUI.browser-check.mjs",

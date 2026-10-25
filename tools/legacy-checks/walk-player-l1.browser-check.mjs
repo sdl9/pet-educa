@@ -1,4 +1,4 @@
-// Run from the repository root: node src/game/dev/WalkLayoutEditor.browser-check.mjs
+// Historical L1 snapshot: node tools/legacy-checks/walk-player-l1.browser-check.mjs
 // Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -22,7 +22,7 @@ const protectedFiles = [
 const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.map(async file => [file,
     createHash('sha256').update(await fs.readFile(file)).digest('hex')])));
 const originalFiles = await hashes();
-const output = path.resolve('tmp/walk-player-l1-validation');
+const output = path.resolve('tmp/legacy-checks/walk-player-l1-validation');
 await fs.mkdir(output, { recursive: true });
 // Browser lock files must stay outside Vite's watched workspace (Windows EBUSY).
 const profile = await fs.mkdtemp(path.join(tmpdir(), 'walk-layout-editor-edge-'));
@@ -125,7 +125,7 @@ try {
         baseline={learning,camera:learningCamera,hashes:originalFiles};
         await capture('before-l1.png');
     } else {
-        baseline=JSON.parse(await fs.readFile(baselineFile,'utf8'));
+        baseline=JSON.parse(await fs.readFile('tests/fixtures/walk-history/l1-baseline.json','utf8'));
         assert.deepEqual(originalFiles,baseline.hashes,'Protected sources and PNGs unchanged');
         assert.deepEqual(learning.filter(o=>o.key!=='walk-player'),baseline.learning,'Frozen layout unchanged');
         assert.deepEqual(learningCamera,baseline.camera,'Camera unchanged');

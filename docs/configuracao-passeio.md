@@ -94,6 +94,9 @@ O rascunho de referência em `docs/layout` recebeu a mesma atualização de orig
 Os relatórios/snapshots históricos em `tmp` mantêm seus caminhos datados.
 
 O prompt original do pacote de assets continua intacto para reprodução histórica;
-onde cita `WalkGameLearning.js`/`walkStage18Map.json`, os equivalentes atuais são
+na etapa 5, foi movido com o pacote para `art-source/WalkGame_Assets_Animados`,
+fora de `public` e da distribuição. Os scripts históricos úteis estão em
+`tools/legacy-checks`, com fixture preservada em `tests/fixtures/walk-history`.
+Onde o prompt cita `WalkGameLearning.js`/`walkStage18Map.json`, os equivalentes atuais são
 `WalkGame.js`/`walkMap.json`. O editor continua exclusivo de desenvolvimento.
 Comandos e variáveis de navegador estão em [testes-navegador.md](testes-navegador.md).

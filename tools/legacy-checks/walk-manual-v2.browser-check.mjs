@@ -1,4 +1,4 @@
-// Run from the repository root: node src/game/dev/WalkLayoutEditor.browser-check.mjs
+// Historical manual-v2 snapshot: node tools/legacy-checks/walk-manual-v2.browser-check.mjs
 // Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -19,7 +19,7 @@ const protectedFiles = [
 const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.map(async file => [file,
     createHash('sha256').update(await fs.readFile(file)).digest('hex')])));
 const originalFiles = await hashes();
-const output = path.resolve('tmp/walk-manual-v2-validation');
+const output = path.resolve('tmp/legacy-checks/walk-manual-v2-validation');
 await fs.mkdir(output, { recursive: true });
 // Browser lock files must stay outside Vite's watched workspace (Windows EBUSY).
 const profile = await fs.mkdtemp(path.join(tmpdir(), 'walk-layout-editor-edge-'));

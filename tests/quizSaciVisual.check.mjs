@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 
-const root = new URL('../../', import.meta.url);
+const root = new URL('../', import.meta.url);
 const read = relative => fs.readFile(new URL(relative, root), 'utf8');
 const manifest = JSON.parse(await read('public/assets/quiz-saci/quiz-saci-assets-manifest.json'));
 const assets = Object.fromEntries(manifest.images.map(asset => [asset.key, asset]));
