@@ -20,6 +20,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 4 | `etapa-4` | `baa91259e4ab0bad8066d11d149e374e4d6973bc` | `25770691614947c67365f8ae53340b28ccf41fac` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 5 | `etapa-5` | `9fd2c2c0894d6a172ab97afb23976847015e8acb` | `ff0b0f7d36b204a9eb0d5aa7c4a383e9ba4c6651` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 6 | `etapa-6` | `4f7d811c8142f75e5ec2e37347701065f1899207` | `14db4ad86a763c4711ca367d20e5c033ecd087a3` | Celular físico, GPU de hardware, Canvas real e publicação manual não verificados |
+| 7 | `etapa-7` | `0d9193136ab84e2a17f35105cf903ac5d829b419` | A registrar no fechamento documental | Celular físico; intervenção preexistente de touchcancel; Canvas real não verificado |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -650,3 +651,76 @@ Não houve publicação, teste em aparelho físico, GPU de hardware ou Canvas re
 Evidências externas: `antes/` e `depois/` com medidas/capturas, `comparacao-rotulos.json`, `documentacao-e-invariantes.json`, `repositorio-verificado.json`, scripts auxiliares e logs `build.log`, `test-browser.log`, `test-walk-routes.log`. `evidencias-atuais/` guarda 47 PNGs/JSONs copiados com hashes verificados em `evidencias-sha256.json`. Nenhum perfil, captura de teste, cache, backup ou dist integra o commit. Os servidores próprios foram encerrados. Permanecem os avisos anteriores de chunk grande e manifesto em `public`, sem falha funcional nova identificada nesta execução.
 
 Status da **etapa 6: aprovada tecnicamente**, com documentação/metadados alinhados, rótulos verificados e suíte aplicável aprovada. O commit técnico local `14db4ad86a763c4711ca367d20e5c033ecd087a3` contém as mudanças e os resultados; este complemento documental registra seu SHA sem referência circular ao próprio commit. Sem avanço à etapa 7, geração de ZIP candidato, push, merge, publicação ou reescrita de commits anteriores.
+
+## Etapa 7 — revisão final e pacote candidato
+
+A coleta inicial foi registrada em 25/10/2026; a retomada após interrupção ocorreu em 03/11/2026 (datas da sessão, America/Sao_Paulo). Branch existente `etapa-7`, entrada `0d9193136ab84e2a17f35105cf903ac5d829b419`, raiz `D:/ARQUIVOS/Documents/pet-educa`, origin de leitura/envio `https://github.com/sdl9/pet-educa.git`. Nenhum AGENTS.md aplicável encontrado no checkout ou ancestrais. Não houve criação/troca de branch, importação de histórico ou alteração de remotes.
+
+Na entrada da etapa havia 296 arquivos rastreados, árvore/índice limpos, nenhum arquivo novo não ignorado, staged, unstaged ou remoção. Na retomada havia somente `docs/checklist-celular.md`, criado pela própria execução interrompida; não havia trabalho alheio a incluir. Esta etapa altera apenas este registro e aquele checklist. Produção, testes, dependências, lockfile e configurações permanecem intactos.
+
+### Recuperação e revisão acumulada
+
+Recuperação externa: `$env:TEMP\pet-educa-etapa-7-20261025`. `entrada.bundle` passou em `git bundle verify` na coleta e na retomada; contém `etapa-7` no HEAD de entrada e histórico completo alcançável. SHA-256 `B3AB85BEA21321456D0024F2A02EA08017542E816D3F41765304E8EF5CCB9D23`. `entrada-bytes/` e `arquivos-entrada.json` preservam os 296 caminhos, tamanhos e SHA-256; todos os bytes do checkout e das cópias foram reconferidos antes da edição documental. `estado-entrada.txt`, `staged.patch` e `unstaged.patch` registram os estados separados, inicialmente vazios. A retomada preservou também o checklist local com hash conferido em `retomada-20261103/`. Não foram apagados arquivos ignorados/desconhecidos ou perfis locais.
+
+Para recuperação, verificar bundle/hash, clonar o bundle em **pasta nova** e conferir os bytes contra o manifesto; não restaurar amplamente sobre trabalho posterior. O diff acumulado desde `dd334db2a1ffae306ce45c91bc04526821a76ac7`, disponível localmente, está em `diff-acumulado.patch`; não foi importado histórico antigo de outro repositório.
+
+Foram revistos os relatórios das etapas, diff acumulado e 296 caminhos rastreados. `revisar-acumulado.mjs`/`revisao-acumulada.json` comprovam: 23 fontes não afetados iguais à entrada histórica; passeio igual ao original após somente as substituições de identidade/mapas previstas; mapa de interações intacto; layout diferente apenas em descrição/campos mortos; alimentação igual à etapa 2 mais os seis rótulos da etapa 6; lockfile diferente apenas nos dois nomes de pacote. Foram comparados 129 arquivos públicos, incluindo SHA-256 idêntico de 114 binários de execução, e 89 arquivos de arte preservados nos destinos de origem. Comparações de textos normalizam somente CRLF/LF, não propriedades de gameplay. Licenças, fontes, posições, arte e regras preservadas.
+
+Não há `tmp`, `dist.zip`, perfis/cache ou saída acidental de terminal no índice. O `dist.zip` antigo continua local e ignorado. Há uma única implementação definitiva `WalkGame.js`/classe/chave `WalkGame`; os nomes antigos encontrados em testes são assertions de ausência ou fixtures históricas, não destinos ativos. Menu abre `FoodGame`, `WalkGame` e `SaciGame`; `?walkLearning` permanece compatível. Editor e inspetor são DEV, ausentes dos chunks e registro de produção. Scripts e documentação atual usam os nomes vigentes; relatos históricos estão identificados como tais.
+
+### Comandos e resultados efetivos
+
+Node `v24.19.0`, npm `11.17.0`, Phaser instalado `4.0.0`, Vite `6.4.3`. Edge real via CDP, sem dependência de automação nova: `156.0.4314.42` na coleta inicial e executável `156.0.4314.58` na retomada. Seleção pela variável existente `WALK_EDGE_PATH` (menu também aceita `PET_EDUCA_EDGE_PATH`); executável instalado `C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`. Não houve `npm ci`, atualização de dependências ou execução de `log.js`.
+
+Dev: `npm.cmd run dev-nolog -- --host 127.0.0.1 --strictPort`, porta 8080. Produção: `node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 8081 --strictPort`, servindo o dist construído. Ambos locais, sem publicação. Os navegadores usaram perfis novos externos ao checkout; seu conteúdo não integra evidências, backup ou commit.
+
+| Comando/verificação | Resultado |
+| --- | --- |
+| `npm.cmd run test:quiz` | 19/19; aprovado na coleta e na retomada; lógica/doubles, não comprova renderização |
+| `npm.cmd run test:quiz-visual` | Aprovado nas APIs simuladas WebGL/Canvas, na coleta e retomada; não é navegador |
+| `npm.cmd run test:scene-comparison` | 4/4, coleta e retomada |
+| `npm.cmd run build-nolog` | Aprovado, coleta e retomada; aviso anterior de chunk acima de 500 kB permanece |
+| `npm.cmd run test:distribution` | Aprovado, coleta e retomada: 131 arquivos públicos iguais por SHA-256, 134 arquivos/4.178.588 bytes em dist; sem fontes de arte, prompts/prévias/perfis/cache |
+| `npm.cmd run test:browser` | Aprovado na coleta e retomada, código 0: menu, editor, passeio, animações e alimentação completa/reaberta; logs preservados |
+| `npm.cmd run test:walk-routes` | Aprovado na coleta e retomada: dev e build real, 17 carregamentos, política de rotas, sete cuidados, PC/toque e ferramentas ausentes em produção |
+| `git diff --check` e revisão do diff acumulado | Aprovados; somente documentação alterada nesta etapa |
+| Auditoria ampliada externa do build | Percursos funcionais completos aprovados; assertion estrita de console reprovada pelas três intervenções preexistentes detalhadas abaixo; não é declarada integralmente aprovada |
+
+As três ferramentas históricas de `tools/legacy-checks` não integram a suíte atual e não foram reexecutadas nesta etapa. Suas divergências de hashes/layout/contagem continuam documentadas na etapa 5; não foram corrigidas ou apresentadas como aprovadas.
+
+### Aplicativo real de produção e comparação visual
+
+`auditar-producao.mjs` externo usa o Game real do chunk Phaser compilado, não importa `/src` no navegador e não injeta doubles no produto. Usa CDP para mouse, teclado e toque; a instrumentação posiciona o jogador junto a alguns pontos/alimentos reais para exercitar física e diálogos. Não equivale a uma pessoa realizar toda a travessia ou a tocar um aparelho físico. O quiz é respondido pelos controles da UI; dados lidos em Node são apenas o oráculo das respostas.
+
+PC em 1280 × 720, mouse/teclado; toque emulado em 844 × 390 horizontal (menu também testado em 740 × 360 pela suíte). Resolução lógica 1280 × 720/FIT. A auditoria inicial registrou renderer WebGL (`type: 2`), ANGLE/NVIDIA GeForce RTX 2060/Direct3D11, e fontes locais carregadas. Esse registro específico acrescenta evidência de GPU ao estado histórico, que usava SwiftShader; não comprova Canvas real nem outros dispositivos.
+
+- Intro, três cartões utilizáveis e destinos, mouse/teclado/toque, retorno ao menu e reentrada. Editor DEV: cenário compartilhado, seleção, arraste, snap, cancelamento, exportação e dados oficiais íntegros pela suíte existente.
+- Alimentação: instruções, movimento/cancelamento, início duplo sem duplicar recursos, alimentos reais bons/ruins e coleta única, pontos positivos/negativos, reação `0xffb3b3` de 400 ms, resultado/menu/reentrada. Rodada PC completa **sem aceleração**: 60.589 ms observados, 120 spawns, 3.555 amostras de frame, máximo **6 itens**, **1 detector**, **0 itens completamente fora da tela** após atualização. Rodadas reabertas em PC/toque mantiveram limites e tempo/pontuação reiniciados. A suite verifica descarte somente após o último pixel e limpeza no encerramento.
+- Passeio: controles, câmera, colisão física na água (limites medidos iguais a 352), 37 corpos estáticos, cinco pontos/sete cuidados/três tópicos, diálogos, conclusão, saída e reentrada. Saci/coração e animações da fonte, brinquedo e tutor presentes; suíte de animações cobre pausa/retomada e colisão móvel do tutor.
+- Quiz real PC e toque: 15 perguntas em cada modo, dez acertos/cinco erros, escolha única, bloqueio após resposta, avanço manual, perguntas longas 6/11/13, conclusão, reinício e Menu antes/depois de responder.
+
+Não foram encontrados HTTP 400+/404, falhas de carregamento, exceções de runtime, erros de console da aplicação ou requests `/src` na auditoria completa. Há, contudo, as intervenções do navegador abaixo; portanto não se declara console absolutamente limpo. Capturas de resultado da alimentação, conclusão do passeio e pergunta longa em toque foram abertas e inspecionadas na retomada, sem cortes/sobreposições encontrados nesses estados.
+
+Comparação com as referências válidas da etapa 0: menu PC e instruções da alimentação são **idênticos byte a byte**. SHA-256 respectivamente `F9435E6B9803A1CCFDF30710DE126A6929B167090C95E956D8B65BF3D807C140` e `99788477DA182719E25BFFA48F6A0650841EC780A68BA1E7CAE5181AFCB11C85`, registrados em `comparacao-capturas-etapa0.json`. Para estados dinâmicos, confrontaram-se dados/invariantes e capturas; não se presume igualdade de frame animado. Rótulos e descarte da alimentação são as mudanças intencionais autorizadas. O relato antigo de fluxo interrompido no cartão do quiz não foi convertido em execução aprovada.
+
+### Achado de console: preexistente, sem correção nesta etapa
+
+A checagem externa estrita `assert.deepEqual(failures, [])` falhou (código 1) em **três** eventos `Log.entryAdded`, fonte `intervention`, nível `error`: `Ignored attempt to cancel a touchcancel event with cancelable=false`. Todos os seis grupos funcionais PC/toque chegaram ao fim antes dessa assertion. O checkpoint `producao-evidencias/functional-results-before-strict-console-check.json` guarda os resultados e todos os eventos; `auditar-producao-evidencias.log` preserva a falha. A assertion continua intacta e não foi filtrada para obter sucesso.
+
+A causa observada é `TouchManager.js` do Phaser instalado, que chama `preventDefault()` no touchcancel quando capture está ativo, sem conferir `event.cancelable`. Não se conclui que tenha ocorrido rolagem: esse é apenas um exemplo na mensagem do navegador. `comparar-touchcancel.mjs` reproduziu o mesmo evento real não cancelável no canvas com capture ativo, tanto no ZIP anterior isolado quanto no build atual. `touchcancel-comparado/report.json` guarda os dois eventos. Os controles cancelaram o movimento corretamente nos casos funcionais executados.
+
+O ZIP antigo foi identificado contra o blob local `dd334db2:dist.zip`, sem alterar a cópia original; extração/preview ficaram externos. O chunk Phaser dos dois pacotes é idêntico por SHA-256: `80663703BB12E16F915B376F874DC67CE7E801DFC47FA59C00CB98AC1D81E3FD`. Logo, há evidência de problema anterior da dependência na combinação de navegador/gesto, não regressão introduzida nas etapas. Não se atualizou engine nem se alterou produção/testes para silenciar a mensagem. A ressalva permanece para revisão e conferência no aparelho físico.
+
+Outro diagnóstico auxiliar inicial usou, incorretamente, vermelho puro como expectativa da reação do alimento ruim. A entrada histórica, produção atual e teste existente comprovam `0xffb3b3`/400 ms; corrigiu-se somente esse oráculo externo para o valor efetivo, mantendo sua comparação estrita. Script/log iniciais preservados, sem mudar a suíte do projeto.
+
+### Limites e fechamento
+
+[Checklist de celular físico](checklist-celular.md) curto, integralmente **pendente da usuária**: horizontal/leitura/toque, três jogos completos, cancelamento de gesto, retorno/reentrada, carregamento e registro de aparelho/navegador/candidato. Nenhum aparelho físico foi usado e nenhuma aprovação humana de publicação é presumida. Canvas real e matriz de navegadores/dispositivos continuam não verificados. Não se declara ausência absoluta de bugs.
+
+A retomada reexecutou também a auditoria completa do dist no Edge `156.0.4314.58`. Os seis grupos funcionais PC/toque passaram novamente; o mesmo conjunto de três intervenções deixou a assertion estrita de console com código 1. Não houve outros eventos de erro/rede ou requests `/src`. A nova rodada sem aceleração mediu 60.723 ms, 120 spawns e 3.588 amostras: máximo seis itens, um detector, zero itens completamente fora da tela. Logs em `retomada-20261103/`; checkpoint/capturas em `producao-retomada/`. Renderer WebGL/ANGLE/NVIDIA e fontes locais foram novamente confirmados nos dois viewports. Essas são execuções da retomada, separadas das medidas iniciais acima.
+
+Foram preservados por SHA-256 295 dos 296 arquivos de entrada; a única edição em arquivo preexistente é este relatório. O novo checklist não altera a implementação. `evidencias-atuais-retomada/` externo guarda 47 PNGs/JSONs da suíte atual, com hashes em `evidencias-atuais-retomada-sha256.json`; perfis não foram copiados. A fase de testes terminou sem falha nova identificada nas verificações realizadas, com o achado anterior de console discriminado.
+
+A comparação isolada do touchcancel foi repetida na retomada e confirmou o mesmo evento nos dois pacotes com o Edge atualizado (`touchcancel-retomada/report.json`). Comandos auxiliares: `$env:AUDIT_OUTPUT=<pasta-externa>; node <recuperação>/auditar-producao.mjs` e, com o ZIP histórico isolado servido em 8082, `node <recuperação>/comparar-touchcancel.mjs`, cada qual com saída externa própria. `diagnostico-final.json` registra separadamente aprovação funcional, código 1 da assertion estrita e classificação dos três eventos; não converte a falha em sucesso da auditoria inteira.
+
+O build é utilizável nas verificações realizadas, com o achado preexistente de console explicitado. O candidato é preparado a partir de um checkpoint local limpo; identificação, hash, conteúdo do ZIP e commit técnico serão registrados no complemento de fechamento, antes de encerrar a etapa. Sem push, merge, upload, itch.io, publicação, reescrita de histórico ou implementação de correções adicionais.
