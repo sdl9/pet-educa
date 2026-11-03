@@ -20,7 +20,7 @@ Registro da etapa 0, executada em 24/10/2026 (America/Sao_Paulo): linha de base,
 | 4 | `etapa-4` | `baa91259e4ab0bad8066d11d149e374e4d6973bc` | `25770691614947c67365f8ae53340b28ccf41fac` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 5 | `etapa-5` | `9fd2c2c0894d6a172ab97afb23976847015e8acb` | `ff0b0f7d36b204a9eb0d5aa7c4a383e9ba4c6651` | Scripts históricos divergentes; limites físicos/hardware permanecem |
 | 6 | `etapa-6` | `4f7d811c8142f75e5ec2e37347701065f1899207` | `14db4ad86a763c4711ca367d20e5c033ecd087a3` | Celular físico, GPU de hardware, Canvas real e publicação manual não verificados |
-| 7 | `etapa-7` | `0d9193136ab84e2a17f35105cf903ac5d829b419` | A registrar no fechamento documental | Celular físico; intervenção preexistente de touchcancel; Canvas real não verificado |
+| 7 | `etapa-7` | `0d9193136ab84e2a17f35105cf903ac5d829b419` | `6a612d5f8d3bb8a4f86d057fbb81bc0941ed2b04` | Celular físico; intervenção preexistente de touchcancel; Canvas real não verificado |
 
 O commit de conclusão técnica da etapa 0 contém o diagnóstico e a linha de base. Commits exclusivamente documentais posteriores registraram seu SHA e complementaram aquele encerramento, evitando a referência circular de um commit conter seu próprio SHA. O HEAD final da etapa 0 foi `140655f14ba60b65a98bfe469c34ee24c0fe9ef5`. A autorização posterior da etapa 1 está limitada à seção correspondente; não autoriza avançar à etapa 2.
 
@@ -723,4 +723,26 @@ Foram preservados por SHA-256 295 dos 296 arquivos de entrada; a única edição
 
 A comparação isolada do touchcancel foi repetida na retomada e confirmou o mesmo evento nos dois pacotes com o Edge atualizado (`touchcancel-retomada/report.json`). Comandos auxiliares: `$env:AUDIT_OUTPUT=<pasta-externa>; node <recuperação>/auditar-producao.mjs` e, com o ZIP histórico isolado servido em 8082, `node <recuperação>/comparar-touchcancel.mjs`, cada qual com saída externa própria. `diagnostico-final.json` registra separadamente aprovação funcional, código 1 da assertion estrita e classificação dos três eventos; não converte a falha em sucesso da auditoria inteira.
 
-O build é utilizável nas verificações realizadas, com o achado preexistente de console explicitado. O candidato é preparado a partir de um checkpoint local limpo; identificação, hash, conteúdo do ZIP e commit técnico serão registrados no complemento de fechamento, antes de encerrar a etapa. Sem push, merge, upload, itch.io, publicação, reescrita de histórico ou implementação de correções adicionais.
+O build é utilizável nas verificações realizadas, com o achado preexistente de console explicitado. Status: **Candidato validado tecnicamente; falta celular físico**, com a ressalva de console detalhada acima. Não se declara a auditoria estrita integralmente aprovada nem aprovação humana de publicação.
+
+### ZIP candidato e origem exata
+
+Checkpoint técnico local `6a612d5f8d3bb8a4f86d057fbb81bc0941ed2b04`, branch `etapa-7`, **árvore/índice limpos** no momento do empacotamento; tree Git `4fad21acfa22afd3f1b1d0be99b7c19da3d681dc`. Esse commit contém somente os dois documentos da etapa 7. O código/configurações/assets/testes são idênticos à entrada `0d9193136ab84e2a17f35105cf903ac5d829b419`, sobre a qual foram executados os testes e o build na retomada. Este complemento exclusivamente documental registra o SHA do checkpoint e o artefato, sem referência circular ao próprio commit.
+
+| Item | Valor conferido |
+| --- | --- |
+| Arquivo externo | `D:/ARQUIVOS/Documents/pet-educa-candidatos/pet-educa-candidato-6a612d5f8d3b.zip` |
+| Tamanho compactado | **2.667.463 bytes** |
+| SHA-256 do ZIP | `1C9D5E98579EE4D37F74CE28918CEC84AAADC7357CCAADD623D716C75A41871D` |
+| Conteúdo | **134 arquivos**, **4.178.588 bytes** descompactados |
+| Raiz | `index.html`, `style.css`, `favicon.png` e `assets/`; sem pasta `dist` externa |
+| Conferência | Cada caminho, tamanho e SHA-256 de cada entrada corresponde ao dist; sem duplicatas, separadores Windows ou diretórios proibidos |
+| Manifesto externo | Mesmo caminho do ZIP acrescido de `.manifest.json`; commit/tree/estado limpo, versões e hashes de todas as entradas |
+
+O ZIP não contém node_modules, .git, perfis, backups, src, tests, art-source, ferramentas de desenvolvimento ou pacotes de arte de origem. A checagem de distribuição também verificou ausência de prompts/prévias/cache e integridade de todos os 131 arquivos públicos. O `dist.zip` local antigo não foi sobrescrito.
+
+A primeira tentativa de compactação foi rejeitada porque a API do Windows gravou separadores `\` nas entradas. O helper externo passou a criar entradas com `/` explicitamente. Outra tentativa deixou arquivo vazio por falta de carregamento explícito da assembly de compressão do PowerShell; ambos os artefatos rejeitados foram preservados apenas na recuperação externa, com nomes `empacotamento-rejeitado-*`. Nenhum deles é o candidato entregue. O ZIP final passou na comparação de todos os bytes e nomes. Isso corrige o empacotamento auxiliar, sem modificar o build ou a implementação.
+
+Evidências selecionadas duráveis: `D:/ARQUIVOS/Documents/pet-educa-candidatos/evidencias-etapa-7-6a612d5f8d3b/`, **95 arquivos** copiados e conferidos por SHA-256, inventariados em `sha256-evidencias.json`. Incluem logs da coleta/retomada, auditorias externas reproduzíveis, capturas/medidas, revisão acumulada e comparação do touchcancel; não incluem perfis. O manifesto e essa pasta ficam ao lado do ZIP, fora dele. A recuperação de entrada permanece no diretório TEMP identificado acima. Os três servidores locais próprios foram encerrados.
+
+A conclusão está limitada a este candidato e às verificações documentadas. Permanecem a validação física da usuária e a ressalva preexistente do Phaser. Sem push, merge, upload, itch.io, publicação, reescrita de histórico ou implementação de correções adicionais.
