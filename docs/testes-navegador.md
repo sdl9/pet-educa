@@ -17,8 +17,8 @@ Em outro terminal, execute:
 | `npm.cmd run test:scene-comparison` | Política de comparação do cenário: rejeita diferenças estáticas, duplicatas, objetos inesperados e geometria incorreta; aceita somente as variações temporais declaradas |
 | `npm.cmd run test:menu` | Intro, três cartões utilizáveis e destinos, mouse nas bordas/ícones/rótulos, teclado, toque emulado, retorno real ao menu, reentradas, fontes e limpeza do editor |
 | `npm.cmd run test:walk-editor` | Cenário compartilhado, seleção, arrastes, snap/Shift, cancelamento, terreno não selecionável, download real, integridade dos arquivos oficiais, descarte por recarga e retorno ao passeio |
-| `npm.cmd run test:walk-ui` | Apresentação comparada ao FoodGame real, textos/encaixe, bloqueio de comandos, cancelamento, Começar sem propagação, Controles, descarte e reentrada sem duplicação; diálogos, sete cuidados e conclusão preservados |
-| `npm.cmd run test:walk-animations` | Animações, percurso do tutor, colisões, diálogos, reentrada e editor; teste existente preservado |
+| `npm.cmd run test:walk-ui` | Apresentação, dicas/encaixe, bloqueios e reentrada sem duplicação; E/e/Shift+E/repetição inativos, Espaço sem ação dupla, sete cuidados completos por teclado e toque emulado; cliques e foco preservados |
+| `npm.cmd run test:walk-animations` | Animações, percurso do tutor, colisões, diálogos por Espaço/toque com E inativo, pausa/retomada, reentrada e editor |
 | `npm.cmd run test:food-ui` | Dez alimentos/legendas e classificações, encaixe de textos/imagens, espera sem partida, início só por Começar, cliques repetidos, partida real de 60 s, término, score, menu, descarte e reentrada; PC e toque emulado |
 | `npm.cmd run test:browser` | Os cinco comandos de navegador acima, em sequência; para na primeira falha |
 | `npm.cmd run test:walk-routes` | Verificação adicional de rotas em dev e na distribuição construída, cena definitiva, Saci/coração, animações e ausência das ferramentas em produção |

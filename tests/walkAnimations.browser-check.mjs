@@ -197,7 +197,7 @@ try {
         await page.send('Input.dispatchKeyEvent',{type:'keyUp',code,key,windowsVirtualKeyCode:number});
         await frames(2);
     }
-    for(const [x,mode,pauseMs] of [[640,'E',320],[448,'SPACE',320],[640,'TOUCH',320],[544,'E',0]]) {
+    for(const [x,mode,pauseMs] of [[640,'SPACE',320],[448,'SPACE',320],[640,'TOUCH',320],[544,'SPACE',0]]) {
         // Reach endpoints through the controller: pending pause retains the
         // incoming direction and flips it only when the 320 ms pause ends.
         await reset(544,x===448?-1:1);
@@ -207,8 +207,14 @@ try {
         assert.equal(arrival.direction,x===448?-1:1);
         await approach('guia');
         if(mode==='TOUCH') { await viewport(844,390,true); await frames(6); await approach('guia'); await touch(1050,650); }
-        else await key(mode==='E'?'KeyE':'Space',mode==='E'?'e':' ',mode==='E'?69:32);
+        else {
+            await key('KeyE','e',69);
+            assert.equal(await get('dialogueSystem.isOpen()'),false,'E não inicia interação');
+            await key('Space',' ',32);
+        }
         assert.equal(await get('dialogueSystem.isOpen()'),true,mode);
+        await key('KeyE','e',69);
+        assert.equal(await get('dialogueSystem.isOpen()'),true,'E não conclui o diálogo');
         await thaw();
         const stopped=await tutorState(); await pause(450);
         const after=await tutorState();
@@ -228,7 +234,7 @@ try {
         resumptions.push({x,mode,pauseMs,...window,displacement});
         await freeze();
     }
-    pass('E, espaço e toque; diálogo congela passos no trajeto e pausas nas extremidades, retomada sem salto');
+    pass('Espaço e toque preservados, E inativo; diálogo congela passos/pausas e retoma sem salto');
     await viewport(1280,720);
     await reset(448,-1); await tick(4000);
     await get('scene.start("MainMenu");void 0'); await until(()=>attach('MainMenu'),'Menu não abriu');

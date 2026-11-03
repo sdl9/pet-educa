@@ -135,9 +135,10 @@ export class WalkDialogueSystem {
         }
     }
 
-    showPages(pages, onComplete, { allowClose = false } = {}) {
+    showPages(pages, onComplete, { allowClose = false, closeOnly = false } = {}) {
         this.mode = 'pages';
         this.allowClose = allowClose;
+        this.closeOnly = closeOnly;
         this.pages = pages;
         this.pageIndex = 0;
         this.pageCompletion = onComplete;
@@ -161,12 +162,12 @@ export class WalkDialogueSystem {
         this.speakerText.setPosition(80, top + 24);
         this.bodyText.setPosition(80, top + 72);
         this.instructionText.setText(
-            `E / ESPAÇO ou toque em ${isLastPage ? 'CONCLUIR' : 'CONTINUAR'}`
+            `Espaço ou toque em ${this.closeOnly ? 'FECHAR' : isLastPage ? 'CONCLUIR' : 'CONTINUAR'}`
         );
         this.nextButton.text.setText(
             isLastPage ? 'CONCLUIR' : 'CONTINUAR'
         );
-        this.setButtonVisible(this.nextButton, true);
+        this.setButtonVisible(this.nextButton, !this.closeOnly);
         this.setButtonVisible(this.closeButton, this.allowClose);
     }
 

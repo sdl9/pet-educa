@@ -140,6 +140,12 @@ try {
         }
         await frames();
     }
+    async function key(code, key, number) {
+        await page.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', code, key, windowsVirtualKeyCode: number });
+        await frames(3);
+        await page.send('Input.dispatchKeyEvent', { type: 'keyUp', code, key, windowsVirtualKeyCode: number });
+        await frames(3);
+    }
     const screenshot = async name => {
         const shot = await page.send('Page.captureScreenshot', { format: 'png' });
         await fs.writeFile(path.join(output, name + '.png'), Buffer.from(shot.data, 'base64'));
@@ -182,10 +188,22 @@ try {
         await frames(4);
         assert.equal(await get('saci.jogadorEstavaProximo'), true); assert.equal(await get('saci.coracao.visible'), true);
         await screenshot(mode + '-walk');
+        await evaluate('(()=>{const s=__routeGame.scene.keys.WalkGame,p=s.interactions.find(i=>i.id==="guia");s.player.body.reset(p.x,p.y+48);})()');
+        await frames(5);
+        assert.ok((await get('interactionSystem.promptText.text')).endsWith('Espaço ou toque'));
+        assert.equal(await get('input.keyboard.keys[69] === undefined'),true);
+        await key('KeyE','e',69);assert.equal(await get('dialogueSystem.isOpen()'),false,'E não abre em '+mode);
+        await key('Space',' ',32);assert.equal(await get('dialogueSystem.pageIndex'),0);
+        assert.equal(await get('dialogueSystem.mode'),'pages');
+        assert.equal(await get('dialogueSystem.completedLessons.size'),0,'Espaço não abre e conclui com uma pressão');
+        assert.equal(await get('dialogueSystem.instructionText.text'),'Espaço ou toque em CONCLUIR');
+        await key('KeyE','e',69);assert.equal(await get('dialogueSystem.isOpen()'),true,'E não conclui em '+mode);
+        await key('Space',' ',32);assert.equal(await get('dialogueSystem.completedLessons.has("guia")'),true);
+        assert.equal(await get('dialogueSystem.isOpen()'),false,'Conclusão por Espaço não reabre');
         await click(1172, 44); await ready(mode, 'MainMenu'); await click(500, 408); await ready(mode, 'WalkGame');
         assert.equal(await get('dialogueSystem.completedLessons.size'), 0);
         assert.ok(await get('tutorPatrol.sprite.x') >= 544 && await get('tutorPatrol.sprite.x') < 555);
-        checks.push(mode + ': routes, registered scenes, menu/reentry, keyboard, seven lessons, collisions, Saci/heart and three animations');
+        checks.push(mode + ': routes, menu/reentry, Space interaction without double action, E inactive, updated hints, seven lessons, collisions, Saci/heart and animations');
         console.log('PASS ' + checks.at(-1));
     }
     await viewport(844, 390, true);

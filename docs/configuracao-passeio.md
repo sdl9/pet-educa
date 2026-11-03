@@ -23,7 +23,8 @@ bordas/sombra, fontes Lilita One e Nunito Sans e cores de `PET_EDUCA_UI`. O text
 O texto menciona **7 cuidados**, conforme aprovado: continuam existindo **5 locais
 de interação**, com 3 temas na veterinária. Mapa, diálogos e regras não mudaram.
 O botão **Controles**, disponível após Começar, abre o texto original
-`WALK_DIALOGUES.intro`, incluindo WASD/setas e E/ESPAÇO. Não é uma segunda
+`WALK_DIALOGUES.intro`, incluindo WASD/setas e Espaço, com apenas o botão Fechar.
+Não é uma segunda
 apresentação automática.
 
 Enquanto `walkStarted` é falso, física, direcional, atualização do tutor e
@@ -49,6 +50,36 @@ WebGL/SwiftShader e toque emulado; não houve teste em aparelho físico.
 Evidências: `tmp/walk-ui-validation/report.json`, PNGs nessa pasta e relatórios
 em `tmp/walk-animations-validation`, `tmp/walk-ui-validation/routes` e
 `tmp/walk-editor-check-*`.
+
+## Interação por Espaço — 2026-11-03
+
+O Passeio usa **Espaço** para iniciar uma interação e avançar/concluir páginas.
+A origem do atalho adicional E era `WalkGame.create`, que registrava a tecla,
+e `WalkGame.update`, que combinava E ou Espaço no sinal enviado ao diálogo.
+O registro e a leitura de E foram removidos. `DirectionInput` só trata movimento;
+`VirtualDPad` e os botões compartilhados não precisaram mudar.
+
+As dicas do prompt, das páginas e do botão Controles indicam somente Espaço
+como atalho de interação. O metadado `acceptance.keyboardInteractionKeys` em
+`walkMap.json` passou a conter somente `SPACE`; posições, IDs, cinco locais e
+sete cuidados foram preservados. A/B/C, Tab/setas/Enter e Escape mantêm suas
+funções contextuais existentes. Toques e cliques usam os controles anteriores.
+
+Na validação desta correção passaram `test:walk-ui`, `test:walk-animations`,
+`test:walk-routes` (dev/produção), `test:menu`, `test:quiz` (21 casos),
+`test:quiz-visual` (APIs simuladas), `test:scene-comparison` (4 casos),
+`build-nolog`, `test:distribution` e `git diff --check`.
+O build manteve o aviso de chunk acima de 500 kB.
+Os testes reais no Edge conferiram E/e, Shift+E e repetição sem ações,
+inclusive com botões focados, páginas abertas, temas e resultado. A rodada
+completa foi concluída por Espaço e, separadamente, por toque emulado nos cinco
+locais/sete cuidados. Uma pressão mantida de Espaço abre uma única página;
+concluir não reabre o diálogo. Foram mantidos os testes de cliques, bloqueios,
+cancelamento, retorno ao menu e contagens de eventos após reentrada.
+As capturas do prompt, Controles e página móvel foram inspecionadas visualmente:
+texto sem E como atalho e sem cortes. Isso não equivale a uma partida manual
+ou teste em celular físico. Relatórios e PNGs em `tmp/walk-ui-validation`,
+`tmp/walk-animations-validation` e `tmp/walk-ui-validation/routes`.
 
 ## Valores conferidos na entrada e preservados
 

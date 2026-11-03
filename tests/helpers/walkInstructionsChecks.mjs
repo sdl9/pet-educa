@@ -81,9 +81,9 @@ export function walkInstructionsChecks({ evaluate, get, until, frames, page, cli
         assert.equal(await get('dialogueSystem.completedLessons.size'),0);
         assert.equal(await evaluate('window.__behindClicks'),0,'Clique/toque não atravessa a apresentação: '+JSON.stringify(await evaluate('window.__walkInputTrace')));
         // Tecla mantida até Começar não vira uma interação residual.
-        await page.send('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'e',code:'KeyE',windowsVirtualKeyCode:69});
+        await page.send('Input.dispatchKeyEvent',{type:'rawKeyDown',key:' ',code:'Space',windowsVirtualKeyCode:32});
         await start(mobile);
-        await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'e',code:'KeyE',windowsVirtualKeyCode:69});
+        await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:' ',code:'Space',windowsVirtualKeyCode:32});
         assert.equal(await evaluate('window.__behindClicks'),0,'Soltura de Começar não atravessa a caixa, mesmo sem topOnly');
         assert.equal(await evaluate('!window.__oldWalkUI.container.scene && window.__oldWalkChildren.every(o=>!o.scene && o.listenerCount("pointerdown")===0 && o.listenerCount("pointerup")===0)'),true,'Início destrói apresentação e eventos');
         await evaluate('window.__behind.destroy();__checkedScene.input.setTopOnly(true);void 0');

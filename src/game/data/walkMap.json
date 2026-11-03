@@ -30,18 +30,18 @@
         { "key": "plaza-spring-rider", "x": 1344, "y": 656 }
     ],
     "interactions": [
-        { "id": "guia", "lessonIds": ["guia"], "label": "conversar sobre a guia", "x": 544, "y": 368, "radius": 120, "dialogue": "tutorComCachorro" },
-        { "id": "feevalepet", "lessonIds": ["feevalepet"], "label": "conhecer o FeevalePet", "x": 1110, "y": 350, "radius": 105, "dialogue": "voluntaria" },
-        { "id": "veterinaria", "lessonIds": ["guarda", "brincadeiras", "cuidados"], "label": "falar com a veterinária", "x": 1184, "y": 350, "radius": 105, "dialogue": "veterinaria", "type": "topics" },
-        { "id": "descanso", "lessonIds": ["descanso"], "label": "conversar sobre descanso", "x": 368, "y": 592, "radius": 125, "dialogue": "banco" },
-        { "id": "agua", "lessonIds": ["agua"], "label": "observar a água", "x": 560, "y": 592, "radius": 125, "dialogue": "bebedouro" }
+        { "id": "guia", "lessonIds": ["guia"], "label": "Conversar sobre a guia", "x": 544, "y": 368, "radius": 120, "dialogue": "tutorComCachorro" },
+        { "id": "feevalepet", "lessonIds": ["feevalepet"], "label": "Conhecer o FeevalePet", "x": 1110, "y": 350, "radius": 105, "dialogue": "voluntaria" },
+        { "id": "veterinaria", "lessonIds": ["guarda", "brincadeiras", "cuidados"], "label": "Falar com a veterinária", "x": 1184, "y": 350, "radius": 105, "dialogue": "veterinaria", "type": "topics" },
+        { "id": "descanso", "lessonIds": ["descanso"], "label": "Conversar sobre descanso", "x": 368, "y": 592, "radius": 125, "dialogue": "banco" },
+        { "id": "agua", "lessonIds": ["agua"], "label": "Observar a água", "x": 560, "y": 592, "radius": 125, "dialogue": "bebedouro" }
     ],
     "requiredLessons": ["guia", "feevalepet", "guarda", "brincadeiras", "cuidados", "descanso", "agua"],
     "acceptance": {
         "physicalInteractionCount": 5,
         "requiredLessonCount": 7,
         "veterinarianTopicCount": 3,
-        "keyboardInteractionKeys": ["E", "SPACE"],
+        "keyboardInteractionKeys": ["SPACE"],
         "touchInteraction": true
     }
 }

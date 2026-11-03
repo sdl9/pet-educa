@@ -38,7 +38,7 @@ verificadas. As APIs simuladas de Canvas nos testes não equivalem a essa execu�
 | --- | --- | --- |
 | Intro e menu | Setas cima/baixo para foco; Enter/Espaço para ativar | Botão Menu e três cartões inteiros |
 | Alimentação | WASD ou setas; Enter inicia e retorna do resultado; Escape volta ao menu | Continuar, direcional virtual e Menu, inclusive no resultado |
-| Passeio | WASD ou setas; E/Espaço interage e avança; A/B/C seleciona tópicos; Tab/setas/Enter navega nos diálogos; Escape fecha quando permitido | Direcional, interação, opções/avanço e Menu |
+| Passeio | WASD ou setas; Espaço interage e avança; A/B/C seleciona tópicos; Tab/setas/Enter navega nos diálogos; Escape fecha quando permitido | Direcional, interação, opções/avanço e Menu |
 | Quiz | Cima/baixo ou Tab para foco, Enter/Espaço para ativar ao soltar, Escape para Menu | Alternativas, avanço, reinício e retorno ao menu |
 
 No passeio, o botão Menu permite sair durante exploração ou diálogo. Os controles

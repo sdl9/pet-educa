@@ -77,7 +77,6 @@ export class WalkGame extends Scene {
             baixo: 'S',
             esquerda: 'A',
             direita: 'D',
-            interagir: 'E',
             espaco: 'SPACE'
         });
 
@@ -185,7 +184,7 @@ export class WalkGame extends Scene {
         this.touchControls.setEnabled(false);
         this.player.mover(0, 0);
         this.tutorPatrol.setPaused(true);
-        this.dialogueSystem.showPages(WALK_DIALOGUES.intro, () => this.dialogueSystem.close(), { allowClose: true });
+        this.dialogueSystem.showPages(WALK_DIALOGUES.intro, () => this.dialogueSystem.close(), { allowClose: true, closeOnly: true });
     }
 
     returnToMenu() {
@@ -201,9 +200,7 @@ export class WalkGame extends Scene {
 
     update(time, delta) {
         if (this.uiNavigating || !this.walkStarted) return;
-        const interactionPressed = Input.Keyboard.JustDown(
-            this.teclas.interagir
-        ) || Input.Keyboard.JustDown(this.teclas.espaco);
+        const interactionPressed = Input.Keyboard.JustDown(this.teclas.espaco);
 
         const dialogueWasOpen = this.dialogueSystem.isOpen();
         this.dialogueSystem.update(interactionPressed);
