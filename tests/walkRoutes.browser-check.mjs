@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
+import { startWalk } from './helpers/startWalk.mjs';
 
 const urls = {
     dev: process.env.WALK_UI_URL || 'http://127.0.0.1:8080',
@@ -160,6 +161,7 @@ try {
         }
         await navigate(mode, '', 'Intro'); await click(504, 564); await ready(mode, 'MainMenu');
         await click(500, 408); await ready(mode, 'WalkGame');
+        await startWalk({ page, evaluate, until, scene: '__routeGame.scene.keys.WalkGame' });
         assert.equal(await get('dialogueSystem.requiredLessons.length'), 7);
         assert.ok(await get('walkCollisions.staticBodies.getLength()') > 0);
         if (mode === 'dev') assert.equal(await get('constructor.name'), 'WalkGame');
@@ -188,6 +190,7 @@ try {
     }
     await viewport(844, 390, true);
     await navigate('production', 'walkLearning', 'WalkGame');
+    await startWalk({ page, evaluate, until, scene: '__routeGame.scene.keys.WalkGame', touch: true });
     assert.equal(await get('touchControls.enabled'), true);
     const startY = await get('player.y');
     const point = await evaluate('(()=>{const r=__routeGame.canvas.getBoundingClientRect();return{x:r.x+154*r.width/1280,y:r.y+436*r.height/720};})()');

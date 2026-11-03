@@ -121,6 +121,7 @@ try {
         for (const object of s.touchControls?.visuals ?? []) own(object, 'hud');
         own(s.dialogueSystem?.progressUI, 'hud'); own(s.dialogueSystem?.panel, 'hud');
         own(s.interactionSystem?.prompt, 'hud'); own(s.menuUI, 'hud');
+        own(s.instructionsUI?.container, 'hud');
         const result = [];
         const visit = object => {
             if (object.texture) result.push({role:roles.get(object) ?? 'scenery',
@@ -139,6 +140,7 @@ try {
     console.log('PASS normal route -> Intro');
     await page.send('Page.navigate', { url: `${baseURL}/?walkLearning` });
     await until(() => attach('WalkGame', '/src/game/scenes/WalkGame.js'), 'WalkGame did not start');
+    await until(() => evaluate('Boolean(__checkedScene.instructionsUI)'), 'Walk presentation did not open');
     const gameplay = await snapshot();
     for (const role of ['player', 'saci', 'heart']) {
         assert.equal(gameplay.filter(object => object.role === role).length, 1, `Explicit ${role} owner`);
@@ -291,6 +293,7 @@ try {
     assert.deepEqual(reset,original,'Reload must discard the provisional changes');
     await evaluate("void __checkedScene.scene.start('WalkGame')");
     await until(()=>attach('WalkGame','/src/game/scenes/WalkGame.js'),'Returning to learning failed');
+    await until(() => evaluate('Boolean(__checkedScene.instructionsUI)'), 'Walk presentation did not reopen');
     assert.equal(await evaluate("Boolean(document.querySelector('aside'))"),false);
     assert.deepEqual(sharedScenerySnapshot(await snapshot(), 'gameplay'),learning);
     const errors=page.events.filter(e=>e.method==='Runtime.exceptionThrown');

@@ -17,7 +17,7 @@ Em outro terminal, execute:
 | `npm.cmd run test:scene-comparison` | Política de comparação do cenário: rejeita diferenças estáticas, duplicatas, objetos inesperados e geometria incorreta; aceita somente as variações temporais declaradas |
 | `npm.cmd run test:menu` | Intro, três cartões utilizáveis e destinos, mouse nas bordas/ícones/rótulos, teclado, toque emulado, retorno real ao menu, reentradas, fontes e limpeza do editor |
 | `npm.cmd run test:walk-editor` | Cenário compartilhado, seleção, arrastes, snap/Shift, cancelamento, terreno não selecionável, download real, integridade dos arquivos oficiais, descarte por recarga e retorno ao passeio |
-| `npm.cmd run test:walk-ui` | Interface, diálogos, conclusão do passeio, menu e input; teste existente preservado |
+| `npm.cmd run test:walk-ui` | Apresentação comparada ao FoodGame real, textos/encaixe, bloqueio de comandos, cancelamento, Começar sem propagação, Controles, descarte e reentrada sem duplicação; diálogos, sete cuidados e conclusão preservados |
 | `npm.cmd run test:walk-animations` | Animações, percurso do tutor, colisões, diálogos, reentrada e editor; teste existente preservado |
 | `npm.cmd run test:food-ui` | Dez alimentos/legendas e classificações, encaixe de textos/imagens, espera sem partida, início só por Começar, cliques repetidos, partida real de 60 s, término, score, menu, descarte e reentrada; PC e toque emulado |
 | `npm.cmd run test:browser` | Os cinco comandos de navegador acima, em sequência; para na primeira falha |
@@ -117,7 +117,7 @@ Nos dois testes movidos, um executável ausente produz uma mensagem que informa 
 
 ## Comparação do cenário no editor
 
-`tests/WalkLayoutEditor.browser-check.mjs` substitui o arquivo que ficava em `src/game/dev`. O snapshot percorre os objetos texturizados, inclusive descendentes de containers. A política não elimina objetos pelo nome, prefixo, profundidade ou visibilidade. Identifica por referência os únicos proprietários de objetos de execução: `player`, `saci`, `saci.coracao`, `touchControls.visuals`, `dialogueSystem.progressUI`, `dialogueSystem.panel`, `interactionSystem.prompt` e `menuUI`. Seus objetos recebem os papéis explícitos jogador, Saci, coração e HUD. Um papel desconhecido é rejeitado. O teste exige que jogador, Saci e coração existam na cena jogável e que o editor não os contenha.
+`tests/WalkLayoutEditor.browser-check.mjs` substitui o arquivo que ficava em `src/game/dev`. O snapshot percorre os objetos texturizados, inclusive descendentes de containers. A política não elimina objetos pelo nome, prefixo, profundidade ou visibilidade. Identifica por referência os únicos proprietários de objetos de execução: `player`, `saci`, `saci.coracao`, `touchControls.visuals`, `dialogueSystem.progressUI`, `dialogueSystem.panel`, `interactionSystem.prompt`, `menuUI` e `instructionsUI.container`. Seus objetos recebem os papéis explícitos jogador, Saci, coração e HUD. Um papel desconhecido é rejeitado. O teste exige que jogador, Saci e coração existam na cena jogável e que o editor não os contenha.
 
 Todos os demais objetos permanecem na comparação, incluindo terreno, decoração, composições e tutor. Comparam-se textura, quantidade (incluindo duplicatas), posição, dimensões do frame, escala, origem, profundidade, rotação, visibilidade, alpha e espelhamento. A ordem de renderização é canonicalizada como multiconjunto, sem remover membros.
 

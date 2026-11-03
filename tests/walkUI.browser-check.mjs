@@ -4,6 +4,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { WALK_DIALOGUES } from '../src/game/data/walkDialogues.js';
+import { walkInstructionsChecks } from './helpers/walkInstructionsChecks.mjs';
 
 // Teste local com Edge headless, seguindo os checks de navegador já usados no projeto.
 const baseURL = process.env.WALK_UI_URL || 'http://localhost:8080';
@@ -128,9 +129,26 @@ try {
         assert.ok(body.bounds.bottom <= (body.mode === 'topics' ? body.firstTopic - 8 : 604), 'Fala sobrepõe controles');
     }
     function pass(name) { passed.push(name); console.log('PASS ' + name); }
+    const intro = walkInstructionsChecks({ evaluate, get, until, frames, page, click, touch });
 
     await viewport(1280, 720);
+    await navigate('', 'Intro');
+    await until(() => get('children.list.some(o=>o.texture?.key==="pet-educa-ui-button")'), 'Intro não ficou pronta');
+    await click(504,564);await until(()=>attach('MainMenu'),'Menu não abriu');
+    await click(500,258);await until(()=>attach('FoodGame'),'FoodGame não abriu');
+    await until(()=>get('uiReady'),'Instruções do FoodGame não ficaram prontas');
+    const foodReference=await evaluate(`(()=>{const s=__checkedScene;return {
+        panel:{key:s.painelInstrucoes.texture.key,bounds:s.painelInstrucoes.getBounds()},
+        button:{key:s.botaoComecar.texture.key,bounds:s.botaoComecar.getBounds()},
+        title:{font:s.textoInstrucoes.style.fontFamily,size:parseInt(s.textoInstrucoes.style.fontSize),color:s.textoInstrucoes.style.color}};})()`);
     await navigate('?walkLearning', 'WalkGame');
+    await intro.layout(foodReference);const initialListeners=await intro.listeners();
+    await shot('walk-instructions-pc');await intro.blocked();
+    await click(964,44);
+    assert.equal(await get('dialogueSystem.bodyText.text'),WALK_DIALOGUES.intro[0].text,'Controles preservam o texto existente');
+    await click(904,652);
+    assert.equal(await get('dialogueSystem.isOpen()'),false);
+    pass('Estilo real do FoodGame, comandos bloqueados, Começar sem propagação e Controles acessíveis');
     assert.equal(await get('dialogueSystem.bodyText.style.fontFamily'), 'Nunito Sans');
     assert.equal(await get('dialogueSystem.bodyText.style.color'), '#342B24');
     assert.equal(await get('dialogueSystem.panel.scrollFactorX'), 0);
@@ -224,6 +242,9 @@ try {
 
     await viewport(844, 390, true);
     await navigate('?walkLearning', 'WalkGame');
+    await intro.layout(foodReference);await shot('walk-instructions-mobile');
+    await viewport(740,360,true);await frames(4);await intro.layout(foodReference);await shot('walk-instructions-mobile-small');
+    await viewport(844,390,true);await frames(4);await intro.blocked(true);
     assert.equal(await get('touchControls.enabled'), true);
     await approach('feevalepet');
     await shot('walk-booth-mobile');
@@ -262,6 +283,7 @@ try {
 
     await viewport(1280, 720);
     await navigate('?walkLearning', 'WalkGame');
+    await intro.start();
     for (const id of ['guia', 'feevalepet', 'descanso', 'agua']) {
         await approach(id); await click(1050, 650); await click(1112, 652);
         assert.equal(await get('dialogueSystem.isOpen()'), false);
@@ -286,6 +308,8 @@ try {
     await until(() => attach('MainMenu'), 'Menu não abriu ao sair do passeio');
     await click(500, 408); // Cartão existente do Passeio Consciente.
     await until(() => attach('WalkGame'), 'Passeio não reabriu pelo menu');
+    await intro.ready();assert.deepEqual(await intro.listeners(),initialListeners,'Reentrada sem eventos duplicados');
+    await intro.start();
     assert.equal(await get('dialogueSystem.completedLessons.size'), 0);
     await approach('guia'); await click(1050,650);
     assert.equal(await get('menuButton.visible'), true);
@@ -295,6 +319,7 @@ try {
 
     await viewport(844,390,true);
     await navigate('?walkLearning', 'WalkGame');
+    await intro.start(true);
     await touch(1172,44,true);
     assert.equal(await get('sys.isActive()'), true);
     await approach('veterinaria'); await touch(1050,650);
@@ -304,10 +329,13 @@ try {
     await until(() => attach('MainMenu'), 'Menu por toque não abriu durante diálogo');
     await touch(500,408);
     await until(() => attach('WalkGame'), 'Passeio não reabriu por toque');
+    await intro.ready();assert.deepEqual(await intro.listeners(),initialListeners,'Reentrada por toque sem eventos duplicados');
+    await evaluate('window.__exitWalkUI=__checkedScene.instructionsUI;window.__exitWalkChildren=__checkedScene.instructionsUI.container.list.slice();void 0');
     assert.equal(await get('menuButton.enabled'), true);
     assert.equal(await get('dialogueSystem.isOpen()'), false);
     await touch(1172,44);
     await until(() => attach('MainMenu'), 'Menu por toque não abriu durante exploração');
+    assert.equal(await evaluate('!window.__exitWalkUI.container.scene && window.__exitWalkChildren.every(o=>!o.scene && o.listenerCount("pointerdown")===0)'),true,'Saída nas instruções descarta a caixa e os eventos');
     pass('Menu por toque, cancelamento e reabertura no celular horizontal');
     await viewport(1280,720);
 
@@ -375,7 +403,7 @@ try {
         (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error') ||
         (e.method === 'Network.responseReceived' && e.params.response.status >= 400 && e.params.response.url.includes('/assets/')));
     assert.deepEqual(failures, [], 'Erros de execução ou carregamento');
-    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, renderer: 'Edge WebGL (SwiftShader)', viewports: ['1280x720','844x390'], errors: failures }, null, 2));
+    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, renderer: 'Edge WebGL (SwiftShader)', viewports: ['1280x720','844x390','740x360'], errors: failures }, null, 2));
 } catch (error) {
     console.error(error);
     if (page) {
