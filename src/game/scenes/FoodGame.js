@@ -5,6 +5,9 @@ import { Player } from '../objects/Player';
 import FoodObjects from '../objects/FoodObjects';
 import { readKeyboardDirection, combineDirections, shouldShowTouchControls } from '../systems/DirectionInput';
 import { VirtualDPad } from '../systems/VirtualDPad';
+import { createFoodInstructions } from '../ui/foodInstructions';
+
+const TEMPO_PARTIDA = 60;
 
 // FoodGame e a Scene do primeiro minigame.
 // Em arquitetura, a Scene funciona como a "orquestradora":
@@ -39,6 +42,9 @@ export class FoodGame extends Scene {
         this.resultadoUI = null;
         this.alimentos = null;
         this.overlapAlimentos = null;
+        this.instrucoesUI = null;
+        this.score = 0;
+        this.timer = TEMPO_PARTIDA;
         this.events.once('shutdown', this.limparPartida, this);
         this.menuKeys = this.input.keyboard.addKeys({
             continuar: 'ENTER',
@@ -89,18 +95,12 @@ export class FoodGame extends Scene {
 
 
     mostrarInstrucoes() {
-        const balao = this.criarBalao(
-            'Ajude o Caramelo a se alimentar!',
-            [
-                { y: 296, text: 'Mova o cachorrinho para pegar ração, arroz, cenoura e água.' },
-                { y: 414, text: 'Desvie dos alimentos que fazem mal!' }
-            ],
-            'Continuar', () => this.iniciarJogo()
-        );
-        this.instrucoesUI = balao.container;
-        this.painelInstrucoes = balao.painel;
-        this.textoInstrucoes = balao.titulo;
-        this.botaoContinuar = balao.botao;
+        this.physics.pause();
+        const instructions = createFoodInstructions(this, () => this.iniciarJogo());
+        this.instrucoesUI = instructions.container;
+        this.painelInstrucoes = instructions.panel;
+        this.textoInstrucoes = instructions.title;
+        this.botaoComecar = instructions.button;
     }
 
     criarBalao(titulo, blocos, rotulo, aoClicar) {
@@ -148,6 +148,8 @@ export class FoodGame extends Scene {
     }
 
     limparPartida() {
+        this.instrucoesUI?.destroy();
+        this.instrucoesUI = null;
         this.timerJogo?.remove(false);
         this.timerJogo?.destroy();
         this.timerJogo = null;
@@ -172,14 +174,15 @@ export class FoodGame extends Scene {
     }
 
     iniciarJogo() {
-        // Aceita o início uma vez, mesmo com toque duplo ou Enter simultâneo.
+        // Aceita o início uma vez, inclusive com cliques/toques repetidos.
         if (!this.uiReady || this.uiNavigating || this.jogoComecou) return;
         this.jogoComecou = true;
         this.instrucoesUI.destroy();
         this.instrucoesUI = null;
 
         this.score = 0;
-        this.timer = 60;
+        this.timer = TEMPO_PARTIDA;
+        this.physics.resume();
 
         this.criarHUD();
 
@@ -374,9 +377,6 @@ export class FoodGame extends Scene {
             return;
         }
         if (!this.jogoComecou) {
-            if (Input.Keyboard.JustDown(this.menuKeys.continuar)) {
-                this.iniciarJogo();
-            }
             return;
         }
         if (this.jogoFinalizado) {
@@ -384,7 +384,7 @@ export class FoodGame extends Scene {
             return;
         }
 
-        // Como o player so existe depois do botao CONTINUAR,
+        // Como o player so existe depois do botao Começar,
         // protegemos o update com a flag jogoComecou.
         // Sem isso, o codigo tentaria mover um player que ainda nao foi criado.
         if (this.jogoComecou) {

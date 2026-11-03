@@ -2,19 +2,31 @@
 
 ## Estado atual
 
-As instruções do FoodGame reaproveitam apenas o painel da Intro sobre o
-cenário original da alimentação. Não exibem o parque, o título Pet Educa ou
-o retrato do Caramelo. Os textos, o botão Continuar e o Menu são mantidos.
-O painel fica centralizado na tela, movendo textos e Continuar junto com ele.
-Os textos existentes foram mantidos e organizados em blocos dentro do painel.
-O container de instruções é destruído ao iniciar, removendo também seu input.
-A partida só pode começar uma vez por entrada na cena.
+As instruções do FoodGame adaptam a tela existente sobre o cenário da alimentação,
+com o painel e botão verde do Pet Educa e as fontes Lilita One e Nunito Sans.
+O título é "Ajude o Caramelo a comer bem!", seguido da duração de **1 minuto**,
+do objetivo e do aviso para desviar dos alimentos ruins. Dois grupos exibem os
+assets do jogo com legendas: **Pode comer**, com confirmação, e **Faz mal**, com X.
+Os símbolos são desenhados, sem depender de cores ou emojis.
+
+`src/game/data/foodConfig.js` é a fonte única para carregamento dos assets,
+sorteio dos alimentos e instruções. Preserva os quatro bons (ração, arroz,
+cenoura, água) e seis ruins (chocolate, uvas, abacate, bala, cebola, alho).
+A composição usa duas linhas por grupo, quatro itens à esquerda e seis à direita,
+com fontes de pelo menos 30 px lógicos e imagens na mesma escala da partida.
+
+Cada nova entrada, inclusive depois do resultado, reapresenta as instruções.
+Somente clicar/tocar em **Começar** inicia a partida; Enter aguarda esse botão.
+Enquanto isso, a física fica pausada, sem jogador, alimentos, overlap ou timers.
+O início repõe os **60 segundos** já existentes e zero pontos. Cliques repetidos
+não recriam jogador, timer, gerador ou detector. O container e seus eventos são
+destruídos ao começar ou sair para o menu. Não há uma segunda tela de instruções.
 
 Ao chegar a zero, o contador encerra a partida uma única vez. Movimento,
 coletas e geração de alimentos param, preservando os Pontos finais. O mesmo
 método criarBalao monta o resultado centralizado sobre o jogo, exibindo
 "Partida finalizada!", "Seus Pontos: X" e o botão "Menu". Enter também retorna
-ao menu nessa etapa. Reentrar inicia uma nova partida com 60 segundos e zero pontos.
+ao menu nessa etapa. Reentrar reapresenta as instruções, preparando 60 segundos e zero pontos.
 O HUD usa "Pontos" e "Tempo". Na etapa 6, somente esses rótulos e os do resultado
 foram corrigidos; posições, fontes, tamanhos, painel e regras foram preservados.
 
@@ -66,6 +78,20 @@ com o servidor na porta 8080. O teste usa o Edge instalado em modo headless;
 na sandbox deste ambiente, o navegador precisa ser executado fora dela.
 
 ## Registros de validação
+
+2026-11-03 — instruções ilustradas: `test:food-ui` passou no Edge headless
+WebGL/SwiftShader. Conferiu a classificação dos dez assets, legendas, geometria,
+espera de 2,2 s sem consumir tempo/criar corpos ou eventos da partida, Enter sem
+iniciar, cliques repetidos sem recriar recursos, descarte da UI ao sair/iniciar,
+retorno ao menu, reentrada e nova partida depois do resultado. Preservou os testes
+de coleta, pontos positivos/negativos, rodada real de 60 s, 92 spawns a 650 ms,
+velocidade de 325 px/s e um único overlap. As capturas das instruções foram
+inspecionadas visualmente em 1280 × 720, 844 × 390 e 740 × 360, sem cortes ou
+sobreposições. Toque foi emulado; não houve teste em celular físico.
+Também passaram `test:menu`, `test:quiz` (21 casos), `test:quiz-visual` (doubles),
+`test:scene-comparison` (4 casos), `build-nolog`, `test:distribution` e
+`git diff --check`. O build manteve o aviso de chunk acima de 500 kB.
+Evidências locais: `tmp/food-ui-validation/report.json` e PNGs nessa pasta.
 
 Etapa 6: `test:food-ui` passou com os rótulos corrigidos e assertions de encaixe do
 HUD e resultado, em PC e toque emulado, preservando os demais casos. A comparação

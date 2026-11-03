@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { preloadAnimatedWalkAssets } from '../data/walkAnimatedAssets';
 import { preloadQuizSaciAssets } from '../data/quizSaciAssets';
 import { preloadPetEducaUI, openPetEducaScene } from '../ui/petEducaUI';
+import { FOOD_CONFIG } from '../data/foodConfig';
 
 export class Preloader extends Scene {
     constructor() {
@@ -36,11 +37,7 @@ export class Preloader extends Scene {
             frameWidth: 64,
             frameHeight: 64
         });
-        for (const key of [
-            'food-good-kibble', 'food-good-rice', 'food-good-carrot', 'food-good-water',
-            'food-bad-chocolate', 'food-bad-grapes', 'food-bad-avocado',
-            'food-bad-candy', 'food-bad-onion', 'food-bad-garlic'
-        ]) {
+        for (const { texture: key } of Object.values(FOOD_CONFIG).flat()) {
             this.load.image(key, `foodgame/foods/${key}.png`);
         }
 

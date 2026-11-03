@@ -3,6 +3,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
+import { FOOD_CONFIG } from '../src/game/data/foodConfig.js';
+
+// Fixture de regressão: a extração da configuração não muda os alimentos do jogo.
+assert.deepEqual(FOOD_CONFIG, {
+    bom: [
+        { texture: 'food-good-kibble', name: 'Ração' }, { texture: 'food-good-rice', name: 'Arroz' },
+        { texture: 'food-good-carrot', name: 'Cenoura' }, { texture: 'food-good-water', name: 'Água' }
+    ],
+    ruim: [
+        { texture: 'food-bad-chocolate', name: 'Chocolate' }, { texture: 'food-bad-grapes', name: 'Uvas' },
+        { texture: 'food-bad-avocado', name: 'Abacate' }, { texture: 'food-bad-candy', name: 'Bala' },
+        { texture: 'food-bad-onion', name: 'Cebola' }, { texture: 'food-bad-garlic', name: 'Alho' }
+    ]
+});
 
 // Teste local com Edge headless, seguindo os checks de navegador já usados no projeto.
 const baseURL = process.env.FOOD_UI_URL || 'http://localhost:8080';
@@ -126,6 +140,63 @@ try {
         await frames();
     }
     function edges(rect) { return { ...rect, right: rect.x + rect.width, bottom: rect.y + rect.height }; }
+    async function checkInstructions() {
+        const layout = await evaluate(`(()=>{const s=__checkedScene;return {
+            panel:s.painelInstrucoes.getBounds(),button:s.botaoComecar.getBounds(),menu:s.botaoMenu.background.getBounds(),
+            texts:s.instrucoesUI.list.filter(o=>o.type==='Text').map(o=>({text:o.text,bounds:o.getBounds(),size:parseInt(o.style.fontSize)})),
+            foods:s.instrucoesUI.list.filter(o=>o.getData('foodType')).map(o=>({type:o.type,group:o.getData('foodType'),
+                text:o.text,texture:o.texture?.key,bounds:o.getBounds()})),
+            symbols:s.instrucoesUI.list.filter(o=>o.type==='Graphics').length,
+            canvas:document.querySelector('canvas').getBoundingClientRect().toJSON()
+        };})()`);
+        const panel = edges(layout.panel), button = edges(layout.button);
+        assert.equal(panel.x + panel.width / 2, 640);
+        assert.ok(panel.y > edges(layout.menu).bottom, 'Painel não sobrepõe Menu');
+        assert.ok(panel.x >= 0 && panel.right <= 1280 && panel.bottom <= 720);
+        assert.equal(layout.symbols,2,'Cada grupo tem seu símbolo desenhado');
+        assert.ok(layout.texts.some(o=>o.text==='Ajude o Caramelo a comer bem!'));
+        assert.ok(layout.texts.some(o=>o.text==='1 minuto'));
+        assert.ok(layout.texts.some(o=>o.text==='Desvie dos alimentos que fazem mal para ele!'));
+        assert.ok(layout.texts.some(o=>o.text==='Pode comer:'));
+        assert.ok(layout.texts.some(o=>o.text==='Faz mal:'));
+        for (const item of layout.texts) {
+            const b=edges(item.bounds);
+            assert.ok(b.x>=panel.x+16 && b.right<=panel.right-16 && b.y>=panel.y+12 && b.bottom<=panel.bottom-12,'Texto cabe no painel: '+item.text);
+            assert.ok(item.size*layout.canvas.width/1280>=14,'Fonte legível no viewport: '+item.text);
+            if(item.text==='Começar') assert.ok(b.x>=button.x && b.right<=button.right && b.y>=button.y && b.bottom<=button.bottom);
+            else assert.ok(b.bottom<=button.y-8,'Texto não sobrepõe Começar: '+item.text);
+        }
+        // Textos consecutivos da frase são adjacentes, mas nunca se sobrepõem.
+        const overlap=(a,b)=>a.x<b.x+b.width-1 && a.x+a.width>b.x+1 && a.y<b.y+b.height-1 && a.y+a.height>b.y+1;
+        for(let i=0;i<layout.texts.length;i++) for(let j=i+1;j<layout.texts.length;j++) {
+            assert.equal(overlap(layout.texts[i].bounds,layout.texts[j].bounds),false,
+                'Textos sem sobreposição: '+layout.texts[i].text+' / '+layout.texts[j].text);
+        }
+        for(const [group,foods] of Object.entries(FOOD_CONFIG)) {
+            const images=layout.foods.filter(o=>o.group===group && o.type==='Image');
+            const names=layout.foods.filter(o=>o.group===group && o.type==='Text');
+            assert.deepEqual(images.map(o=>o.texture),foods.map(o=>o.texture));
+            assert.deepEqual(names.map(o=>o.text),foods.map(o=>o.name));
+            for(const [index,image] of images.entries()) {
+                const b=edges(image.bounds),name=names[index];
+                assert.ok(b.x>=panel.x+16 && b.right<=panel.right-16 && b.bottom<name.bounds.y);
+                assert.equal(b.x+b.width/2,name.bounds.x+name.bounds.width/2,'Legenda centrada sob a imagem');
+                for(const text of layout.texts) assert.equal(overlap(image.bounds,text.bounds),false,'Asset não sobrepõe texto: '+image.texture+' / '+text.text);
+            }
+        }
+    }
+    async function checkWaiting() {
+        await key('Enter','Enter',13);
+        await key('ArrowRight','ArrowRight',39);
+        await pause(2200);
+        const state=await evaluate(`(()=>{const s=__checkedScene;
+            s.capturarItem(null,{active:true,tipo:'bom'});
+            return {started:s.jogoComecou,score:s.score,timer:s.timer,player:s.player,paused:s.physics.world.isPaused,
+                timerEvent:s.timerJogo,spawn:s.timerSpawn,foods:s.alimentos,overlap:s.overlapAlimentos,
+                bodies:s.physics.world.bodies.size,items:s.children.list.filter(o=>o.tipo).length};})()`);
+        assert.deepEqual(state,{started:false,score:0,timer:60,player:null,paused:true,
+            timerEvent:null,spawn:null,foods:null,overlap:null,bodies:0,items:0},'Esperar/teclar não inicia movimento, cronômetro, alimentos, colisões ou pontos');
+    }
     const resources = () => evaluate(`(()=>{
         const s=__checkedScene,w=s.physics.world;
         const detectors=[...new Set([...w.colliders.getActive(),...w.colliders._pending])];
@@ -236,7 +307,7 @@ try {
         const result = await get('resultadoUI.list.filter(o=>o.type==="Text").map(o=>o.text)');
         assert.deepEqual(result, ['Partida finalizada!', 'Seus Pontos: ' + expected, 'Menu']);
         const bounds = await get('resultadoUI.list.find(o=>o.texture?.key === "pet-educa-ui-panel").getBounds()');
-        assert.deepEqual(bounds, layout.panel, 'Resultado deve reaproveitar o balão centralizado');
+        assert.deepEqual(bounds, resultPanel, 'Resultado deve reaproveitar o balão centralizado');
         const resultLayout = await evaluate(`(()=>{const {resultadoUI}=__checkedScene;return {
             button:resultadoUI.list.find(o=>o.texture?.key==='pet-educa-ui-button').getBounds(),
             texts:resultadoUI.list.filter(o=>o.type==='Text').map(o=>({text:o.text,bounds:o.getBounds()}))};})()`);
@@ -275,7 +346,7 @@ try {
     }
 
     async function fullRound() {
-        await openFood();await click(640,516);
+        await openFood();await click(640,638);
         assert.equal(await get('timer'),60);assert.equal(await get('timerJogo.timeScale'),1);
         assert.equal(await get('timerSpawn.delay'),650);
         assert.equal(await get('player.velocidade'),300);
@@ -321,7 +392,7 @@ try {
             maxOffscreen:Math.max(...audit.samples.map(s=>s.offscreen)),firstArrival:audit.firstArrival,samples,spawns:audit.spawned});
         await shot('food-full-round-result');await key('Enter','Enter',13);await until(()=>attach('MainMenu'),'Resultado não voltou ao menu');
         await evaluate('window.__foodAudit=null;void 0');
-        await openFood();await click(640,516);
+        await openFood();await checkInstructions();await click(640,638);
         assert.equal(await get('score'),0);assert.equal(await get('timer'),60);
         const reopened=[];while((await get('timer'))>54){reopened.push(await checkPlayingResources());await pause(500);}
         lifecycle.push({phase:'reopened-round',samples:reopened});await rememberRound();
@@ -332,7 +403,8 @@ try {
     await viewport(1280,720);
     await navigate('', 'Intro');
     await until(() => get('children.list.some(o=>o.texture?.key === "pet-educa-ui-button")'), 'Intro não construiu a interface');
-    const reference = await get('children.list.filter(o=>["pet-educa-ui-panel","pet-educa-ui-button"].includes(o.texture?.key)).map(o=>({key:o.texture.key,x:o.x,y:o.y,scaleX:o.scaleX,scaleY:o.scaleY}))');
+    const reference = await get('children.list.find(o=>o.texture?.key === "pet-educa-ui-panel").getBounds()');
+    const resultPanel = {...reference,x:(1280-reference.width)/2,y:(720-reference.height)/2};
     await shot('intro-reference');
     await click(504,564);
     await until(() => attach('MainMenu'), 'Menu principal não abriu');
@@ -342,34 +414,26 @@ try {
     assert.equal(await get('timerJogo'), null);
     assert.equal(await get('timerSpawn'), null);
     assert.equal(await get('botaoMenu.visible'), true);
-    assert.deepEqual(await get('instrucoesUI.list.filter(o=>o.type === "Image").map(o=>({key:o.texture.key,x:o.x,y:o.y,scaleX:o.scaleX,scaleY:o.scaleY}))'), reference);
     assert.equal(await get('children.list.some(o=>o.texture?.key === "foodgame-street-background" && o.visible)'), true);
     assert.equal(await get('instrucoesUI.list.some(o=>["pet-educa-ui-park","pet-educa-ui-dog"].includes(o.texture?.key) || o.text === "Pet Educa")'), false);
-    const layout = await evaluate('(()=>{const s=__checkedScene;return {panel:s.painelInstrucoes.getBounds(),button:s.botaoContinuar.getBounds(),texts:s.instrucoesUI.list.filter(o=>o.type==="Text"&&o.text!=="Pet Educa").map(o=>({text:o.text,bounds:o.getBounds(),font:o.style.fontFamily}))};})()');
-    const panel = edges(layout.panel), button = edges(layout.button);
-    assert.equal(panel.x + panel.width / 2, 640, 'Painel não centralizado horizontalmente');
-    assert.equal(panel.y + panel.height / 2, 360, 'Painel não centralizado verticalmente');
-    for (const item of layout.texts) {
-        const b = edges(item.bounds);
-        assert.ok(b.x >= panel.x + 16 && b.right <= panel.right - 16 && b.y >= panel.y + 16 && b.bottom <= panel.bottom - 12, 'Texto fora do painel: ' + item.text);
-        if (item.text === 'Continuar') {
-            assert.equal(item.font, 'Lilita One');
-            assert.ok(b.x >= button.x && b.right <= button.right && b.y >= button.y && b.bottom <= button.bottom);
-        } else {
-            assert.equal(item.font, 'Nunito Sans');
-            assert.ok(b.bottom <= button.y - 16, 'Texto sobrepõe Continuar');
-        }
-    }
+    await checkInstructions();
+    await checkWaiting();
+    await evaluate('window.__oldInstructions=__checkedScene.instrucoesUI;window.__oldInstructionChildren=__checkedScene.instrucoesUI.list.slice();void 0');
     await shot('food-instructions-pc');
     await click(1172,44);
     await until(() => attach('MainMenu'), 'Menu não abriu nas instruções');
-    pass('Painel das instruções sobre o cenário do jogo, sem parque/título/retrato; Menu disponível');
+    assert.equal(await evaluate('!window.__oldInstructions.scene && window.__oldInstructionChildren.every(o=>!o.scene && o.listenerCount("pointerdown")===0)'),true,'Menu destrói imagens, textos e eventos das instruções');
+    pass('Instruções com os dez assets/nomes, grupos/símbolos corretos; espera sem partida e descarte ao sair');
 
     await openFood();
-    await click(640,516);
+    await click(640,638);
+    await evaluate('window.__firstStart={player:__checkedScene.player,timer:__checkedScene.timerJogo,spawn:__checkedScene.timerSpawn};void 0');
+    await click(640,638);await click(640,638);
+    assert.equal(await evaluate('window.__firstStart.player===__checkedScene.player && window.__firstStart.timer===__checkedScene.timerJogo && window.__firstStart.spawn===__checkedScene.timerSpawn'),true,'Cliques reais repetidos não recriam a partida');
     assert.equal(await get('jogoComecou'), true);
     assert.equal(await get('instrucoesUI'), null);
-    assert.equal(await get('botaoContinuar.scene === undefined'), true);
+    assert.equal(await get('botaoComecar.scene === undefined'), true);
+    assert.equal(await get('botaoComecar.listenerCount("pointerdown")'),0);
     assert.equal(await get('botaoMenu.enabled'), true);
     assert.equal(await get('score'), 0);
     assert.equal(await get('timer'), 60);
@@ -399,13 +463,16 @@ try {
 
     await openFood();
     await key('Enter','Enter',13);
+    assert.equal(await get('jogoComecou'), false, 'Enter aguarda o clique em Começar');
+    await checkInstructions();
+    await click(640,638);
     assert.equal(await get('jogoComecou'), true);
     await key('Escape','Escape',27);
     await until(() => attach('MainMenu'), 'Escape não voltou ao menu');
-    pass('Reentrada, início por Enter e saída por Escape');
+    pass('Reentrada reapresenta instruções; Enter aguarda Começar e Escape volta ao menu');
 
     await openFood();
-    await click(640,516);
+    await click(640,638);
     await finishFood();
     pass('Fim em zero, Pontos finais, balão único, partida parada e botão Menu no resultado');
     await fullRound();
@@ -416,13 +483,16 @@ try {
     await touch(504,564);
     await until(() => attach('MainMenu'), 'Menu móvel não abriu');
     await openFood(true);
-    const mobilePanel = await get('painelInstrucoes.getBounds()');
-    assert.equal(mobilePanel.x + mobilePanel.width / 2, 640);
-    assert.equal(mobilePanel.y + mobilePanel.height / 2, 360);
+    await checkInstructions();
+    await checkWaiting();
     await shot('food-instructions-mobile');
+    await viewport(740,360,true);await frames(4);
+    await checkInstructions();
+    await shot('food-instructions-mobile-small');
+    await viewport(844,390,true);await frames(4);
     await touch(1172,44,true);
     assert.equal(await get('uiNavigating'), false);
-    await touch(640,516);
+    await touch(640,638);
     assert.equal(await get('jogoComecou'), true);
     assert.equal(await get('touchControls.enabled'), true);
     await checkHUDLabels();
@@ -447,11 +517,12 @@ try {
     pass('Celular horizontal: instruções, Menu por toque, cancelamento e reentrada limpa');
 
     await openFood(true);
-    await touch(640,516);
+    await touch(640,638);
     await finishFood(true);
     await openFood(true);
+    await checkInstructions();
     assert.equal(await get('resultadoUI'), null);
-    await touch(640,516);
+    await touch(640,638);
     assert.equal(await get('score'), 0);
     assert.equal(await get('timer'), 60);
     assert.equal(await get('physics.world.isPaused'), false);
@@ -463,7 +534,7 @@ try {
         (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error') ||
         (e.method === 'Network.responseReceived' && e.params.response.status >= 400 && e.params.response.url.includes('/assets/')));
     assert.deepEqual(failures, [], 'Erros de execução ou assets');
-    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, lifecycle, viewports: ['1280x720','844x390'], renderer: 'Edge WebGL (SwiftShader)', errors: failures },null,2));
+    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, lifecycle, viewports: ['1280x720','844x390','740x360'], renderer: 'Edge WebGL (SwiftShader)', errors: failures },null,2));
 } catch(error) {
     console.error(error);
     if(page) {
