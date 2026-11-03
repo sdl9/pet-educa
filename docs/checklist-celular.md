@@ -15,7 +15,9 @@ por HTTP; confira que está usando o mesmo candidato identificado no registro.
 - [ ] Passeio: movimento/câmera/colisões, conversas e tópicos, sete cuidados e
   conclusão, Saci/coração, fonte/brinquedo/tutor animados, Menu e reentrada limpa.
 - [ ] Quiz: escolha única, acerto/erro, leitura das perguntas longas (6, 11 e 13)
-  e feedback, avanço manual, conclusão das 15 perguntas, reinício e Menu.
+  e feedback, avanço manual, conclusão das cinco perguntas sorteadas do banco
+  de 15, novo sorteio no reinício e Menu. As perguntas longas podem exigir
+  outras partidas para serem sorteadas; não há obrigação de aparecerem juntas.
 - [ ] Cancelar gesto/soltar fora do controle; alternar aba ou bloquear/desbloquear
   e voltar. Conferir que não há movimento preso, resposta ou navegação duplicada.
 - [ ] Conferir carregamento após recarregar e reabrir os jogos; registrar imagens,

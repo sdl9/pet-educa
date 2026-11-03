@@ -12,7 +12,7 @@ Em outro terminal, execute:
 
 | Comando | Cobertura |
 | --- | --- |
-| `npm.cmd run test:quiz` | 19 casos de regras e APIs simuladas da UI do quiz; não renderiza navegador |
+| `npm.cmd run test:quiz` | 21 casos de banco, sorteio de cinco perguntas, reinício e APIs simuladas da UI do quiz; não renderiza navegador |
 | `npm.cmd run test:quiz-visual` | Check de geometria/estados/recortes com doubles, movido de `tmp`; não renderiza navegador |
 | `npm.cmd run test:scene-comparison` | Política de comparação do cenário: rejeita diferenças estáticas, duplicatas, objetos inesperados e geometria incorreta; aceita somente as variações temporais declaradas |
 | `npm.cmd run test:menu` | Intro, três cartões utilizáveis e destinos, mouse nas bordas/ícones/rótulos, teclado, toque emulado, retorno real ao menu, reentradas, fontes e limpeza do editor |
@@ -133,7 +133,7 @@ As assertions existentes de IDs, contagens, grupos, offsets, posições, metadad
 
 ## Evidências e limites
 
-O teste do menu foi movido de `src/game/ui` para `tests/petEducaUI.browser-check.mjs`. Preserva textos, medidas, fontes, filtragem, contatos simultâneos, reentradas, limpeza e erros/timeout de fontes. A expectativa de quiz indisponível foi substituída após confirmar `SaciGame` no registro e no terceiro cartão do menu; agora também exige uma rodada de 15 perguntas inicialmente zerada. Os retornos dos três jogos usam controles reais, por teclado/mouse ou toque emulado. Somente o cenário específico de limpeza do editor usa troca programática de cena, pois não existe botão de saída no editor.
+O teste do menu foi movido de `src/game/ui` para `tests/petEducaUI.browser-check.mjs`. Preserva textos, medidas, fontes, filtragem, contatos simultâneos, reentradas, limpeza e erros/timeout de fontes. A expectativa de quiz indisponível foi substituída após confirmar `SaciGame` no registro e no terceiro cartão do menu; agora também exige uma rodada de cinco perguntas inicialmente zerada, sorteadas do banco preservado de 15. O trecho de quiz em test:walk-ui percorre cinco perguntas, acerto/erro, resultado, reinício com novo Fisher–Yates e reentrada em PC/toque emulado. Os retornos dos três jogos usam controles reais, por teclado/mouse ou toque emulado. Somente o cenário específico de limpeza do editor usa troca programática de cena, pois não existe botão de saída no editor.
 
 Menu: viewports 1280 × 720 (DPR 1) e 740 × 360 (DPR 2, canvas exibido 640 × 360). O toque é habilitado antes de inicializar uma página nova, pois Phaser detecta capacidades na abertura. Passeio e alimentação mantêm seus próprios viewports de linha de base (1280 × 720 e 844 × 390). O editor usa o tamanho de janela já previsto em seu teste e registra capturas reais. Toque é emulado e WebGL pode usar SwiftShader; nenhum desses resultados comprova celular físico, GPU de hardware ou renderizador Canvas real.
 

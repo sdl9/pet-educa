@@ -178,7 +178,7 @@ try {
             await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator && __checkedScene.round)'), 'Quiz round not ready');
             assert.equal(await evaluate('__checkedScene.round.index'), 0);
             assert.equal(await evaluate('__checkedScene.round.hits'), 0);
-            assert.equal(await evaluate('__checkedScene.round.total'), 15);
+            assert.equal(await evaluate('__checkedScene.round.total'), 5);
         }
     };
     const assertFrame = async () => {

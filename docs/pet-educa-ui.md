@@ -4,7 +4,7 @@
 
 O fluxo é Boot → Preloader → Intro → MainMenu. **Os três cartões são utilizáveis**:
 Jogo da Alimentação (`FoodGame`), Passeio Consciente (`WalkGame`) e Quiz do Saci
-(`SaciGame`, 15 perguntas com feedback, avanço manual, resultado e reinício).
+(`SaciGame`, cinco perguntas sorteadas do banco de 15, com feedback, avanço manual, resultado e reinício).
 Todos retornam ao menu. Teclado, mouse e toque emulado estão cobertos pela suíte;
 celular físico permanece pendente.
 

@@ -311,18 +311,65 @@ try {
     pass('Menu por toque, cancelamento e reabertura no celular horizontal');
     await viewport(1280,720);
 
-    await navigate('?saciQuiz', 'SaciGame');
-    await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator)'), 'Quiz não inicializou');
-    assert.equal(await get('quizUI.questionPanel.width'), 480);
-    assert.equal(await get('quizUI.questionPanel.scaleX'), 2);
-    assert.equal(await get('quizUI.indicator.text'), 'Pergunta 1 de 15');
-    await shot('quiz-reference-pc');
-    await click(600, 424);
-    assert.equal(await get('round.hits'), 1);
-    assert.equal(await get('quizUI.answers[1].state'), 'correct');
-    await click(1120, 660);
-    assert.equal(await get('round.index'), 1);
-    pass('Quiz do Saci preservado: moldura, resposta e avanço');
+    for (const mobile of [false, true]) {
+        await viewport(mobile ? 844 : 1280, mobile ? 390 : 720, mobile);
+        await navigate('?saciQuiz', 'SaciGame');
+        await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator)'), 'Quiz não inicializou');
+        assert.equal(await get('quizUI.questionPanel.width'), 480);
+        assert.equal(await get('quizUI.questionPanel.scaleX'), 2);
+        const activate = mobile ? touch : click;
+        for (let game = 0; game < 2; game++) {
+            const ids = await get('round.questions.map(q=>q.id)');
+            assert.equal(ids.length, 5);
+            assert.equal(new Set(ids).size, 5);
+            let hits = 0;
+            for (let index = 0; index < 5; index++) {
+                assert.equal(await get('quizUI.indicator.text'), `Pergunta ${index + 1} de 5`);
+                const question = await get('round.currentQuestion');
+                assert.equal(await get('quizUI.question.text'), question.pergunta);
+                assert.deepEqual(await get('quizUI.answers.map(a=>a.label.text)'), question.alternativas);
+                const correct = 'ABC'.indexOf(question.correta);
+                const chosen = game === 0 && index % 2 ? (correct + 1) % 3 : correct;
+                if (chosen === correct) hits++;
+                const b = await get(`quizUI.answers[${chosen}].hit.getBounds()`);
+                await activate(b.x + b.width / 2, b.y + b.height / 2);
+                await activate(b.x + b.width / 2, b.y + b.height / 2);
+                assert.equal(await get('round.hits'), hits, 'Uma única resposta por pergunta');
+                assert.equal(await get('round.index'), index, 'Feedback não avança automaticamente');
+                assert.equal(await get(`quizUI.answers[${correct}].state`), 'correct');
+                assert.equal(await get('quizUI.next.label.text'), index === 4 ? 'Finalizar' : 'Próxima');
+                await shot(`quiz-${mobile ? 'touch' : 'pc'}-${game}-${index}`);
+                await activate(1120, 660);
+            }
+            assert.equal(await get('round.phase'), 'complete');
+            assert.equal(await get('round.currentQuestion'), null);
+            assert.equal(await get('round.hits'), game === 0 ? 3 : 5);
+            assert.equal(await get(`children.list.some(o=>o.visible && o.text==='Você acertou ${hits} de 5 perguntas')`), true);
+            if (game === 0) {
+                // Oráculo controlado só no teste: prova que o botão solicita outro Fisher–Yates.
+                await evaluate('window.__previousQuestions=__checkedScene.round.questions;window.__quizDraws=0;__checkedScene.round.random=()=>{window.__quizDraws++;return 0;};void 0');
+                const b = await get('quizUI.restart.hit.getBounds()');
+                await activate(b.x + b.width / 2, b.y + b.height / 2);
+                assert.equal(await evaluate('window.__quizDraws'), 14);
+                assert.equal(await evaluate('__checkedScene.round.questions!==window.__previousQuestions'), true);
+                assert.deepEqual(await get('round.questions.map(q=>q.id)'), [2, 3, 4, 5, 6]);
+                assert.equal(await get('round.index'), 0);
+                assert.equal(await get('round.hits'), 0);
+                assert.equal(await get('round.feedback'), null);
+                assert.equal(await get('round.phase'), 'question');
+            }
+        }
+        const b = await get('quizUI.menu.hit.getBounds()');
+        await activate(b.x + b.width / 2, b.y + b.height / 2);
+        await until(() => attach('MainMenu'), 'Quiz não voltou ao menu');
+        await activate(500, 558);
+        await until(() => attach('SaciGame'), 'Quiz não reabriu');
+        assert.equal(await get('round.total'), 5);
+        assert.equal(await get('round.hits'), 0);
+        assert.equal(await get('round.index'), 0);
+        assert.equal(await get('round.phase'), 'question');
+    }
+    pass('Quiz PC/toque: cinco perguntas únicas, feedback, resultado 3/5 e 5/5, novo sorteio no reinício e reentrada');
 
     const failures = page.events.filter(e => e.method === 'Runtime.exceptionThrown' ||
         (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error') ||

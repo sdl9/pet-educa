@@ -19,7 +19,7 @@ disponíveis e retornam ao mesmo menu:
 | --- | --- | --- |
 | Jogo da Alimentação | `FoodGame` | Mover Caramelo, coletar alimentos adequados e evitar os inadequados; rodada de 60 segundos, Pontos e resultado |
 | Passeio Consciente | `WalkGame` | Explorar a praça, conversar em cinco pontos e concluir sete cuidados, incluindo três tópicos da veterinária |
-| Quiz do Saci | `SaciGame` | Responder 15 perguntas na ordem fornecida, receber feedback, avançar manualmente, ver o resultado e reiniciar |
+| Quiz do Saci | `SaciGame` | Responder cinco perguntas distintas sorteadas do banco de 15, receber feedback, avançar manualmente, ver o resultado e sortear novamente ao reiniciar |
 
 A interface é horizontal, em resolução lógica **1280 × 720**. O Phaser usa
 `Scale.FIT` e `CENTER_BOTH` para ajustar e centralizar o canvas no espaço disponível.
@@ -95,7 +95,7 @@ O navegador deve estar instalado: os comandos não baixam um executável.
 
 | Comando | O que verifica |
 | --- | --- |
-| `npm run test:quiz` | Regras das 15 perguntas e UI com doubles; não renderiza navegador |
+| `npm run test:quiz` | Banco de 15 perguntas, sorteio de cinco por partida, reinício e UI com doubles; não renderiza navegador |
 | `npm run test:quiz-visual` | Geometria, estados e recortes nas APIs simuladas WebGL/Canvas |
 | `npm run test:scene-comparison` | Política explícita de comparação entre cenário jogável e editor |
 | `npm run test:menu` | Intro, três cartões/destinos, fontes, PC/toque emulado e retornos |

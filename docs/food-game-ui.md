@@ -24,8 +24,14 @@ retorna ao menu. A saída bloqueia novas ativações, interrompe o movimento
 e cancela timer/spawn antes de trocar de cena. O cronômetro foi deslocado
 para a esquerda do botão. Regras de alimentos, pontuação e movimento não mudaram.
 
-Os alimentos surgem um por vez a cada 500 ms, alternando bom e ruim.
-Com a velocidade de 500 px/s, ficam cerca de 250 pixels entre os centros.
+Os alimentos surgem um por vez a cada **650 ms**, alternando bom e ruim.
+Com a velocidade de **325 px/s**, ficam cerca de 211 pixels entre os centros.
+O ajuste após avaliação com crianças reduz a velocidade anterior de 500 px/s
+em 35% e aumenta o intervalo anterior de 500 ms em 30%. Não há aceleração
+progressiva. A velocidade do personagem permanece em 300 px/s.
+Como cada item permanece mais tempo visível, o limite de retenção passa de seis
+para sete itens, sem pooling ou crescimento durante a partida. O teste mede
+a chegada à faixa de captura em cerca de quatro segundos e a rodada de 60 s.
 As alturas continuam aleatórias, mas os pares simultâneos que podiam se
 sobrepor foram removidos. A sequência recomeça a cada partida.
 

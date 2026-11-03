@@ -746,3 +746,14 @@ A primeira tentativa de compactação foi rejeitada porque a API do Windows grav
 Evidências selecionadas duráveis: `D:/ARQUIVOS/Documents/pet-educa-candidatos/evidencias-etapa-7-6a612d5f8d3b/`, **95 arquivos** copiados e conferidos por SHA-256, inventariados em `sha256-evidencias.json`. Incluem logs da coleta/retomada, auditorias externas reproduzíveis, capturas/medidas, revisão acumulada e comparação do touchcancel; não incluem perfis. O manifesto e essa pasta ficam ao lado do ZIP, fora dele. A recuperação de entrada permanece no diretório TEMP identificado acima. Os três servidores locais próprios foram encerrados.
 
 A conclusão está limitada a este candidato e às verificações documentadas. Permanecem a validação física da usuária e a ressalva preexistente do Phaser. Sem push, merge, upload, itch.io, publicação, reescrita de histórico ou implementação de correções adicionais.
+
+## Alteração posterior — feedback da avaliação com crianças
+
+Em 03/11/2026, a usuária autorizou separadamente reduzir o ritmo da alimentação
+e sortear cinco perguntas por partida do Quiz do Saci. Entrada limpa
+`a4dc595b59fee746f70dac6158f639c4e4cefae1`, inicialmente em `etapa-7` e ao final
+em `quiz-e-food`, já selecionada externamente no mesmo HEAD antes do commit.
+Não houve criação/troca de branch pelo agente. Recuperação, valores anteriores/novos, arquivos, evidências
+e limites estão em [ajustes-feedback-criancas.md](ajustes-feedback-criancas.md).
+O banco de 15 perguntas, assets e passeio foram preservados. Essa alteração
+posterior não modifica o ZIP nem os resultados históricos da etapa 7.

@@ -21,7 +21,7 @@ export default class FoodObjects {
         item.body.setSize(30, 30).setOffset(1, 1);
         item.body.updateFromGameObject();
         item.body.setAllowGravity(false);
-        item.body.setVelocityX(-500);
+        item.body.setVelocityX(-325);
         return item;
     }
 }

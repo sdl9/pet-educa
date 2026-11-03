@@ -144,7 +144,7 @@ try {
         assert.equal(state.offscreen,0,'Nenhum alimento completamente à esquerda permanece vivo');
         assert.equal(state.enabledBodies,state.group+1,'Somente jogador e alimentos vivos têm corpos habilitados');
         assert.equal(state.bodies,state.group+1+state.pendingBodies,'Corpos descartados só aguardam o postupdate do Phaser');
-        assert.ok(state.group<=6,'Retenção limitada ao tempo de travessia: no máximo seis alimentos');
+        assert.ok(state.group<=7,'Retenção limitada ao tempo de travessia: no máximo sete alimentos a 325 px/s e 650 ms');
         return state;
     }
     const rememberRound = () => evaluate(`(()=>{const s=__checkedScene;window.__foodLeaving={world:s.physics.world,
@@ -277,8 +277,10 @@ try {
     async function fullRound() {
         await openFood();await click(640,516);
         assert.equal(await get('timer'),60);assert.equal(await get('timerJogo.timeScale'),1);
+        assert.equal(await get('timerSpawn.delay'),650);
+        assert.equal(await get('player.velocidade'),300);
         await rememberRound();
-        await evaluate(`(()=>{const s=__checkedScene;window.__foodAudit={spawned:[],samples:[],invalid:[]};
+        await evaluate(`(()=>{const s=__checkedScene;window.__foodAudit={spawned:[],samples:[],invalid:[],startedAt:s.time.now,firstArrival:null};
             const original=s.timerSpawn.callback;
             s.timerSpawn.callback=function(...args){const before=new Set(s.alimentos.getChildren());original.apply(this,args);
                 for(const item of s.alimentos.getChildren())if(!before.has(item))window.__foodAudit.spawned.push({
@@ -289,12 +291,14 @@ try {
                 const state={timer:s.timer,items:items.length,offscreen:items.filter(o=>o.getBounds().right<0).length,
                     bodies:w.bodies.size,pending:w.pendingDestroy.size,detectors:detectors.filter(c=>c.active).length,queued:detectors.length};
                 window.__foodAudit.samples.push(state);
-                if(state.items>6||state.offscreen||state.detectors!==1||state.queued!==1||state.bodies!==state.items+1+state.pending)
+                if(!window.__foodAudit.firstArrival && (s.score!==0 || items.some(o=>o.body.left<=s.player.body.right)))
+                    window.__foodAudit.firstArrival={elapsedMs:s.time.now-window.__foodAudit.startedAt,timer:s.timer};
+                if(state.items>7||state.offscreen||state.detectors!==1||state.queued!==1||state.bodies!==state.items+1+state.pending)
                     window.__foodAudit.invalid.push(state);};
             s.events.on('postupdate',sample);s.events.once('shutdown',()=>s.events.off('postupdate',sample));
         })()`);
         const start=Date.now(),samples=[];
-        // Round is unaccelerated: actual 60 countdown ticks and normal 500 ms spawns.
+        // Round is unaccelerated: actual 60 countdown ticks and normal 650 ms spawns.
         while(!await get('jogoFinalizado')) {
             if(Date.now()-start>120000)throw new Error('Rodada não completou 60 segundos de jogo');
             samples.push(await checkPlayingResources(true));await pause(1000);
@@ -302,10 +306,11 @@ try {
         await frames(4);
         const audit=await evaluate('window.__foodAudit');
         assert.deepEqual(audit.invalid,[],'Nenhum frame acumula alimentos fora da tela ou detectores');
-        assert.ok(audit.spawned.length>=119&&audit.spawned.length<=120,'Uma rodada de 60 s mantém a cadência de 500 ms');
+        assert.ok(audit.firstArrival && audit.firstArrival.elapsedMs < 4500,'Alimentos chegam à faixa de captura em cerca de quatro segundos, dentro da rodada');
+        assert.equal(audit.spawned.length,92,'Uma rodada de 60 s mantém a cadência de 650 ms');
         for(const [index,item] of audit.spawned.entries()) {
             assert.equal(item.tipo,index%2?'ruim':'bom');assert.equal(item.x,1330);assert.ok(item.y>=440&&item.y<=630);
-            assert.equal(item.velocity,-500);assert.equal(item.scale,2);assert.deepEqual(item.origin,[0.5,0.5]);
+            assert.equal(item.velocity,-325);assert.equal(item.scale,2);assert.deepEqual(item.origin,[0.5,0.5]);
             assert.deepEqual(item.body,[60,60]);assert.equal(item.gravity,false);
         }
         assert.equal(await get('timer'),0);assert.equal((await resources()).items,0);assert.equal((await resources()).detectors,0);
@@ -313,7 +318,7 @@ try {
         lifecycle.push({phase:'full-round',wallMs:Date.now()-start,spawned:audit.spawned.length,
             frames:audit.samples.length,maxItems:Math.max(...audit.samples.map(s=>s.items)),
             maxBodies:Math.max(...audit.samples.map(s=>s.bodies)),maxDetectors:Math.max(...audit.samples.map(s=>s.detectors)),
-            maxOffscreen:Math.max(...audit.samples.map(s=>s.offscreen)),samples,spawns:audit.spawned});
+            maxOffscreen:Math.max(...audit.samples.map(s=>s.offscreen)),firstArrival:audit.firstArrival,samples,spawns:audit.spawned});
         await shot('food-full-round-result');await key('Enter','Enter',13);await until(()=>attach('MainMenu'),'Resultado não voltou ao menu');
         await evaluate('window.__foodAudit=null;void 0');
         await openFood();await click(640,516);
@@ -321,7 +326,7 @@ try {
         const reopened=[];while((await get('timer'))>54){reopened.push(await checkPlayingResources());await pause(500);}
         lifecycle.push({phase:'reopened-round',samples:reopened});await rememberRound();
         await key('Escape','Escape',27);await until(()=>attach('MainMenu'),'Rodada reaberta não voltou ao menu');await checkReleasedRound(true);
-        pass('Rodada completa sem aceleração e reaberta: até seis itens, zero fora da tela e um overlap constante');
+        pass('Rodada completa sem aceleração e reaberta: até sete itens, zero fora da tela e um overlap constante');
     }
 
     await viewport(1280,720);
@@ -377,6 +382,7 @@ try {
     const oldX = await get('player.x');
     await page.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
     await frames(10);
+    assert.equal(await get('player.body.velocity.x'),300,'Controles mantêm velocidade de resposta');
     await page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
     await frames();
     assert.ok((await get('player.x')) > oldX);

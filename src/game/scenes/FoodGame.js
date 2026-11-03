@@ -336,10 +336,10 @@ export class FoodGame extends Scene {
     }
 
     iniciarSpawn() {
-        // Um alimento por vez: a 500 px/s, 500 ms deixam 250 px entre os centros.
+        // Um alimento por vez: a 325 px/s, 650 ms deixam cerca de 211 px entre os centros.
         let proximoTipo = 'bom';
         this.timerSpawn = this.time.addEvent({
-            delay: 500,
+            delay: 650,
             callback: () => {
                 if (this.jogoFinalizado || this.uiNavigating) return;
                 FoodObjects.criar(this, proximoTipo, this.alimentos);
