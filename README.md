@@ -1,6 +1,6 @@
 # Pet Educa
 
-GIF: ![Menu inicial](docs/media/menu.gif)
+![Menu inicial](docs/media/menu.gif)
 
 **Pet Educa** é um jogo educativo para navegador sobre alimentação e cuidado responsável com os animais. O projeto foi desenvolvido por Laíssa Dornelles Salles em colaboração com o **FeevalePet**, da Universidade Feevale, usando JavaScript e Phaser.
 
