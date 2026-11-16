@@ -23,14 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
-# Browser integration checks: generated screenshots and temporary comparison
-/tmp/pet-educa-check-*/
-/tmp/walk-editor-check-*/
-/tmp/walk-editor-static-check.mjs
+# Saídas locais de testes, capturas, caches e perfis temporários
+/tmp/
 
-# Capturas e relatório do teste visual do passeio
-/tmp/walk-ui-validation/
-/tmp/walk-animations-validation/
-
-# Capturas e relatório do jogo de alimentação
-/tmp/food-ui-validation/
+# Artefatos locais retirados do índice; não apagar as cópias de entrada
+/dist.zip
+/h -u origin walk-layout-editor-phase-a

@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { preloadAnimatedWalkAssets } from '../data/walkAnimatedAssets';
 import { preloadQuizSaciAssets } from '../data/quizSaciAssets';
 import { preloadPetEducaUI, openPetEducaScene } from '../ui/petEducaUI';
+import { FOOD_CONFIG } from '../data/foodConfig';
 
 export class Preloader extends Scene {
     constructor() {
@@ -31,19 +32,12 @@ export class Preloader extends Scene {
         this.load.setPath('assets');
         this.petEducaFonts = preloadPetEducaUI(this);
 
-        this.load.image('logo', '2.png');
-        this.load.image('tst', 'tst.png');
-
         this.load.image('foodgame-street-background', 'foodgame/background/foodgame-street-background.png');
         this.load.spritesheet('food-dog-caramelo', 'foodgame/dog/food-dog-caramelo-sheet.png', {
             frameWidth: 64,
             frameHeight: 64
         });
-        for (const key of [
-            'food-good-kibble', 'food-good-rice', 'food-good-carrot', 'food-good-water',
-            'food-bad-chocolate', 'food-bad-grapes', 'food-bad-avocado',
-            'food-bad-candy', 'food-bad-onion', 'food-bad-garlic'
-        ]) {
+        for (const { texture: key } of Object.values(FOOD_CONFIG).flat()) {
             this.load.image(key, `foodgame/foods/${key}.png`);
         }
 
@@ -68,10 +62,10 @@ export class Preloader extends Scene {
             : import.meta.env.DEV && (params.has('quizVisual') || params.has('saciQuiz'))
             ? 'SaciGame'
             : params.has('walkLearning')
-            ? 'WalkGameLearning'
+            ? 'WalkGame'
             : 'Intro';
 
-        if (['Intro', 'SaciGame', 'WalkGameLearning'].includes(startScene)) {
+        if (['Intro', 'SaciGame', 'WalkGame'].includes(startScene)) {
             openPetEducaScene(this, startScene, this.petEducaFonts, {
                 visualDemo: import.meta.env.DEV && params.has('quizVisual')
             });

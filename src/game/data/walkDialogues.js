@@ -2,7 +2,7 @@ export const WALK_DIALOGUES = {
     intro: [
         {
             speaker: 'Passeio Consciente',
-            text: 'Explore a praça e encontre os 5 pontos de cuidado responsável. Use WASD ou as setas para andar e pressione E ou ESPAÇO para interagir.'
+            text: 'Explore a praça e encontre os 5 pontos de cuidado responsável. Use WASD ou as setas para andar e pressione Espaço para interagir.'
         }
     ],
 

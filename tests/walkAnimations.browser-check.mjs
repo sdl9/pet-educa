@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
+import { startWalk } from './helpers/startWalk.mjs';
 
 // Teste local com Edge headless, seguindo os checks de navegador já usados no projeto.
 const baseURL = process.env.WALK_UI_URL || 'http://localhost:8080';
@@ -54,6 +55,7 @@ async function connect(url) {
 
 let browser, page;
 const passed = [];
+const resumptions = [];
 try {
     const portFile = await until(() => fs.readFile(path.join(profile, 'DevToolsActivePort'), 'utf8'), 'Edge não iniciou');
     const [port, endpoint] = portFile.trim().split(/\r?\n/);
@@ -110,12 +112,32 @@ try {
     function pass(name) { passed.push(name); console.log('PASS ' + name); }
 
     await viewport(1280, 720);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
+    await startWalk({ page, evaluate, until });
     const tutorState = () => evaluate('(()=>{const {tutorPatrol,interactions}=__checkedScene;return ({x:tutorPatrol.sprite.x,y:tutorPatrol.sprite.y,flip:tutorPatrol.sprite.flipX,direction:tutorPatrol.direction,pause:tutorPatrol.pauseRemaining,paused:tutorPatrol.sprite.anims.isPaused,frame:tutorPatrol.sprite.frame.name,interaction:interactions.find(i=>i.id==="guia").x});})()');
     const freeze = () => evaluate('(()=>{const p=__checkedScene.tutorPatrol;p.realUpdate=p.update;p.update=()=>{};})()');
     const thaw = () => evaluate('__checkedScene.tutorPatrol.update=__checkedScene.tutorPatrol.realUpdate');
     const tick = delta => evaluate('__checkedScene.tutorPatrol.realUpdate(' + delta + ',false)');
     const reset = (x=544, direction=1, pauseMs=0) => evaluate('(()=>{const p=__checkedScene.tutorPatrol;p.sprite.setPosition(' + x + ',368);p.direction=' + direction + ';p.pauseRemaining=' + pauseMs + ';p.realUpdate(0,false);})()');
+    // Observe a fixed window of delivered scene deltas, not a Node wall-clock
+    // sleep. Phaser smooths/clamps delta, so a stalled browser advances less
+    // game time. Success still depends on the assertions after this window.
+    const tutorWindow = milliseconds => evaluate(`new Promise((resolve,reject)=>{
+        const s=__checkedScene,start=performance.now();let elapsed=0,count=0;
+        const cleanup=()=>{clearTimeout(timer);s.events.off('postupdate',step);s.events.off('shutdown',shutdown);};
+        const shutdown=()=>{cleanup();reject(new Error('Cena encerrada durante a verificação de retomada'));};
+        const step=(time,delta)=>{
+            elapsed+=delta;count++;
+            if(elapsed>=${milliseconds}) {
+                const p=s.tutorPatrol;
+                const state={x:p.sprite.x,direction:p.direction,pause:p.pauseRemaining,paused:p.sprite.anims.isPaused};
+                cleanup();resolve({elapsed,frames:count,wallMs:performance.now()-start,state});
+            }
+        };
+        // Watchdog for a stopped scene, not extra allowed tutor movement time.
+        const timer=setTimeout(()=>{cleanup();reject(new Error('Cena não entregou ${milliseconds} ms de atualizações para verificar a retomada'));},9000);
+        s.events.on('postupdate',step);s.events.once('shutdown',shutdown);
+    })`);
     const closeTo = (actual, expected) => assert.ok(Math.abs(actual-expected) < 0.01, `${actual} != ${expected}`);
     const animations = await get('children.list.filter(o=>["plaza-fountain-water","plaza-spring-rider","npc-tutor-cachorro-guia"].includes(o.texture?.key)).map(o=>({key:o.texture.key,w:o.width,h:o.height,origin:[o.originX,o.originY],scale:o.scaleX,frames:o.anims.currentAnim.frames.length,rate:o.anims.currentAnim.frameRate,repeat:o.anims.currentAnim.repeat,x:o.x,y:o.y}))');
     assert.equal(animations.length, 3);
@@ -175,12 +197,24 @@ try {
         await page.send('Input.dispatchKeyEvent',{type:'keyUp',code,key,windowsVirtualKeyCode:number});
         await frames(2);
     }
-    for(const [x,mode,pauseMs] of [[640,'E',320],[448,'SPACE',320],[640,'TOUCH',320],[544,'E',0]]) {
-        await reset(x,x===640?-1:1,pauseMs);
+    for(const [x,mode,pauseMs] of [[640,'SPACE',320],[448,'SPACE',320],[640,'TOUCH',320],[544,'SPACE',0]]) {
+        // Reach endpoints through the controller: pending pause retains the
+        // incoming direction and flips it only when the 320 ms pause ends.
+        await reset(544,x===448?-1:1);
+        if(pauseMs) await tick(2000);
+        const arrival=await tutorState();
+        assert.equal(arrival.x,x);assert.equal(arrival.pause,pauseMs);
+        assert.equal(arrival.direction,x===448?-1:1);
         await approach('guia');
         if(mode==='TOUCH') { await viewport(844,390,true); await frames(6); await approach('guia'); await touch(1050,650); }
-        else await key(mode==='E'?'KeyE':'Space',mode==='E'?'e':' ',mode==='E'?69:32);
+        else {
+            await key('KeyE','e',69);
+            assert.equal(await get('dialogueSystem.isOpen()'),false,'E não inicia interação');
+            await key('Space',' ',32);
+        }
         assert.equal(await get('dialogueSystem.isOpen()'),true,mode);
+        await key('KeyE','e',69);
+        assert.equal(await get('dialogueSystem.isOpen()'),true,'E não conclui o diálogo');
         await thaw();
         const stopped=await tutorState(); await pause(450);
         const after=await tutorState();
@@ -189,21 +223,28 @@ try {
         await shot('dialogue-'+mode.toLowerCase());
         if(mode==='TOUCH') await touch(1112,652); else await key('Space',' ',32);
         assert.equal(await get('dialogueSystem.isOpen()'),false);
-        await pause(650);
-        assert.ok(Math.abs((await tutorState()).x-stopped.x)<35);
-        assert.equal((await tutorState()).paused,false);
+        const window=await tutorWindow(650);
+        const resumed=window.state;
+        const displacement=resumed.x-stopped.x;
+        assert.ok(Math.abs(displacement)<35);
+        assert.equal(resumed.paused,false);
+        assert.ok(Math.abs(displacement)>0,'Tutor deve realmente se mover após o diálogo');
+        assert.equal(Math.sign(displacement),pauseMs ? -stopped.direction : stopped.direction,'Tutor retoma na direção esperada');
+        assert.equal(resumed.pause,0);
+        resumptions.push({x,mode,pauseMs,...window,displacement});
         await freeze();
     }
-    pass('E, espaço e toque; diálogo congela passos no trajeto e pausas nas extremidades, retomada sem salto');
+    pass('Espaço e toque preservados, E inativo; diálogo congela passos/pausas e retoma sem salto');
     await viewport(1280,720);
     await reset(448,-1); await tick(4000);
     await get('scene.start("MainMenu");void 0'); await until(()=>attach('MainMenu'),'Menu não abriu');
-    await get('scene.start("WalkGameLearning");void 0'); await until(()=>attach('WalkGameLearning'),'Passeio não reabriu');
+    await get('scene.start("WalkGame");void 0'); await until(()=>attach('WalkGame'),'Passeio não reabriu');
+    await startWalk({ page, evaluate, until });
     const restarted=await tutorState();
     assert.ok(restarted.x>=544&&restarted.x<555); assert.equal(restarted.y,368); assert.equal(restarted.direction,1); assert.equal(restarted.flip,false);
     assert.equal(await get('walkCollisions.staticBodies.getChildren().filter(z=>z.name.startsWith("npc-tutor")).length'),1);
     assert.equal(await get('children.list.filter(o=>o.texture?.key==="npc-tutor-cachorro-guia").length'),1);
-    assert.equal(await evaluate('import("/src/game/data/walkStage18Map.json").then(m=>m.default.interactions.find(i=>i.id==="guia").x)'),544);
+    assert.equal(await evaluate('import("/src/game/data/walkMap.json").then(m=>m.default.interactions.find(i=>i.id==="guia").x)'),544);
     await get('cameras.main.stopFollow().centerOn(800,448).setZoom(0.8);void 0'); await frames(4); await shot('plaza-animated');
     pass('Saída e reentrada restauram o início; JSON compartilhado intacto; sem sprites ou colisores duplicados');
 
@@ -220,7 +261,7 @@ try {
         (e.method==='Runtime.consoleAPICalled'&&e.params.type==='error')||
         (e.method==='Network.responseReceived'&&e.params.response.status>=400&&e.params.response.url.includes('/assets/')));
     assert.deepEqual(failures,[]);
-    await fs.writeFile(path.join(output,'report.json'),JSON.stringify({passed:true,checks:passed,errors:failures},null,2));
+    await fs.writeFile(path.join(output,'report.json'),JSON.stringify({passed:true,checks:passed,resumptions,errors:failures},null,2));
 } catch (error) {
     console.error(error);
     if (page) {

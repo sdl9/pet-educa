@@ -4,6 +4,10 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { WALK_DIALOGUES } from '../src/game/data/walkDialogues.js';
+import { walkInstructionsChecks } from './helpers/walkInstructionsChecks.mjs';
+
+const walkMap = JSON.parse(await fs.readFile(new URL('../src/game/data/walkMap.json', import.meta.url), 'utf8'));
+assert.deepEqual(walkMap.acceptance.keyboardInteractionKeys, ['SPACE']);
 
 // Teste local com Edge headless, seguindo os checks de navegador já usados no projeto.
 const baseURL = process.env.WALK_UI_URL || 'http://localhost:8080';
@@ -113,8 +117,42 @@ try {
         await evaluate('(()=>{const s=__checkedScene; const p=s.interactionSystem.interactions.find(i=>i.id===' + JSON.stringify(id) + ');s.player.body.reset(p.x,p.y+48);s.cameras.main.centerOn(p.x,p.y+48);})()');
         await frames(5);
         assert.equal(await get('interactionSystem.current?.id'), id);
+        assert.ok((await get('interactionSystem.promptText.text')).endsWith('Espaço ou toque'));
+        await assertTips();
+    }
+    async function key(code, key, number, modifiers = 0) {
+        await page.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', code, key, windowsVirtualKeyCode: number, modifiers });
+        await frames(3);
+        await page.send('Input.dispatchKeyEvent', { type: 'keyUp', code, key, windowsVirtualKeyCode: number, modifiers });
+        await frames(3);
+    }
+    async function assertTips() {
+        const texts=await evaluate(`(()=>{const texts=[];const visit=o=>{if(!o.visible)return;
+            if(o.type==='Text')texts.push(o.text);if(o.list)o.list.forEach(visit);};
+            __checkedScene.children.list.forEach(visit);return texts;})()`);
+        assert.equal(texts.some(text=>/\bE\s*(?:\/|ou)\s*Espaço|pressione E\b/iu.test(text)),false,'Nenhuma dica visível anuncia E');
+    }
+    async function assertEInactive() {
+        const snapshot=()=>evaluate(`(()=>{const s=__checkedScene,d=s.dialogueSystem;return {
+            started:s.walkStarted,active:s.sys.isActive(),mode:d.mode,page:d.pageIndex,pages:d.pages.length,
+            lessons:[...d.completedLessons],speaker:d.speakerText.text,text:d.bodyText.text,
+            buttons:d.buttons.map(b=>({visible:b.visible,enabled:b.enabled,focused:b.focused,label:b.text.text})),
+            player:{x:s.player.x,y:s.player.y},instructions:Boolean(s.instructionsUI)};})()`);
+        const before=await snapshot();
+        assert.equal(await get('input.keyboard.keys[69] === undefined'),true,'E não está registrada no Passeio');
+        await key('KeyE','e',69);
+        await key('KeyE','E',69,8);
+        await page.send('Input.dispatchKeyEvent',{type:'rawKeyDown',code:'KeyE',key:'e',windowsVirtualKeyCode:69});
+        await frames(6);
+        await page.send('Input.dispatchKeyEvent',{type:'rawKeyDown',code:'KeyE',key:'e',windowsVirtualKeyCode:69,autoRepeat:true});
+        await frames(3);
+        await page.send('Input.dispatchKeyEvent',{type:'keyUp',code:'KeyE',key:'e',windowsVirtualKeyCode:69});
+        await frames(3);
+        assert.deepEqual(await snapshot(),before,'E/e, Shift+E e repetição não abrem, avançam, fecham ou confirmam ações');
+        await assertTips();
     }
     async function geometry() {
+        await assertTips();
         const data = await get('dialogueSystem.buttons.filter(b=>b.visible).map(b=>({label:b.text.text,text:b.text.getBounds(),box:b.background.getBounds(),scaleX:b.background.scaleX,scaleY:b.background.scaleY,left:b.background.leftWidth,right:b.background.rightWidth}))');
         for (const b of data) {
             for (const rect of [b.text, b.box]) { rect.right = rect.x + rect.width; rect.bottom = rect.y + rect.height; }
@@ -128,9 +166,32 @@ try {
         assert.ok(body.bounds.bottom <= (body.mode === 'topics' ? body.firstTopic - 8 : 604), 'Fala sobrepõe controles');
     }
     function pass(name) { passed.push(name); console.log('PASS ' + name); }
+    const intro = walkInstructionsChecks({ evaluate, get, until, frames, page, click, touch });
 
     await viewport(1280, 720);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('', 'Intro');
+    await until(() => get('children.list.some(o=>o.texture?.key==="pet-educa-ui-button")'), 'Intro não ficou pronta');
+    await click(504,564);await until(()=>attach('MainMenu'),'Menu não abriu');
+    await click(500,258);await until(()=>attach('FoodGame'),'FoodGame não abriu');
+    await until(()=>get('uiReady'),'Instruções do FoodGame não ficaram prontas');
+    const foodReference=await evaluate(`(()=>{const s=__checkedScene;return {
+        panel:{key:s.painelInstrucoes.texture.key,bounds:s.painelInstrucoes.getBounds()},
+        button:{key:s.botaoComecar.texture.key,bounds:s.botaoComecar.getBounds()},
+        title:{font:s.textoInstrucoes.style.fontFamily,size:parseInt(s.textoInstrucoes.style.fontSize),color:s.textoInstrucoes.style.color}};})()`);
+    await navigate('?walkLearning', 'WalkGame');
+    await intro.layout(foodReference);const initialListeners=await intro.listeners();
+    await shot('walk-instructions-pc');await intro.blocked();
+    await click(964,44);
+    assert.equal(await get('dialogueSystem.bodyText.text'),WALK_DIALOGUES.intro[0].text,'Controles preservam o texto existente');
+    assert.match(await get('dialogueSystem.bodyText.text'),/pressione Espaço para interagir/);
+    assert.deepEqual(await get('dialogueSystem.buttons.filter(b=>b.visible).map(b=>b.text.text)'),['FECHAR']);
+    assert.equal(await get('dialogueSystem.nextButton.hit.input.enabled'),false);
+    assert.equal(await get('dialogueSystem.instructionText.text'),'Espaço ou toque em FECHAR');
+    await shot('walk-controls-pc');
+    await key('Tab','Tab',9);await assertEInactive();
+    await click(904,652);
+    assert.equal(await get('dialogueSystem.isOpen()'),false);
+    pass('Estilo real do FoodGame, comandos bloqueados, Começar sem propagação e Controles acessíveis');
     assert.equal(await get('dialogueSystem.bodyText.style.fontFamily'), 'Nunito Sans');
     assert.equal(await get('dialogueSystem.bodyText.style.color'), '#342B24');
     assert.equal(await get('dialogueSystem.panel.scrollFactorX'), 0);
@@ -139,12 +200,14 @@ try {
     await approach('feevalepet');
     await shot('walk-booth-pc');
     await approach('guia');
+    await assertEInactive();
     await shot('walk-prompt-pc');
     await mouse('mouseMoved', 1050, 650);
     assert.equal(await get('interactionSystem.promptButton.state'), 'hover');
     await mouse('mousePressed', 1050, 650);
     assert.equal(await get('interactionSystem.promptButton.state'), 'selected');
     await mouse('mouseReleased', 1050, 650);
+    await assertEInactive();
     assert.equal(await get('dialogueSystem.speakerText.text'), 'Tutor com cachorro');
     await geometry(); await shot('walk-dialogue-pc');
     assert.equal(await get('player.body.velocity.length()'), 0);
@@ -173,6 +236,7 @@ try {
     pass('NPCs e câmera em posições diferentes');
 
     await approach('veterinaria'); await click(1050, 650);
+    await assertEInactive();
     assert.equal(await get('dialogueSystem.mode'), 'topics');
     assert.equal(await get('dialogueSystem.closeButton.visible'), true);
     await geometry(); await shot('walk-topics-pc');
@@ -208,6 +272,7 @@ try {
         await evaluate('__checkedScene.dialogueSystem.showPages(' + JSON.stringify([speech]) + ',()=>__checkedScene.dialogueSystem.close())');
         await frames(); await geometry();
         assert.equal(await get('dialogueSystem.bodyText.text'), speech.text);
+        await assertEInactive();
     }
     for (const [key, code, number] of [['Tab','Tab',9],['Tab','Tab',9]]) {
         await page.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key, code, windowsVirtualKeyCode: number });
@@ -215,6 +280,7 @@ try {
         await frames();
     }
     assert.equal(await get('dialogueSystem.nextButton.state'), 'hover');
+    await assertEInactive();
     await page.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
     await page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
     await frames();
@@ -223,7 +289,14 @@ try {
     pass('Todas as falas com a fonte real, sem corte ou sobreposição (' + allPages.length + ' páginas)');
 
     await viewport(844, 390, true);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
+    await intro.layout(foodReference);await shot('walk-instructions-mobile');
+    await viewport(740,360,true);await frames(4);await intro.layout(foodReference);await shot('walk-instructions-mobile-small');
+    await viewport(844,390,true);await frames(4);await intro.blocked(true);
+    await touch(964,44);
+    assert.deepEqual(await get('dialogueSystem.buttons.filter(b=>b.visible).map(b=>b.text.text)'),['FECHAR']);
+    await shot('walk-controls-mobile');await touch(904,652);
+    assert.equal(await get('dialogueSystem.isOpen()'),false);
     assert.equal(await get('touchControls.enabled'), true);
     await approach('feevalepet');
     await shot('walk-booth-mobile');
@@ -238,6 +311,7 @@ try {
     await frames();
     assert.deepEqual(await get('touchControls.getDirection()'), { x: 0, y: 0 });
     await approach('guia'); await touch(1050, 650);
+    await assertEInactive();
     assert.equal(await get('dialogueSystem.closeButton.visible'), false);
     await touch(904, 652);
     assert.equal(await get('dialogueSystem.isOpen()'), true);
@@ -260,24 +334,62 @@ try {
     assert.equal(await get('dialogueSystem.buttons.some(b=>b.hit.input?.enabled)'), false);
     pass('Celular horizontal: escala, direcional, toque, cancelamento, bloqueio e reabertura');
 
+    await navigate('?walkLearning', 'WalkGame');await intro.start(true);
+    for(const id of ['guia','feevalepet','descanso','agua']) {
+        await approach(id);await assertEInactive();await touch(1050,650);
+        assert.equal(await get('dialogueSystem.pageIndex'),0);
+        await assertEInactive();await touch(1112,652);
+        assert.equal(await get('dialogueSystem.isOpen()'),false);
+    }
+    await approach('veterinaria');await touch(1050,650);await assertEInactive();
+    for(const [index,y] of [520,592,664].entries()) {
+        await touch(440,y);await touch(1112,652);
+        assert.equal(await get('dialogueSystem.pageIndex'),1);
+        await touch(1112,652);
+        assert.equal(await get('dialogueSystem.completedLessons.size'),5+index);
+    }
+    assert.equal(await get('dialogueSystem.speakerText.text'),'Passeio concluído!');
+    await assertEInactive();await geometry();await shot('walk-completion-mobile');await touch(1112,652);
+    assert.equal(await get('dialogueSystem.isOpen()'),false);
+    pass('Toque emulado conclui os sete cuidados nos cinco locais, sem depender de teclado; E não altera o estado');
+
     await viewport(1280, 720);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
+    await intro.start();
     for (const id of ['guia', 'feevalepet', 'descanso', 'agua']) {
-        await approach(id); await click(1050, 650); await click(1112, 652);
+        await approach(id);await assertEInactive();
+        const before=await get('dialogueSystem.completedLessons.size');
+        await page.send('Input.dispatchKeyEvent',{type:'rawKeyDown',code:'Space',key:' ',windowsVirtualKeyCode:32});
+        await frames(6);
+        await page.send('Input.dispatchKeyEvent',{type:'rawKeyDown',code:'Space',key:' ',windowsVirtualKeyCode:32,autoRepeat:true});
+        await frames(4);
+        assert.equal(await get('dialogueSystem.mode'),'pages');
+        assert.equal(await get('dialogueSystem.pageIndex'),0);
+        assert.equal(await get('dialogueSystem.completedLessons.size'),before,'Uma pressão/tecla mantida só abre; não conclui o diálogo recém-aberto');
+        await page.send('Input.dispatchKeyEvent',{type:'keyUp',code:'Space',key:' ',windowsVirtualKeyCode:32});await frames(3);
+        await assertEInactive();await key('Space',' ',32);
         assert.equal(await get('dialogueSystem.isOpen()'), false);
+        assert.equal(await get('dialogueSystem.completedLessons.size'),before+1,'Espaço conclui uma vez, sem reabrir');
     }
     assert.equal(await get('dialogueSystem.completedLessons.size'), 4);
-    await approach('veterinaria'); await click(1050, 650);
-    for (const [index, y] of [520,592,664].entries()) {
-        await click(440, y); await click(1112,652); await click(1112,652);
+    await approach('veterinaria');await assertEInactive();await key('Space',' ',32);
+    assert.equal(await get('dialogueSystem.mode'),'topics');
+    await assertEInactive();await key('Space',' ',32);
+    assert.equal(await get('dialogueSystem.mode'),'topics','Espaço preserva o contexto: não escolhe tema arbitrariamente');
+    for (const [index, letter] of ['A','B','C'].entries()) {
+        await key('Key'+letter,letter.toLowerCase(),65+index);
+        assert.equal(await get('dialogueSystem.pageIndex'),0);
+        await assertEInactive();await key('Space',' ',32);
+        assert.equal(await get('dialogueSystem.pageIndex'),1);
+        await assertEInactive();await key('Space',' ',32);
         assert.equal(await get('dialogueSystem.completedLessons.size'), 5 + index);
     }
     assert.equal(await get('dialogueSystem.speakerText.text'), 'Passeio concluído!');
     assert.equal(await get('dialogueSystem.closeButton.visible'), false);
     assert.equal(await get('dialogueSystem.progressText.text'), 'Cuidados: 7/7');
-    await geometry(); await shot('walk-completion-pc'); await click(1112,652);
+    await geometry();await assertEInactive();await shot('walk-completion-pc');await key('Space',' ',32);
     assert.equal(await get('dialogueSystem.isOpen()'), false);
-    pass('Cinco pontos, sete cuidados, três tópicos e conclusão preservados');
+    pass('Espaço percorre cinco pontos/sete cuidados, páginas e conclusão; E inativo e uma ação por pressão, sem reabrir diálogo');
 
     assert.equal(await get('menuUI.visible'), true);
     assert.equal(await get('menuButton.hit.scrollFactorX'), 0);
@@ -285,16 +397,19 @@ try {
     await click(1172, 44);
     await until(() => attach('MainMenu'), 'Menu não abriu ao sair do passeio');
     await click(500, 408); // Cartão existente do Passeio Consciente.
-    await until(() => attach('WalkGameLearning'), 'Passeio não reabriu pelo menu');
+    await until(() => attach('WalkGame'), 'Passeio não reabriu pelo menu');
+    await intro.ready();assert.deepEqual(await intro.listeners(),initialListeners,'Reentrada sem eventos duplicados');
+    await intro.start();
     assert.equal(await get('dialogueSystem.completedLessons.size'), 0);
-    await approach('guia'); await click(1050,650);
+    await approach('guia');await assertEInactive();await key('Space',' ',32);
     assert.equal(await get('menuButton.visible'), true);
     await click(1172,44);
     await until(() => attach('MainMenu'), 'Menu não abriu durante o diálogo');
     pass('Menu no PC durante exploração/diálogo e reentrada pelo cartão');
 
     await viewport(844,390,true);
-    await navigate('?walkLearning', 'WalkGameLearning');
+    await navigate('?walkLearning', 'WalkGame');
+    await intro.start(true);
     await touch(1172,44,true);
     assert.equal(await get('sys.isActive()'), true);
     await approach('veterinaria'); await touch(1050,650);
@@ -303,32 +418,82 @@ try {
     await touch(1172,44);
     await until(() => attach('MainMenu'), 'Menu por toque não abriu durante diálogo');
     await touch(500,408);
-    await until(() => attach('WalkGameLearning'), 'Passeio não reabriu por toque');
+    await until(() => attach('WalkGame'), 'Passeio não reabriu por toque');
+    await intro.ready();assert.deepEqual(await intro.listeners(),initialListeners,'Reentrada por toque sem eventos duplicados');
+    await evaluate('window.__exitWalkUI=__checkedScene.instructionsUI;window.__exitWalkChildren=__checkedScene.instructionsUI.container.list.slice();void 0');
     assert.equal(await get('menuButton.enabled'), true);
     assert.equal(await get('dialogueSystem.isOpen()'), false);
     await touch(1172,44);
     await until(() => attach('MainMenu'), 'Menu por toque não abriu durante exploração');
+    assert.equal(await evaluate('!window.__exitWalkUI.container.scene && window.__exitWalkChildren.every(o=>!o.scene && o.listenerCount("pointerdown")===0)'),true,'Saída nas instruções descarta a caixa e os eventos');
     pass('Menu por toque, cancelamento e reabertura no celular horizontal');
     await viewport(1280,720);
 
-    await navigate('?saciQuiz', 'SaciGame');
-    await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator)'), 'Quiz não inicializou');
-    assert.equal(await get('quizUI.questionPanel.width'), 480);
-    assert.equal(await get('quizUI.questionPanel.scaleX'), 2);
-    assert.equal(await get('quizUI.indicator.text'), 'Pergunta 1 de 15');
-    await shot('quiz-reference-pc');
-    await click(600, 424);
-    assert.equal(await get('round.hits'), 1);
-    assert.equal(await get('quizUI.answers[1].state'), 'correct');
-    await click(1120, 660);
-    assert.equal(await get('round.index'), 1);
-    pass('Quiz do Saci preservado: moldura, resposta e avanço');
+    for (const mobile of [false, true]) {
+        await viewport(mobile ? 844 : 1280, mobile ? 390 : 720, mobile);
+        await navigate('?saciQuiz', 'SaciGame');
+        await until(() => evaluate('Boolean(__checkedScene.quizUI?.indicator)'), 'Quiz não inicializou');
+        assert.equal(await get('quizUI.questionPanel.width'), 480);
+        assert.equal(await get('quizUI.questionPanel.scaleX'), 2);
+        const activate = mobile ? touch : click;
+        for (let game = 0; game < 2; game++) {
+            const ids = await get('round.questions.map(q=>q.id)');
+            assert.equal(ids.length, 5);
+            assert.equal(new Set(ids).size, 5);
+            let hits = 0;
+            for (let index = 0; index < 5; index++) {
+                assert.equal(await get('quizUI.indicator.text'), `Pergunta ${index + 1} de 5`);
+                const question = await get('round.currentQuestion');
+                assert.equal(await get('quizUI.question.text'), question.pergunta);
+                assert.deepEqual(await get('quizUI.answers.map(a=>a.label.text)'), question.alternativas);
+                const correct = 'ABC'.indexOf(question.correta);
+                const chosen = game === 0 && index % 2 ? (correct + 1) % 3 : correct;
+                if (chosen === correct) hits++;
+                const b = await get(`quizUI.answers[${chosen}].hit.getBounds()`);
+                await activate(b.x + b.width / 2, b.y + b.height / 2);
+                await activate(b.x + b.width / 2, b.y + b.height / 2);
+                assert.equal(await get('round.hits'), hits, 'Uma única resposta por pergunta');
+                assert.equal(await get('round.index'), index, 'Feedback não avança automaticamente');
+                assert.equal(await get(`quizUI.answers[${correct}].state`), 'correct');
+                assert.equal(await get('quizUI.next.label.text'), index === 4 ? 'Finalizar' : 'Próxima');
+                await shot(`quiz-${mobile ? 'touch' : 'pc'}-${game}-${index}`);
+                await activate(1120, 660);
+            }
+            assert.equal(await get('round.phase'), 'complete');
+            assert.equal(await get('round.currentQuestion'), null);
+            assert.equal(await get('round.hits'), game === 0 ? 3 : 5);
+            assert.equal(await get(`children.list.some(o=>o.visible && o.text==='Você acertou ${hits} de 5 perguntas')`), true);
+            if (game === 0) {
+                // Oráculo controlado só no teste: prova que o botão solicita outro Fisher–Yates.
+                await evaluate('window.__previousQuestions=__checkedScene.round.questions;window.__quizDraws=0;__checkedScene.round.random=()=>{window.__quizDraws++;return 0;};void 0');
+                const b = await get('quizUI.restart.hit.getBounds()');
+                await activate(b.x + b.width / 2, b.y + b.height / 2);
+                assert.equal(await evaluate('window.__quizDraws'), 14);
+                assert.equal(await evaluate('__checkedScene.round.questions!==window.__previousQuestions'), true);
+                assert.deepEqual(await get('round.questions.map(q=>q.id)'), [2, 3, 4, 5, 6]);
+                assert.equal(await get('round.index'), 0);
+                assert.equal(await get('round.hits'), 0);
+                assert.equal(await get('round.feedback'), null);
+                assert.equal(await get('round.phase'), 'question');
+            }
+        }
+        const b = await get('quizUI.menu.hit.getBounds()');
+        await activate(b.x + b.width / 2, b.y + b.height / 2);
+        await until(() => attach('MainMenu'), 'Quiz não voltou ao menu');
+        await activate(500, 558);
+        await until(() => attach('SaciGame'), 'Quiz não reabriu');
+        assert.equal(await get('round.total'), 5);
+        assert.equal(await get('round.hits'), 0);
+        assert.equal(await get('round.index'), 0);
+        assert.equal(await get('round.phase'), 'question');
+    }
+    pass('Quiz PC/toque: cinco perguntas únicas, feedback, resultado 3/5 e 5/5, novo sorteio no reinício e reentrada');
 
     const failures = page.events.filter(e => e.method === 'Runtime.exceptionThrown' ||
         (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error') ||
         (e.method === 'Network.responseReceived' && e.params.response.status >= 400 && e.params.response.url.includes('/assets/')));
     assert.deepEqual(failures, [], 'Erros de execução ou carregamento');
-    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, renderer: 'Edge WebGL (SwiftShader)', viewports: ['1280x720','844x390'], errors: failures }, null, 2));
+    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, renderer: 'Edge WebGL (SwiftShader)', viewports: ['1280x720','844x390','740x360'], errors: failures }, null, 2));
 } catch (error) {
     console.error(error);
     if (page) {

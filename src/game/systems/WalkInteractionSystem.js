@@ -30,7 +30,7 @@ export class WalkInteractionSystem {
             return;
         }
         this.promptText.setText(
-            `${this.current.label}\nE / ESPAÇO ou TOQUE`
+            `${this.current.label}\nEspaço ou toque`
         );
         this.prompt.setVisible(true);
         this.promptButton.setVisible(true);

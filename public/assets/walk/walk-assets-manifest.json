@@ -304,7 +304,7 @@
     "walk-tiles-manifest": "tiles-manifest.json",
     "walk-tiles-repeat-config": "tiles-repeat-config.json",
     "walk-tileset-tiled": "walk-tileset.tsx",
-    "walk-prototype-layout": "walk-prototype-layout.json",
+    "walk-layout": "walkLayout.json",
     "walk-assets-manifest": "walk-assets-manifest.json"
   },
   "runtimeKeys": [
@@ -319,7 +319,7 @@
     "walk-npcs",
     "walk-objects-manifest",
     "walk-player",
-    "walk-prototype-layout",
+    "walk-layout",
     "walk-tiles-manifest",
     "walk-tiles-repeat-config",
     "walk-tileset",

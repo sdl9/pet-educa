@@ -11,8 +11,8 @@
   },
   "tileSize": 32,
   "sources": {
-    "ambient": "src/game/data/walkStage18Map.json",
-    "placements": "public/assets/walk/walk-prototype-layout.json",
+    "ambient": "src/game/data/walkMap.json",
+    "placements": "public/assets/walk/walkLayout.json",
     "idPolicy": "Source array slot + part index; stable while official source order is unchanged."
   },
   "ambientAssets": [

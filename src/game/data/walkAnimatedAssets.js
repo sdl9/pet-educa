@@ -1,7 +1,7 @@
 import { WALK_IMAGE_ASSETS, WALK_SPRITESHEETS, WALK_JSON_ASSETS } from './walkAssetCatalog';
 
-// Runtime overrides for the generated catalog. Its referenced generator is not
-// present in this checkout; keep the generated inventory intact.
+// Runtime animation overrides for the manually maintained walkAssetCatalog.
+// Keep the inventory intact; these entries replace the three static images.
 export const WALK_ANIMATED_ASSETS = Object.freeze([
     { key: 'plaza-fountain-water', path: 'walk/animations/plaza-fountain-water-animated.png',
         frameWidth: 160, frameHeight: 128, end: 5, frameRate: 6 },

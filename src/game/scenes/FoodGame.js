@@ -5,6 +5,9 @@ import { Player } from '../objects/Player';
 import FoodObjects from '../objects/FoodObjects';
 import { readKeyboardDirection, combineDirections, shouldShowTouchControls } from '../systems/DirectionInput';
 import { VirtualDPad } from '../systems/VirtualDPad';
+import { createFoodInstructions } from '../ui/foodInstructions';
+
+const TEMPO_PARTIDA = 60;
 
 // FoodGame e a Scene do primeiro minigame.
 // Em arquitetura, a Scene funciona como a "orquestradora":
@@ -37,6 +40,12 @@ export class FoodGame extends Scene {
         this.timerSpawn = null;
         this.timerTonalidadeRuim = null;
         this.resultadoUI = null;
+        this.alimentos = null;
+        this.overlapAlimentos = null;
+        this.instrucoesUI = null;
+        this.score = 0;
+        this.timer = TEMPO_PARTIDA;
+        this.events.once('shutdown', this.limparPartida, this);
         this.menuKeys = this.input.keyboard.addKeys({
             continuar: 'ENTER',
             menu: 'ESC'
@@ -86,18 +95,12 @@ export class FoodGame extends Scene {
 
 
     mostrarInstrucoes() {
-        const balao = this.criarBalao(
-            'Ajude o Caramelo a se alimentar!',
-            [
-                { y: 296, text: 'Mova o cachorrinho para pegar ração, arroz, cenoura e água.' },
-                { y: 414, text: 'Desvie dos alimentos que fazem mal!' }
-            ],
-            'Continuar', () => this.iniciarJogo()
-        );
-        this.instrucoesUI = balao.container;
-        this.painelInstrucoes = balao.painel;
-        this.textoInstrucoes = balao.titulo;
-        this.botaoContinuar = balao.botao;
+        this.physics.pause();
+        const instructions = createFoodInstructions(this, () => this.iniciarJogo());
+        this.instrucoesUI = instructions.container;
+        this.painelInstrucoes = instructions.panel;
+        this.textoInstrucoes = instructions.title;
+        this.botaoComecar = instructions.button;
     }
 
     criarBalao(titulo, blocos, rotulo, aoClicar) {
@@ -140,21 +143,46 @@ export class FoodGame extends Scene {
         this.botaoMenu.setEnabled(false);
         this.touchControls?.setEnabled(false);
         this.player?.mover(0, 0);
-        this.timerJogo?.remove(false);
-        this.timerSpawn?.remove(false);
-        this.cancelarTonalidadeRuim();
+        this.limparPartida();
         this.scene.start('MainMenu');
     }
 
+    limparPartida() {
+        this.instrucoesUI?.destroy();
+        this.instrucoesUI = null;
+        this.timerJogo?.remove(false);
+        this.timerJogo?.destroy();
+        this.timerJogo = null;
+        this.timerSpawn?.remove(false);
+        this.timerSpawn?.destroy();
+        this.timerSpawn = null;
+        this.cancelarTonalidadeRuim();
+        this.events.off('postupdate', this.descartarAlimentosForaDaTela, this);
+        this.overlapAlimentos?.destroy();
+        this.overlapAlimentos = null;
+        this.alimentos?.destroy(true);
+        this.alimentos = null;
+    }
+
+    descartarAlimentosForaDaTela() {
+        if (!this.alimentos) return;
+        // postupdate ocorre depois que o Arcade atualiza a posição dos sprites.
+        // A borda visual inteira deve ter atravessado a esquerda, não só o corpo.
+        for (const item of this.alimentos.getChildren().slice()) {
+            if (item.getBounds().right < 0) this.alimentos.remove(item, false, true);
+        }
+    }
+
     iniciarJogo() {
-        // Aceita o início uma vez, mesmo com toque duplo ou Enter simultâneo.
+        // Aceita o início uma vez, inclusive com cliques/toques repetidos.
         if (!this.uiReady || this.uiNavigating || this.jogoComecou) return;
         this.jogoComecou = true;
         this.instrucoesUI.destroy();
         this.instrucoesUI = null;
 
         this.score = 0;
-        this.timer = 60;
+        this.timer = TEMPO_PARTIDA;
+        this.physics.resume();
 
         this.criarHUD();
 
@@ -204,6 +232,11 @@ export class FoodGame extends Scene {
             this.events.off('pause', this.onInputInterrupted);
         });
 
+        this.alimentos = this.physics.add.group();
+        this.overlapAlimentos = this.physics.add.overlap(
+            this.player, this.alimentos, this.capturarItem, null, this
+        );
+        this.events.on('postupdate', this.descartarAlimentosForaDaTela, this);
         this.iniciarSpawn();
         this.iniciarTimer();
 
@@ -215,7 +248,7 @@ export class FoodGame extends Scene {
         this.textoScore = this.add.text(
             32,
             24,
-            'Score: ' + this.score,
+            'Pontos: ' + this.score,
             {
                 fontFamily: 'Arial',
                 fontSize: 28,
@@ -226,7 +259,7 @@ export class FoodGame extends Scene {
         this.textoTimer = this.add.text(
             1048,
             24,
-            'Timer: ' + this.timer,
+            'Tempo: ' + this.timer,
             {
                 fontFamily: 'Arial',
                 fontSize: 28,
@@ -241,7 +274,7 @@ export class FoodGame extends Scene {
             callback: () => {
                 if (this.jogoFinalizado || this.uiNavigating) return;
                 this.timer = Math.max(0, this.timer - 1);
-                this.textoTimer.setText('Timer: ' + this.timer);
+                this.textoTimer.setText('Tempo: ' + this.timer);
                 if (this.timer === 0) this.finalizarJogo();
             },
             loop: true
@@ -253,9 +286,7 @@ export class FoodGame extends Scene {
         if (!this.jogoComecou || this.jogoFinalizado || this.uiNavigating) return;
         // Bloqueia movimento e pontuação antes de construir o resultado.
         this.jogoFinalizado = true;
-        this.timerJogo.remove(false);
-        this.timerSpawn.remove(false);
-        this.cancelarTonalidadeRuim();
+        this.limparPartida();
         this.touchControls.setEnabled(false);
         this.player.mover(0, 0);
         this.player.anims.stop();
@@ -264,32 +295,36 @@ export class FoodGame extends Scene {
         this.textoScore.setVisible(false);
         this.textoTimer.setVisible(false);
         this.resultadoUI = this.criarBalao(
-            'Passeio finalizado!',
-            [{ y: 330, text: 'Seu Score: ' + this.score, size: 40 }],
+            'Partida finalizada!',
+            [{ y: 330, text: 'Seus Pontos: ' + this.score, size: 40 }],
             'Menu', () => this.voltarAoMenu()
         ).container;
     }
 
-    capturarItem(player, item) { //estudar dps pq n this.capturaritem e pq this.capturaritem ta dentro de iniciarspawn
-        if (this.jogoFinalizado || this.uiNavigating) return;
-        if (item.tipo == 'bom') {
+    capturarItem(player, item) {
+        if (!this.jogoComecou || this.jogoFinalizado || this.uiNavigating
+            || !item?.active || !this.alimentos?.contains(item)) return;
+        const tipo = item.tipo;
+        // Retira a posse antes de destruir/pontuar, inclusive em chamadas repetidas.
+        this.alimentos.remove(item, false, true);
+        if (tipo == 'bom') {
             this.score += 1;
             this.playerComendo = true;
             this.player.anims.play('food-dog-eat');
         }
 
-        if (item.tipo === 'ruim') {
+        if (tipo === 'ruim') {
             this.score -= 1;
             this.aplicarTonalidadeRuim(player);
         }
 
-        item.destroy();
-        this.textoScore.setText('Score: ' + this.score);
+        this.textoScore.setText('Pontos: ' + this.score);
     }
 
     cancelarTonalidadeRuim() {
         if (this.timerTonalidadeRuim) {
             this.time.removeEvent(this.timerTonalidadeRuim);
+            this.timerTonalidadeRuim.destroy();
             this.timerTonalidadeRuim = null;
         }
     }
@@ -304,21 +339,14 @@ export class FoodGame extends Scene {
     }
 
     iniciarSpawn() {
-        // Um alimento por vez: a 500 px/s, 500 ms deixam 250 px entre os centros.
+        // Um alimento por vez: a 325 px/s, 650 ms deixam cerca de 211 px entre os centros.
         let proximoTipo = 'bom';
         this.timerSpawn = this.time.addEvent({
-            delay: 500,
+            delay: 650,
             callback: () => {
                 if (this.jogoFinalizado || this.uiNavigating) return;
-                const alimento = FoodObjects.criar(this, proximoTipo);
+                FoodObjects.criar(this, proximoTipo, this.alimentos);
                 proximoTipo = proximoTipo === 'bom' ? 'ruim' : 'bom';
-                this.physics.add.overlap(
-                    this.player,
-                    alimento,
-                    (player, item) => {
-                        this.capturarItem(player, item);
-                    }
-                );
             },
             loop: true
         });
@@ -349,9 +377,6 @@ export class FoodGame extends Scene {
             return;
         }
         if (!this.jogoComecou) {
-            if (Input.Keyboard.JustDown(this.menuKeys.continuar)) {
-                this.iniciarJogo();
-            }
             return;
         }
         if (this.jogoFinalizado) {
@@ -359,7 +384,7 @@ export class FoodGame extends Scene {
             return;
         }
 
-        // Como o player so existe depois do botao CONTINUAR,
+        // Como o player so existe depois do botao Começar,
         // protegemos o update com a flag jogoComecou.
         // Sem isso, o codigo tentaria mover um player que ainda nao foi criado.
         if (this.jogoComecou) {

@@ -1,25 +1,22 @@
 import { Math as PhaserMath } from 'phaser';
-
-const TEXTURAS = {
-    bom: ['food-good-kibble', 'food-good-rice', 'food-good-carrot', 'food-good-water'],
-    ruim: ['food-bad-chocolate', 'food-bad-grapes', 'food-bad-avocado',
-        'food-bad-candy', 'food-bad-onion', 'food-bad-garlic']
-};
+import { FOOD_CONFIG } from '../data/foodConfig';
 
 export default class FoodObjects {
-    static criar(cena, tipo) {
+    static criar(cena, tipo, grupo) {
         const x = cena.scale.width + 50;
         const y = PhaserMath.Between(440, 630);
-        const texturas = TEXTURAS[tipo];
-        const textura = texturas[PhaserMath.Between(0, texturas.length - 1)];
-        const item = cena.physics.add.sprite(x, y, textura).setOrigin(0.5).setScale(2);
+        const alimentos = FOOD_CONFIG[tipo];
+        const { texture: textura } = alimentos[PhaserMath.Between(0, alimentos.length - 1)];
+        // O grupo cria o corpo antes de aplicarmos os valores do alimento.
+        // Assim seus defaults não sobrescrevem a velocidade definida abaixo.
+        const item = grupo.create(x, y, textura).setOrigin(0.5).setScale(2);
 
         item.tipo = tipo;
         // 30 pixels de origem viram os 60 pixels da colisao anterior na escala 2.
         item.body.setSize(30, 30).setOffset(1, 1);
         item.body.updateFromGameObject();
         item.body.setAllowGravity(false);
-        item.body.setVelocityX(-500);
+        item.body.setVelocityX(-325);
         return item;
     }
 }

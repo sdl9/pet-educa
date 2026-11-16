@@ -1,7 +1,16 @@
 # Interface do Passeio Consciente
 
-A cena usada pelo menu continua sendo `WalkGameLearning`. Abra pelo menu
+## Estado atual
+
+A cena definitiva usada pelo menu é `WalkGame` (`src/game/scenes/WalkGame.js`).
+Na etapa 3, recebeu o código funcional antes chamado `WalkGameLearning`,
+sem alterar regras ou apresentação; o protótipo antigo foi retirado.
+As referências ao nome anterior na validação abaixo são históricas. Abra pelo menu
 ou execute `npm.cmd run dev-nolog` e acesse `http://localhost:8080/?walkLearning`.
+
+O check do quiz citado historicamente em `tmp/quiz-visual-validation/check-ui.mjs`
+foi preservado na etapa 5 como `tests/quizSaciVisual.check.mjs`, comando
+`npm.cmd run test:quiz-visual`. Usa doubles; a evidência de navegador é separada.
 
 O botão **Menu**, fixo no canto superior direito, permanece disponível durante
 a exploração e os diálogos. Ele encerra o movimento e volta ao menu principal.
@@ -56,7 +65,7 @@ A rota direta do passeio agora aguarda as fontes já carregadas pelo Preloader.
 Os caminhos dos assets, o registro de cenas, o menu e as outras rotas continuam iguais.
 As regras de movimentação, colisão, conteúdo, condições e recompensas não mudaram.
 
-## Validação
+## Registro histórico da validação desta integração
 
 Com o Vite em execução, rode `npm.cmd run test:walk-ui`.
 O teste usa o Edge instalado em modo headless, sem dependências novas.
@@ -85,12 +94,12 @@ O build mantém o aviso de chunk maior que 500 kB.
 As capturas foram inspecionadas visualmente. Não houve teste em um celular físico
 ou GPU de hardware. O fallback Canvas foi verificado por testes simulados do quiz;
 a renderização real desta etapa foi WebGL. Os arquivos de diálogos, mapa,
-WalkPlayer, Saci e PNGs permaneceram sem alterações. A cena WalkGameLearning
+WalkPlayer, Saci e PNGs permaneceram sem alterações. A cena então chamada WalkGameLearning
 recebeu somente o botão Menu e o bloqueio de movimento durante a saída.
 A limpeza do direcional no shutdown foi ajustada para não atualizar molduras
 que o Phaser já destruiu.
 
-## Arquivos
+## Arquivos da integração histórica
 
 - Novos: `src/game/ui/pixelPanel.js`, `src/game/ui/walkUI.js`,
   `tests/walkUI.browser-check.mjs` e este documento.

@@ -1,14 +1,11 @@
 import { Boot } from './scenes/Boot';
 import { Intro } from './scenes/Intro';
-import { Game as MainGame } from './scenes/Game';
 import { FoodGame } from './scenes/FoodGame';
 import { SaciGame } from './scenes/SaciGame';
-import { GameOver } from './scenes/GameOver';
 import { MainMenu } from './scenes/MainMenu';
 import { Preloader } from './scenes/Preloader';
 import { AUTO, Game, Scale } from 'phaser';
 import { WalkGame } from './scenes/WalkGame';
-import { WalkGameLearning } from './scenes/WalkGameLearning';
 import { WalkLayoutEditor } from './dev/WalkLayoutEditor';
 
 // Keep startup synchronous so src/main.js registers before DOMContentLoaded.
@@ -43,10 +40,7 @@ const config = {
         FoodGame,
         SaciGame,
         WalkGame,
-        WalkGameLearning,
-        ...developmentScenes,
-        MainGame,
-        GameOver
+        ...developmentScenes
     ],
     physics: {
         default: 'arcade',

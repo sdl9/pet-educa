@@ -3,6 +3,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
+import { FOOD_CONFIG } from '../src/game/data/foodConfig.js';
+
+// Fixture de regressão: a extração da configuração não muda os alimentos do jogo.
+assert.deepEqual(FOOD_CONFIG, {
+    bom: [
+        { texture: 'food-good-kibble', name: 'Ração' }, { texture: 'food-good-rice', name: 'Arroz' },
+        { texture: 'food-good-carrot', name: 'Cenoura' }, { texture: 'food-good-water', name: 'Água' }
+    ],
+    ruim: [
+        { texture: 'food-bad-chocolate', name: 'Chocolate' }, { texture: 'food-bad-grapes', name: 'Uvas' },
+        { texture: 'food-bad-avocado', name: 'Abacate' }, { texture: 'food-bad-candy', name: 'Bala' },
+        { texture: 'food-bad-onion', name: 'Cebola' }, { texture: 'food-bad-garlic', name: 'Alho' }
+    ]
+});
 
 // Teste local com Edge headless, seguindo os checks de navegador já usados no projeto.
 const baseURL = process.env.FOOD_UI_URL || 'http://localhost:8080';
@@ -54,6 +68,7 @@ async function connect(url) {
 
 let browser, page;
 const passed = [];
+const lifecycle = [];
 try {
     const portFile = await until(() => fs.readFile(path.join(profile, 'DevToolsActivePort'), 'utf8'), 'Edge não iniciou');
     const [port, endpoint] = portFile.trim().split(/\r?\n/);
@@ -125,6 +140,128 @@ try {
         await frames();
     }
     function edges(rect) { return { ...rect, right: rect.x + rect.width, bottom: rect.y + rect.height }; }
+    async function checkInstructions() {
+        const layout = await evaluate(`(()=>{const s=__checkedScene;return {
+            panel:s.painelInstrucoes.getBounds(),button:s.botaoComecar.getBounds(),menu:s.botaoMenu.background.getBounds(),
+            texts:s.instrucoesUI.list.filter(o=>o.type==='Text').map(o=>({text:o.text,bounds:o.getBounds(),size:parseInt(o.style.fontSize)})),
+            foods:s.instrucoesUI.list.filter(o=>o.getData('foodType')).map(o=>({type:o.type,group:o.getData('foodType'),
+                text:o.text,texture:o.texture?.key,bounds:o.getBounds()})),
+            symbols:s.instrucoesUI.list.filter(o=>o.type==='Graphics').length,
+            canvas:document.querySelector('canvas').getBoundingClientRect().toJSON()
+        };})()`);
+        const panel = edges(layout.panel), button = edges(layout.button);
+        assert.equal(panel.x + panel.width / 2, 640);
+        assert.ok(panel.y > edges(layout.menu).bottom, 'Painel não sobrepõe Menu');
+        assert.ok(panel.x >= 0 && panel.right <= 1280 && panel.bottom <= 720);
+        assert.equal(layout.symbols,2,'Cada grupo tem seu símbolo desenhado');
+        assert.ok(layout.texts.some(o=>o.text==='Ajude o Caramelo a comer bem!'));
+        assert.ok(layout.texts.some(o=>o.text==='1 minuto'));
+        assert.ok(layout.texts.some(o=>o.text==='Desvie dos alimentos que fazem mal para ele!'));
+        assert.ok(layout.texts.some(o=>o.text==='Pode comer:'));
+        assert.ok(layout.texts.some(o=>o.text==='Faz mal:'));
+        for (const item of layout.texts) {
+            const b=edges(item.bounds);
+            assert.ok(b.x>=panel.x+16 && b.right<=panel.right-16 && b.y>=panel.y+12 && b.bottom<=panel.bottom-12,'Texto cabe no painel: '+item.text);
+            assert.ok(item.size*layout.canvas.width/1280>=14,'Fonte legível no viewport: '+item.text);
+            if(item.text==='Começar') assert.ok(b.x>=button.x && b.right<=button.right && b.y>=button.y && b.bottom<=button.bottom);
+            else assert.ok(b.bottom<=button.y-8,'Texto não sobrepõe Começar: '+item.text);
+        }
+        // Textos consecutivos da frase são adjacentes, mas nunca se sobrepõem.
+        const overlap=(a,b)=>a.x<b.x+b.width-1 && a.x+a.width>b.x+1 && a.y<b.y+b.height-1 && a.y+a.height>b.y+1;
+        for(let i=0;i<layout.texts.length;i++) for(let j=i+1;j<layout.texts.length;j++) {
+            assert.equal(overlap(layout.texts[i].bounds,layout.texts[j].bounds),false,
+                'Textos sem sobreposição: '+layout.texts[i].text+' / '+layout.texts[j].text);
+        }
+        for(const [group,foods] of Object.entries(FOOD_CONFIG)) {
+            const images=layout.foods.filter(o=>o.group===group && o.type==='Image');
+            const names=layout.foods.filter(o=>o.group===group && o.type==='Text');
+            assert.deepEqual(images.map(o=>o.texture),foods.map(o=>o.texture));
+            assert.deepEqual(names.map(o=>o.text),foods.map(o=>o.name));
+            for(const [index,image] of images.entries()) {
+                const b=edges(image.bounds),name=names[index];
+                assert.ok(b.x>=panel.x+16 && b.right<=panel.right-16 && b.bottom<name.bounds.y);
+                assert.equal(b.x+b.width/2,name.bounds.x+name.bounds.width/2,'Legenda centrada sob a imagem');
+                for(const text of layout.texts) assert.equal(overlap(image.bounds,text.bounds),false,'Asset não sobrepõe texto: '+image.texture+' / '+text.text);
+            }
+        }
+    }
+    async function checkWaiting() {
+        await key('Enter','Enter',13);
+        await key('ArrowRight','ArrowRight',39);
+        await pause(2200);
+        const state=await evaluate(`(()=>{const s=__checkedScene;
+            s.capturarItem(null,{active:true,tipo:'bom'});
+            return {started:s.jogoComecou,score:s.score,timer:s.timer,player:s.player,paused:s.physics.world.isPaused,
+                timerEvent:s.timerJogo,spawn:s.timerSpawn,foods:s.alimentos,overlap:s.overlapAlimentos,
+                bodies:s.physics.world.bodies.size,items:s.children.list.filter(o=>o.tipo).length};})()`);
+        assert.deepEqual(state,{started:false,score:0,timer:60,player:null,paused:true,
+            timerEvent:null,spawn:null,foods:null,overlap:null,bodies:0,items:0},'Esperar/teclar não inicia movimento, cronômetro, alimentos, colisões ou pontos');
+    }
+    const resources = () => evaluate(`(()=>{
+        const s=__checkedScene,w=s.physics.world;
+        const detectors=[...new Set([...w.colliders.getActive(),...w.colliders._pending])];
+        return {timer:s.timer,score:s.score,finished:s.jogoFinalizado,items:s.children.list.filter(o=>o.tipo).length,
+            group:s.alimentos?.getLength()??0,offscreen:s.alimentos?.getChildren().filter(o=>o.getBounds().right<0).length??0,
+            bodies:w.bodies.size,enabledBodies:[...w.bodies].filter(b=>b.enable).length,pendingBodies:w.pendingDestroy.size,
+            detectors:detectors.filter(c=>c.active).length,queuedDetectors:detectors.length};
+    })()`);
+    async function checkPlayingResources(allowFinished = false) {
+        const state=await resources();
+        if(allowFinished&&state.finished){assert.equal(state.items,0);assert.equal(state.detectors,0);return state;}
+        assert.equal(state.finished,false,'A verificação de partida ativa não pode usar uma rodada encerrada');
+        assert.equal(state.detectors,1,'Um único detector por partida');
+        assert.equal(state.queuedDetectors,1,'A fila de detectores não cresce por spawn');
+        assert.equal(state.items,state.group,'Todo alimento vivo pertence ao grupo');
+        assert.equal(state.offscreen,0,'Nenhum alimento completamente à esquerda permanece vivo');
+        assert.equal(state.enabledBodies,state.group+1,'Somente jogador e alimentos vivos têm corpos habilitados');
+        assert.equal(state.bodies,state.group+1+state.pendingBodies,'Corpos descartados só aguardam o postupdate do Phaser');
+        assert.ok(state.group<=7,'Retenção limitada ao tempo de travessia: no máximo sete alimentos a 325 px/s e 650 ms');
+        return state;
+    }
+    const rememberRound = () => evaluate(`(()=>{const s=__checkedScene;window.__foodLeaving={world:s.physics.world,
+        group:s.alimentos,overlap:s.overlapAlimentos,timer:s.timerJogo,spawn:s.timerSpawn,
+        items:s.alimentos?.getChildren().slice()??[]};})()`);
+    async function checkReleasedRound(menu = false) {
+        const state=await evaluate(`(()=>{const r=window.__foodLeaving;return{
+            groupDestroyed:r.group?.scene===undefined,itemsDestroyed:r.items.every(o=>!o.active&&!o.scene&&!o.body),
+            overlapReleased:!r.overlap?.active&&r.overlap?.world===null&&r.overlap?.object1===null&&r.overlap?.object2===null,
+            timersReleased:r.timer?.callback===undefined&&r.spawn?.callback===undefined,
+            oldWorldBodies:r.world.bodies.size,oldWorldDetectors:r.world.colliders.getActive().filter(c=>c.active).length};})()`);
+        assert.equal(state.groupDestroyed,true);assert.equal(state.itemsDestroyed,true);
+        assert.equal(state.overlapReleased,true);assert.equal(state.timersReleased,true);
+        if(menu){assert.equal(state.oldWorldBodies,0);assert.equal(state.oldWorldDetectors,0);}
+        lifecycle.push({phase:menu?'menu':'result',...state});
+        await evaluate('window.__foodLeaving=null;void 0');
+    }
+    async function checkCollectionAndExit() {
+        const initial=await get('score');
+        await evaluate(`(async()=>{const s=__checkedScene,{default:F}=await import('/src/game/objects/FoodObjects.js');
+            const item=F.criar(s,'bom',s.alimentos);window.__collectedFood=item;
+            item.body.reset(s.player.body.center.x,s.player.body.center.y);item.body.setVelocity(0,0);})()`);
+        await until(()=>get('score === '+(initial+1)),'Overlap real não coletou alimento');
+        assert.equal(await get('player.anims.currentAnim.key'),'food-dog-eat');
+        assert.equal(await evaluate(`(()=>{const s=__checkedScene,item=window.__collectedFood;
+            s.capturarItem(s.player,item);return s.score===${initial+1}&&!s.alimentos.contains(item)&&!item.active&&!item.body;})()`),true,'Mesmo alimento não pontua duas vezes');
+        const bad=await evaluate(`(async()=>{const s=__checkedScene,{default:F}=await import('/src/game/objects/FoodObjects.js');
+            const item=F.criar(s,'ruim',s.alimentos);s.capturarItem(s.player,item);s.capturarItem(s.player,item);
+            return{score:s.score,tint:s.player.tintTopLeft,delay:s.timerTonalidadeRuim.delay,removed:!s.alimentos.contains(item)&&!item.body};})()`);
+        assert.equal(bad.score,initial);assert.equal(bad.tint,0xffb3b3);assert.equal(bad.delay,400);assert.equal(bad.removed,true);
+        await until(()=>get('timerTonalidadeRuim === null'),'Reação vermelha não terminou');
+        assert.equal(await get('player.isTinted'),false);
+        const edge=await evaluate(`(async()=>{const s=__checkedScene,{default:F}=await import('/src/game/objects/FoodObjects.js');
+            const item=F.criar(s,'bom',s.alimentos);window.__edgeFood=item;
+            item.body.reset(-item.displayWidth/2+1,500);item.body.setVelocity(0,0);
+            return{right:item.getBounds().right,bodyRight:item.body.right,width:item.displayWidth};})()`);
+        assert.equal(edge.right,1);assert.ok(edge.bodyRight<0,'O corpo já saiu mas a imagem ainda está visível');
+        await frames(4);
+        assert.equal(await evaluate('__checkedScene.alimentos.contains(window.__edgeFood)'),true,'Preserva o último pixel visível');
+        await evaluate('window.__edgeFood.body.reset(-window.__edgeFood.displayWidth/2-1,500);void 0');
+        await until(()=>evaluate('!window.__edgeFood.scene'),'Alimento totalmente fora não foi destruído');
+        assert.equal(await evaluate('__checkedScene.alimentos.contains(window.__edgeFood)'),false);
+        await frames(3);await checkPlayingResources();
+        await evaluate('window.__edgeFood=null;window.__collectedFood=null;void 0');
+        pass('Overlap real, coleta única, remoção do grupo, animação/reação de 400 ms e descarte só após o último pixel');
+    }
     async function checkDropSpacing() {
         await until(() => get('children.list.filter(o=>o.tipo).length >= 4'), 'Alimentos não foram gerados');
         const drops = await get('children.list.filter(o=>o.tipo).map(o=>({tipo:o.tipo,x:o.x,width:o.displayWidth}))');
@@ -136,26 +273,57 @@ try {
         }
         pass('Alimentos alternados, com espaçamento horizontal e sem sobreposição');
     }
+    async function checkHUDLabels() {
+        const hud = await evaluate(`(()=>{const s=__checkedScene;return {score:s.score,timer:s.timer,
+            points:{text:s.textoScore.text,bounds:s.textoScore.getBounds()},
+            time:{text:s.textoTimer.text,bounds:s.textoTimer.getBounds()},
+            menu:s.botaoMenu.background.getBounds(),width:s.scale.width,height:s.scale.height};})()`);
+        assert.equal(hud.points.text, 'Pontos: ' + hud.score);
+        assert.equal(hud.time.text, 'Tempo: ' + hud.timer);
+        const points = edges(hud.points.bounds), time = edges(hud.time.bounds);
+        assert.ok(points.x >= 0 && points.y >= 0 && points.bottom <= hud.height, 'Pontos cabem no canvas');
+        assert.ok(points.right <= time.x - 16, 'Pontos não sobrepõem Tempo');
+        assert.ok(time.y >= 0 && time.bottom <= hud.height && time.right <= hud.menu.x - 16, 'Tempo não sobrepõe Menu');
+    }
+
     async function finishFood(mobile = false) {
+        await rememberRound();
         // Acelera somente o TimerEvent no teste: percorre os 60 ticks reais do contador.
         const expected = await evaluate(`(async()=>{
             const s=__checkedScene;
             const {default:FoodObjects}=await import('/src/game/objects/FoodObjects.js');
-            for(let i=0;i<${mobile ? 1 : 5};i++) s.capturarItem(s.player,FoodObjects.criar(s,'bom'));
-            for(let i=0;i<${mobile ? 2 : 1};i++) s.capturarItem(s.player,FoodObjects.criar(s,'ruim'));
+            for(let i=0;i<${mobile ? 1 : 5};i++) s.capturarItem(s.player,FoodObjects.criar(s,'bom',s.alimentos));
+            for(let i=0;i<${mobile ? 2 : 1};i++) s.capturarItem(s.player,FoodObjects.criar(s,'ruim',s.alimentos));
             s.timerJogo.timeScale=60;
             return s.score;
         })()`);
         assert.equal(expected, mobile ? -1 : 4);
+        await checkHUDLabels();
         await until(() => get('jogoFinalizado'), 'Tempo não encerrou a partida');
         assert.equal(await get('timer'), 0);
         assert.equal(await get('physics.world.isPaused'), true);
         assert.equal(await get('touchControls.enabled'), false);
         assert.equal(await get('textoScore.visible || __checkedScene.textoTimer.visible'), false);
         const result = await get('resultadoUI.list.filter(o=>o.type==="Text").map(o=>o.text)');
-        assert.deepEqual(result, ['Passeio finalizado!', 'Seu Score: ' + expected, 'Menu']);
+        assert.deepEqual(result, ['Partida finalizada!', 'Seus Pontos: ' + expected, 'Menu']);
         const bounds = await get('resultadoUI.list.find(o=>o.texture?.key === "pet-educa-ui-panel").getBounds()');
-        assert.deepEqual(bounds, layout.panel, 'Resultado deve reaproveitar o balão centralizado');
+        assert.deepEqual(bounds, resultPanel, 'Resultado deve reaproveitar o balão centralizado');
+        const resultLayout = await evaluate(`(()=>{const {resultadoUI}=__checkedScene;return {
+            button:resultadoUI.list.find(o=>o.texture?.key==='pet-educa-ui-button').getBounds(),
+            texts:resultadoUI.list.filter(o=>o.type==='Text').map(o=>({text:o.text,bounds:o.getBounds()}))};})()`);
+        const panelEdges = edges(bounds), buttonEdges = edges(resultLayout.button);
+        for (const item of resultLayout.texts) {
+            const b = edges(item.bounds);
+            if (item.text === 'Menu') {
+                assert.ok(b.x >= buttonEdges.x && b.right <= buttonEdges.right && b.y >= buttonEdges.y && b.bottom <= buttonEdges.bottom,
+                    'Rótulo Menu cabe no botão do resultado');
+            } else {
+                assert.ok(b.x >= panelEdges.x + 24 && b.right <= panelEdges.right - 24 && b.y >= panelEdges.y + 16 && b.bottom <= buttonEdges.y - 16,
+                    'Texto do resultado cabe no painel sem sobrepor Menu: ' + item.text);
+            }
+        }
+        assert.ok(edges(resultLayout.texts[0].bounds).bottom + 16 <= resultLayout.texts[1].bounds.y,
+            'Título e Pontos do resultado não se sobrepõem');
         assert.equal(await evaluate(`(()=>{
             const s=__checkedScene,ui=s.resultadoUI;
             s.finalizarJogo();
@@ -164,6 +332,11 @@ try {
         })()`), true);
         const positions = await get('children.list.filter(o=>o.tipo).map(o=>({x:o.x,y:o.y}))');
         await frames(20);
+        assert.equal(await get('alimentos'),null);assert.equal(await get('overlapAlimentos'),null);
+        assert.equal(await get('timerJogo'),null);assert.equal(await get('timerSpawn'),null);
+        const finalResources=await resources();
+        assert.equal(finalResources.items,0);assert.equal(finalResources.detectors,0);assert.equal(finalResources.bodies,1);
+        await checkReleasedRound();
         assert.equal(await get('timer'), 0);
         assert.equal(await get('score'), expected);
         assert.deepEqual(await get('children.list.filter(o=>o.tipo).map(o=>({x:o.x,y:o.y}))'), positions, 'Alimentos continuam em movimento');
@@ -172,10 +345,66 @@ try {
         await until(() => attach('MainMenu'), 'Botão Menu do resultado não voltou ao menu');
     }
 
+    async function fullRound() {
+        await openFood();await click(640,638);
+        assert.equal(await get('timer'),60);assert.equal(await get('timerJogo.timeScale'),1);
+        assert.equal(await get('timerSpawn.delay'),650);
+        assert.equal(await get('player.velocidade'),300);
+        await rememberRound();
+        await evaluate(`(()=>{const s=__checkedScene;window.__foodAudit={spawned:[],samples:[],invalid:[],startedAt:s.time.now,firstArrival:null};
+            const original=s.timerSpawn.callback;
+            s.timerSpawn.callback=function(...args){const before=new Set(s.alimentos.getChildren());original.apply(this,args);
+                for(const item of s.alimentos.getChildren())if(!before.has(item))window.__foodAudit.spawned.push({
+                    tipo:item.tipo,x:item.x,y:item.y,velocity:item.body.velocity.x,scale:item.scaleX,origin:[item.originX,item.originY],
+                    width:item.displayWidth,height:item.displayHeight,body:[item.body.width,item.body.height],gravity:item.body.allowGravity});};
+            const sample=()=>{if(s.jogoFinalizado)return;const w=s.physics.world,items=s.alimentos.getChildren();
+                const detectors=[...new Set([...w.colliders.getActive(),...w.colliders._pending])];
+                const state={timer:s.timer,items:items.length,offscreen:items.filter(o=>o.getBounds().right<0).length,
+                    bodies:w.bodies.size,pending:w.pendingDestroy.size,detectors:detectors.filter(c=>c.active).length,queued:detectors.length};
+                window.__foodAudit.samples.push(state);
+                if(!window.__foodAudit.firstArrival && (s.score!==0 || items.some(o=>o.body.left<=s.player.body.right)))
+                    window.__foodAudit.firstArrival={elapsedMs:s.time.now-window.__foodAudit.startedAt,timer:s.timer};
+                if(state.items>7||state.offscreen||state.detectors!==1||state.queued!==1||state.bodies!==state.items+1+state.pending)
+                    window.__foodAudit.invalid.push(state);};
+            s.events.on('postupdate',sample);s.events.once('shutdown',()=>s.events.off('postupdate',sample));
+        })()`);
+        const start=Date.now(),samples=[];
+        // Round is unaccelerated: actual 60 countdown ticks and normal 650 ms spawns.
+        while(!await get('jogoFinalizado')) {
+            if(Date.now()-start>120000)throw new Error('Rodada não completou 60 segundos de jogo');
+            samples.push(await checkPlayingResources(true));await pause(1000);
+        }
+        await frames(4);
+        const audit=await evaluate('window.__foodAudit');
+        assert.deepEqual(audit.invalid,[],'Nenhum frame acumula alimentos fora da tela ou detectores');
+        assert.ok(audit.firstArrival && audit.firstArrival.elapsedMs < 4500,'Alimentos chegam à faixa de captura em cerca de quatro segundos, dentro da rodada');
+        assert.equal(audit.spawned.length,92,'Uma rodada de 60 s mantém a cadência de 650 ms');
+        for(const [index,item] of audit.spawned.entries()) {
+            assert.equal(item.tipo,index%2?'ruim':'bom');assert.equal(item.x,1330);assert.ok(item.y>=440&&item.y<=630);
+            assert.equal(item.velocity,-325);assert.equal(item.scale,2);assert.deepEqual(item.origin,[0.5,0.5]);
+            assert.deepEqual(item.body,[60,60]);assert.equal(item.gravity,false);
+        }
+        assert.equal(await get('timer'),0);assert.equal((await resources()).items,0);assert.equal((await resources()).detectors,0);
+        await checkReleasedRound();
+        lifecycle.push({phase:'full-round',wallMs:Date.now()-start,spawned:audit.spawned.length,
+            frames:audit.samples.length,maxItems:Math.max(...audit.samples.map(s=>s.items)),
+            maxBodies:Math.max(...audit.samples.map(s=>s.bodies)),maxDetectors:Math.max(...audit.samples.map(s=>s.detectors)),
+            maxOffscreen:Math.max(...audit.samples.map(s=>s.offscreen)),firstArrival:audit.firstArrival,samples,spawns:audit.spawned});
+        await shot('food-full-round-result');await key('Enter','Enter',13);await until(()=>attach('MainMenu'),'Resultado não voltou ao menu');
+        await evaluate('window.__foodAudit=null;void 0');
+        await openFood();await checkInstructions();await click(640,638);
+        assert.equal(await get('score'),0);assert.equal(await get('timer'),60);
+        const reopened=[];while((await get('timer'))>54){reopened.push(await checkPlayingResources());await pause(500);}
+        lifecycle.push({phase:'reopened-round',samples:reopened});await rememberRound();
+        await key('Escape','Escape',27);await until(()=>attach('MainMenu'),'Rodada reaberta não voltou ao menu');await checkReleasedRound(true);
+        pass('Rodada completa sem aceleração e reaberta: até sete itens, zero fora da tela e um overlap constante');
+    }
+
     await viewport(1280,720);
     await navigate('', 'Intro');
     await until(() => get('children.list.some(o=>o.texture?.key === "pet-educa-ui-button")'), 'Intro não construiu a interface');
-    const reference = await get('children.list.filter(o=>["pet-educa-ui-panel","pet-educa-ui-button"].includes(o.texture?.key)).map(o=>({key:o.texture.key,x:o.x,y:o.y,scaleX:o.scaleX,scaleY:o.scaleY}))');
+    const reference = await get('children.list.find(o=>o.texture?.key === "pet-educa-ui-panel").getBounds()');
+    const resultPanel = {...reference,x:(1280-reference.width)/2,y:(720-reference.height)/2};
     await shot('intro-reference');
     await click(504,564);
     await until(() => attach('MainMenu'), 'Menu principal não abriu');
@@ -185,44 +414,39 @@ try {
     assert.equal(await get('timerJogo'), null);
     assert.equal(await get('timerSpawn'), null);
     assert.equal(await get('botaoMenu.visible'), true);
-    assert.deepEqual(await get('instrucoesUI.list.filter(o=>o.type === "Image").map(o=>({key:o.texture.key,x:o.x,y:o.y,scaleX:o.scaleX,scaleY:o.scaleY}))'), reference);
     assert.equal(await get('children.list.some(o=>o.texture?.key === "foodgame-street-background" && o.visible)'), true);
     assert.equal(await get('instrucoesUI.list.some(o=>["pet-educa-ui-park","pet-educa-ui-dog"].includes(o.texture?.key) || o.text === "Pet Educa")'), false);
-    const layout = await evaluate('(()=>{const s=__checkedScene;return {panel:s.painelInstrucoes.getBounds(),button:s.botaoContinuar.getBounds(),texts:s.instrucoesUI.list.filter(o=>o.type==="Text"&&o.text!=="Pet Educa").map(o=>({text:o.text,bounds:o.getBounds(),font:o.style.fontFamily}))};})()');
-    const panel = edges(layout.panel), button = edges(layout.button);
-    assert.equal(panel.x + panel.width / 2, 640, 'Painel não centralizado horizontalmente');
-    assert.equal(panel.y + panel.height / 2, 360, 'Painel não centralizado verticalmente');
-    for (const item of layout.texts) {
-        const b = edges(item.bounds);
-        assert.ok(b.x >= panel.x + 16 && b.right <= panel.right - 16 && b.y >= panel.y + 16 && b.bottom <= panel.bottom - 12, 'Texto fora do painel: ' + item.text);
-        if (item.text === 'Continuar') {
-            assert.equal(item.font, 'Lilita One');
-            assert.ok(b.x >= button.x && b.right <= button.right && b.y >= button.y && b.bottom <= button.bottom);
-        } else {
-            assert.equal(item.font, 'Nunito Sans');
-            assert.ok(b.bottom <= button.y - 16, 'Texto sobrepõe Continuar');
-        }
-    }
+    await checkInstructions();
+    await checkWaiting();
+    await evaluate('window.__oldInstructions=__checkedScene.instrucoesUI;window.__oldInstructionChildren=__checkedScene.instrucoesUI.list.slice();void 0');
     await shot('food-instructions-pc');
     await click(1172,44);
     await until(() => attach('MainMenu'), 'Menu não abriu nas instruções');
-    pass('Painel das instruções sobre o cenário do jogo, sem parque/título/retrato; Menu disponível');
+    assert.equal(await evaluate('!window.__oldInstructions.scene && window.__oldInstructionChildren.every(o=>!o.scene && o.listenerCount("pointerdown")===0)'),true,'Menu destrói imagens, textos e eventos das instruções');
+    pass('Instruções com os dez assets/nomes, grupos/símbolos corretos; espera sem partida e descarte ao sair');
 
     await openFood();
-    await click(640,516);
+    await click(640,638);
+    await evaluate('window.__firstStart={player:__checkedScene.player,timer:__checkedScene.timerJogo,spawn:__checkedScene.timerSpawn};void 0');
+    await click(640,638);await click(640,638);
+    assert.equal(await evaluate('window.__firstStart.player===__checkedScene.player && window.__firstStart.timer===__checkedScene.timerJogo && window.__firstStart.spawn===__checkedScene.timerSpawn'),true,'Cliques reais repetidos não recriam a partida');
     assert.equal(await get('jogoComecou'), true);
     assert.equal(await get('instrucoesUI'), null);
-    assert.equal(await get('botaoContinuar.scene === undefined'), true);
+    assert.equal(await get('botaoComecar.scene === undefined'), true);
+    assert.equal(await get('botaoComecar.listenerCount("pointerdown")'),0);
     assert.equal(await get('botaoMenu.enabled'), true);
     assert.equal(await get('score'), 0);
     assert.equal(await get('timer'), 60);
-    assert.equal(await evaluate('(()=>{const s=__checkedScene,p=s.player,t=s.timerJogo,spawn=s.timerSpawn;s.iniciarJogo();return s.player===p&&s.timerJogo===t&&s.timerSpawn===spawn;})()'), true);
+    assert.equal(await evaluate('(()=>{const s=__checkedScene,p=s.player,t=s.timerJogo,spawn=s.timerSpawn,g=s.alimentos,o=s.overlapAlimentos;s.iniciarJogo();return s.player===p&&s.timerJogo===t&&s.timerSpawn===spawn&&s.alimentos===g&&s.overlapAlimentos===o;})()'), true);
     const hud = await evaluate('({timer:__checkedScene.textoTimer.getBounds(),menu:__checkedScene.botaoMenu.background.getBounds()})');
     assert.ok(edges(hud.timer).right <= hud.menu.x - 16, 'Cronômetro sobrepõe Menu');
+    await checkHUDLabels();
     await shot('food-gameplay-pc');
+    await checkCollectionAndExit();
     const oldX = await get('player.x');
     await page.send('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
     await frames(10);
+    assert.equal(await get('player.body.velocity.x'),300,'Controles mantêm velocidade de resposta');
     await page.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
     await frames();
     assert.ok((await get('player.x')) > oldX);
@@ -231,21 +455,27 @@ try {
     assert.ok((await get('children.list.filter(o=>o.tipo === "bom" || o.tipo === "ruim").length')) > 0);
     await checkDropSpacing();
     await shot('food-drop-spacing-pc');
+    await checkPlayingResources();await rememberRound();
     await click(1172,44);
     await until(() => attach('MainMenu'), 'Menu não abriu durante a partida');
+    await checkReleasedRound(true);
     pass('Início único, remoção das instruções, movimento, timer/spawn e Menu durante a partida');
 
     await openFood();
     await key('Enter','Enter',13);
+    assert.equal(await get('jogoComecou'), false, 'Enter aguarda o clique em Começar');
+    await checkInstructions();
+    await click(640,638);
     assert.equal(await get('jogoComecou'), true);
     await key('Escape','Escape',27);
     await until(() => attach('MainMenu'), 'Escape não voltou ao menu');
-    pass('Reentrada, início por Enter e saída por Escape');
+    pass('Reentrada reapresenta instruções; Enter aguarda Começar e Escape volta ao menu');
 
     await openFood();
-    await click(640,516);
+    await click(640,638);
     await finishFood();
-    pass('Fim em zero, Score final, balão único, partida parada e botão Menu no resultado');
+    pass('Fim em zero, Pontos finais, balão único, partida parada e botão Menu no resultado');
+    await fullRound();
 
     await viewport(844,390,true);
     await navigate('', 'Intro');
@@ -253,15 +483,19 @@ try {
     await touch(504,564);
     await until(() => attach('MainMenu'), 'Menu móvel não abriu');
     await openFood(true);
-    const mobilePanel = await get('painelInstrucoes.getBounds()');
-    assert.equal(mobilePanel.x + mobilePanel.width / 2, 640);
-    assert.equal(mobilePanel.y + mobilePanel.height / 2, 360);
+    await checkInstructions();
+    await checkWaiting();
     await shot('food-instructions-mobile');
+    await viewport(740,360,true);await frames(4);
+    await checkInstructions();
+    await shot('food-instructions-mobile-small');
+    await viewport(844,390,true);await frames(4);
     await touch(1172,44,true);
     assert.equal(await get('uiNavigating'), false);
-    await touch(640,516);
+    await touch(640,638);
     assert.equal(await get('jogoComecou'), true);
     assert.equal(await get('touchControls.enabled'), true);
+    await checkHUDLabels();
     await shot('food-gameplay-mobile');
     const touchX = await get('player.x');
     const p = await point(250,532);
@@ -283,23 +517,24 @@ try {
     pass('Celular horizontal: instruções, Menu por toque, cancelamento e reentrada limpa');
 
     await openFood(true);
-    await touch(640,516);
+    await touch(640,638);
     await finishFood(true);
     await openFood(true);
+    await checkInstructions();
     assert.equal(await get('resultadoUI'), null);
-    await touch(640,516);
+    await touch(640,638);
     assert.equal(await get('score'), 0);
     assert.equal(await get('timer'), 60);
     assert.equal(await get('physics.world.isPaused'), false);
     await touch(1172,44);
     await until(() => attach('MainMenu'), 'Menu não abriu após nova partida');
-    pass('Resultado por toque, Score negativo preservado e nova partida com tempo/pontuação reiniciados');
+    pass('Resultado por toque, Pontos negativos preservados e nova partida com tempo/pontuação reiniciados');
 
     const failures = page.events.filter(e => e.method === 'Runtime.exceptionThrown' ||
         (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error') ||
         (e.method === 'Network.responseReceived' && e.params.response.status >= 400 && e.params.response.url.includes('/assets/')));
     assert.deepEqual(failures, [], 'Erros de execução ou assets');
-    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, viewports: ['1280x720','844x390'], renderer: 'Edge WebGL (SwiftShader)', errors: failures },null,2));
+    await fs.writeFile(path.join(output, 'report.json'), JSON.stringify({ passed: true, checks: passed, lifecycle, viewports: ['1280x720','844x390','740x360'], renderer: 'Edge WebGL (SwiftShader)', errors: failures },null,2));
 } catch(error) {
     console.error(error);
     if(page) {

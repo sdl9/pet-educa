@@ -1,13 +1,25 @@
 # Quiz do Saci
 
-A cena continua sendo `SaciGame`, aberta pelo botão **Quiz do Saci** do menu.
+## Estado atual
+
+A cena continua sendo `SaciGame`, aberta pelo botão utilizável **Quiz do Saci** do menu.
+O pacote original de assets está em `art-source/quiz-saci-q4-assets`, fora do build.
+O check histórico `tmp/quiz-visual-validation/check-ui.mjs` passou a
+`tests/quizSaciVisual.check.mjs` (`npm.cmd run test:quiz-visual`); os relatos abaixo
+mantêm a distinção entre doubles e renderização real.
 Durante as perguntas e o feedback, o botão **Menu** no canto superior direito
 permite sair da partida por mouse, toque ou teclado. Na conclusão, a saída
 continua disponível no botão **Voltar ao menu**.
-Há 15 perguntas na ordem fornecida, sem embaralhamento. A criança responde
-uma vez, lê o feedback e só avança ao pressionar **Próxima**. Na pergunta 15,
+O banco mantém as 15 perguntas, alternativas e respostas originais. Cada partida
+sorteia **cinco perguntas distintas** com Fisher–Yates sobre uma cópia do banco;
+a ordem e o conteúdo cadastrados não são alterados. **Jogar novamente** faz
+outro sorteio sem recarregar a página, zerando acertos, índice e feedback.
+Perguntas anteriores podem reaparecer; não há histórico persistente.
+A criança responde uma vez, lê o feedback e só avança ao pressionar **Próxima**.
+O progresso vai de **Pergunta 1 de 5** a **Pergunta 5 de 5**; na quinta pergunta,
 o botão passa a **Finalizar**. A conclusão oferece **Jogar novamente** e
-**Voltar ao menu**. Não há cronômetro, ranking, armazenamento ou pontuação extra.
+**Voltar ao menu**, com resultado de zero a cinco acertos. Não há cronômetro,
+ranking, armazenamento ou pontuação extra.
 
 ## Abrir e testar
 
@@ -71,7 +83,12 @@ Canvas mantém a composição por recortes em memória, preservando cantos.
 Nenhum novo asset foi gerado. Código e configuração dos demais minigames
 não foram alterados nesta etapa.
 
-## Verificações executadas
+## Registro histórico das verificações anteriores
+
+O relato abaixo pertence à implementação visual inicial e aos testes daquela
+ocasião, incluindo sua limitação de navegador. As execuções reais posteriores
+estão em [organizacao-entrega.md](organizacao-entrega.md); comandos e requisitos
+atuais estão em [testes-navegador.md](testes-navegador.md).
 
 - `npm.cmd run test:quiz`: 19 testes passaram, sem dependências novas.
 - `tests/saciQuizRound.test.js`: IDs 1–15, três alternativas, gabarito,

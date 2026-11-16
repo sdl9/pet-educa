@@ -66,7 +66,8 @@ function harness(renderer = 2) {
     const build = new Function('CANVAS', 'Textures', 'QUIZ_SACI_ASSETS', 'QUIZ_SACI_MANIFEST', 'layout', 'QUIZ_SACI_PLAY_LAYOUT', 'PET_EDUCA_UI', 'window',
         source + '\nreturn buildQuizSaciUI;')(1, { FilterMode: { NEAREST: 0 } }, assets, manifest, layouts.base, layouts.play, { fonts: { body: 'Nunito Sans' } }, dom);
     const { scene } = sceneDouble(renderer);
-    const round = new SaciQuizRound(questions);
+    let shuffleValue = 1 - Number.EPSILON;
+    const round = new SaciQuizRound(questions, () => shuffleValue);
     let ui;
     const present = () => {
         const question = round.currentQuestion;
@@ -91,14 +92,14 @@ function harness(renderer = 2) {
         control.hit.emit('pointerup', { id, wasTouch });
         scene.input.emit('pointerup', { id, wasTouch });
     };
-    return { scene, round, ui, dom, click };
+    return { scene, round, ui, dom, click, setShuffle: value => { shuffleValue = value; } };
 }
 
 for (const renderer of [2, 1]) {
     const label = renderer === 2 ? 'WebGL API' : 'Canvas slices';
     test(label + ': erro, destaque correto, input bloqueado e avanço duplo', () => {
         const { scene, round, ui, click } = harness(renderer);
-        assert.equal(ui.indicator.text, 'Pergunta 1 de 15');
+        assert.equal(ui.indicator.text, 'Pergunta 1 de 5');
         assert.equal(ui.next.panel.visible, false);
         assert.equal(ui.feedbackText.visible, false);
         assert.ok(ui.answers.every(answer => answer.enabled && answer.state === 'normal'));
@@ -120,7 +121,7 @@ for (const renderer of [2, 1]) {
         assert.equal(round.hits, 0);
         click(ui.next); click(ui.next);
         assert.equal(round.index, 1);
-        assert.equal(ui.indicator.text, 'Pergunta 2 de 15');
+        assert.equal(ui.indicator.text, 'Pergunta 2 de 5');
         assert.equal(ui.question.text, questions[1].pergunta);
         assert.deepEqual(ui.answers.map(answer => answer.label.text), questions[1].alternativas);
         assert.ok(ui.answers.every(answer => answer.enabled && answer.state === 'normal' && !answer.feedback.visible));
@@ -171,30 +172,36 @@ for (const renderer of [2, 1]) {
         assert.equal(dom.listenerCount('blur'), 0);
     });
 
-    test(label + ': 15 respostas, Finalizar, resultado, reinício e menu', () => {
-        const { scene, round, ui, click } = harness(renderer);
+    test(label + ': cinco respostas, Finalizar, resultado, novo sorteio no reinício e menu', () => {
+        const { scene, round, ui, click, setShuffle } = harness(renderer);
         const listenerCount = scene.input.listenerCount('pointerup');
         for (let game = 0; game < 2; game++) {
-            questions.forEach((question, index) => {
+            assert.equal(round.total, 5);
+            round.questions.forEach((question, index) => {
                 const answer = ui.answers['ABC'.indexOf(question.correta)];
                 click(answer, 0, game === 1);
                 assert.equal(round.hits, index + 1);
                 assert.equal(ui.feedbackText.text, 'Muito bem!');
-                assert.equal(ui.next.label.text, index === 14 ? 'Finalizar' : 'Próxima');
+                assert.equal(ui.next.label.text, index === 4 ? 'Finalizar' : 'Próxima');
                 click(ui.next);
             });
             assert.equal(round.phase, 'complete');
             assert.equal(ui.question.text, 'Você terminou o Quiz do Saci!');
-            assert.ok(scene.created.some(item => item.text === 'Você acertou 15 de 15 perguntas' && item.visible));
+            assert.ok(scene.created.some(item => item.text === 'Você acertou 5 de 5 perguntas' && item.visible));
             assert.ok(ui.answers.every(answer => !answer.panel.visible && !answer.enabled));
             assert.equal(ui.restart.panel.visible, true);
             assert.equal(ui.menu.panel.visible, true);
             assert.equal(ui.exitMenu.panel.visible, false);
             assert.equal(scene.input.listenerCount('pointerup'), listenerCount);
             if (game === 0) {
+                const previous = round.questions.map(q => q.id);
+                setShuffle(0);
                 click(ui.restart);
+                assert.notDeepEqual(round.questions.map(q => q.id), previous);
                 assert.equal(round.hits, 0);
                 assert.equal(round.index, 0);
+                assert.equal(ui.indicator.text, 'Pergunta 1 de 5');
+                assert.equal(ui.question.text, round.currentQuestion.pergunta);
                 assert.ok(ui.answers.every(answer => answer.enabled && answer.state === 'normal'));
                 assert.equal(ui.feedbackText.visible, false);
                 assert.equal(ui.restart.panel.visible, false);
@@ -230,9 +237,10 @@ test('SaciGame separa demo de partida mesmo quando Phaser reutiliza os dados da 
     assert.equal(inspectors, 1);
     assert.equal(persistentData.visualDemo, false);
     scene.create(persistentData);
-    assert.equal(scene.round.currentQuestion.id, 1);
+    assert.equal(scene.round.total, 5);
+    assert.ok(questions.includes(scene.round.currentQuestion));
     assert.equal(scene.round.hits, 0);
     assert.equal(screens[1].options.play, true);
-    assert.equal(screens[1].question[0], questions[0].pergunta);
+    assert.equal(screens[1].question[0], scene.round.currentQuestion.pergunta);
     assert.equal(inspectors, 1);
 });
