@@ -1,5 +1,5 @@
-// Manually maintained catalog. No generator or reproducible source is available in this repository.
-// Keep keys and paths aligned with the checked-in assets and their manifests.
+// Catálogo mantido manualmente. Este repositório não tem um gerador nem uma fonte que permita recriá-lo.
+// Mantenha as chaves e os caminhos de acordo com os recursos versionados e seus manifestos.
 
 export const WALK_IMAGE_ASSETS = Object.freeze([
     {

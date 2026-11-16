@@ -8,13 +8,13 @@ import { AUTO, Game, Scale } from 'phaser';
 import { WalkGame } from './scenes/WalkGame';
 import { WalkLayoutEditor } from './dev/WalkLayoutEditor';
 
-// Keep startup synchronous so src/main.js registers before DOMContentLoaded.
-// Vite removes this unused scene from the production build.
+// Mantenha a inicialização síncrona para que src/main.js faça o registro antes de DOMContentLoaded.
+// O Vite remove esta cena não utilizada da compilação de produção.
 const developmentScenes = import.meta.env.DEV
     ? [WalkLayoutEditor]
     : [];
 
-//  Find out more information about the Game Config at:
+//  Veja mais informações sobre a configuração do jogo em:
 //  https://docs.phaser.io/api-documentation/typedef/types-core#gameconfig
 const config = {
     type: AUTO,

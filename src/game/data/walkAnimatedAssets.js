@@ -1,7 +1,7 @@
 import { WALK_IMAGE_ASSETS, WALK_SPRITESHEETS, WALK_JSON_ASSETS } from './walkAssetCatalog';
 
-// Runtime animation overrides for the manually maintained walkAssetCatalog.
-// Keep the inventory intact; these entries replace the three static images.
+// Substituições de animações em tempo de execução para o walkAssetCatalog mantido manualmente.
+// Mantenha o inventário intacto; estas entradas substituem as três imagens estáticas.
 export const WALK_ANIMATED_ASSETS = Object.freeze([
     { key: 'plaza-fountain-water', path: 'walk/animations/plaza-fountain-water-animated.png',
         frameWidth: 160, frameHeight: 128, end: 5, frameRate: 6 },

@@ -1,4 +1,4 @@
-// Scenes combine device directions before passing them to a player.
+// As cenas combinam as direções dos dispositivos antes de passá-las ao jogador.
 export function readKeyboardDirection(cursors, keys) {
     return {
         x: Number(cursors.right.isDown || keys.direita.isDown)

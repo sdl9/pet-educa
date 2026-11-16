@@ -1,5 +1,5 @@
-// Historical L1 snapshot: node tools/legacy-checks/walk-player-l1.browser-check.mjs
-// Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
+// Registro histórico L1: node tools/legacy-checks/walk-player-l1.browser-check.mjs
+// Usa o Edge instalado e a aplicação Vite real. Não usa renderizador substituto nem dependências adicionais.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -24,7 +24,7 @@ const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.m
 const originalFiles = await hashes();
 const output = path.resolve('tmp/legacy-checks/walk-player-l1-validation');
 await fs.mkdir(output, { recursive: true });
-// Browser lock files must stay outside Vite's watched workspace (Windows EBUSY).
+// Os arquivos de bloqueio do navegador devem ficar fora da pasta monitorada pelo Vite (Windows EBUSY).
 const profile = await fs.mkdtemp(path.join(tmpdir(), 'walk-layout-editor-edge-'));
 const downloads = path.join(output, 'downloads');
 await fs.mkdir(downloads, { recursive: true });
@@ -37,7 +37,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
@@ -88,7 +88,7 @@ try {
         if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? JSON.stringify(result.exceptionDetails));
         return result.result.value;
     }
-    // Obtain the real scene instance without adding a test global to application source.
+    // Obtém a instância real da cena sem adicionar uma variável global de teste ao código da aplicação.
     async function attach(className, modulePath) {
         const result = await page.send('Runtime.evaluate', { expression: `import('/src/game/scenes/Intro.js').then(module => module.Intro.prototype)`, awaitPromise: true });
         if (!result.result.objectId) return false;
@@ -172,7 +172,7 @@ try {
     } else {
         assert.deepEqual(await camera(),baseline.editorCamera,'Editor camera unchanged');
         await capture('editor-preserved.png');
-        // Re-enter the learning scene to ensure animation registration is idempotent.
+        // Entra novamente na cena de aprendizado para garantir que registrar as animações outra vez não altere o resultado.
         await evaluate("void __checkedScene.scene.start('WalkGame')");
         await until(()=>attach('WalkGame'),'Learning re-entry failed');
         assert.deepEqual(await snapshot(),learning,'No duplication on re-entry');

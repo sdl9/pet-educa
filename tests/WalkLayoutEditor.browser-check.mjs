@@ -1,5 +1,5 @@
-// Start npm run dev-nolog, then npm run test:walk-editor from the repository root.
-// Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
+// Execute npm run dev-nolog e depois npm run test:walk-editor na raiz do repositório.
+// Usa o Edge instalado e a aplicação Vite real. Não usa renderizador substituto nem dependências adicionais.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -25,7 +25,7 @@ const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.m
     createHash('sha256').update(await fs.readFile(file)).digest('hex')])));
 const originalFiles = await hashes();
 const output = await fs.mkdtemp(path.resolve('tmp/walk-editor-check-'));
-// Browser lock files must stay outside Vite's watched workspace (Windows EBUSY).
+// Os arquivos de bloqueio do navegador devem ficar fora da pasta monitorada pelo Vite (Windows EBUSY).
 const profile = await fs.mkdtemp(path.join(tmpdir(), 'walk-layout-editor-edge-'));
 const downloads = path.join(output, 'downloads');
 await fs.mkdir(downloads);
@@ -38,7 +38,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
@@ -97,7 +97,7 @@ try {
         if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? JSON.stringify(result.exceptionDetails));
         return result.result.value;
     }
-    // Obtain the real scene instance without adding a test global to application source.
+    // Obtém a instância real da cena sem adicionar uma variável global de teste ao código da aplicação.
     async function attach(className, modulePath) {
         const result = await page.send('Runtime.evaluate', { expression: `import('${modulePath}').then(module => module.${className}.prototype)`, awaitPromise: true });
         if (!result.result.objectId) return false;
@@ -116,7 +116,7 @@ try {
             roles.set(object, role);
             if (object.list) object.list.forEach(child => own(child, role));
         };
-        // Explicit gameplay owners. No texture/depth/visibility wildcard.
+        // Objetos responsáveis pela lógica do jogo definidos explicitamente. Sem critérios genéricos de textura, profundidade ou visibilidade.
         own(s.player, 'player'); own(s.saci, 'saci'); own(s.saci?.coracao, 'heart');
         for (const object of s.touchControls?.visuals ?? []) own(object, 'hud');
         own(s.dialogueSystem?.progressUI, 'hud'); own(s.dialogueSystem?.panel, 'hud');
@@ -251,8 +251,8 @@ try {
         await mouse('mousePressed', p.x, p.y, {button:'left',buttons:1,clickCount:1});
         await mouse('mouseMoved', p.x + 16*p.ratioX, p.y, {button:'left',buttons:1});
         assert.equal(await evaluate('Boolean(__checkedScene.drag?.started)'), true);
-        // CDP drives the mouse; cancellation itself is dispatched to the real
-        // canvas handler because CDP has no mouse pointercancel command.
+        // O CDP controla o mouse; o cancelamento em si é enviado ao manipulador real
+        // do canvas porque o CDP não tem um comando pointercancel para o mouse.
         await evaluate(`(() => {const s=__checkedScene;s.game.canvas.dispatchEvent(new PointerEvent(${JSON.stringify(eventType)},
             {pointerId:s.drag.pointerId,pointerType:'mouse',bubbles:true}));})()`);
         assert.equal(await evaluate('__checkedScene.drag'), null, `${eventType} ends drag`);
@@ -265,8 +265,8 @@ try {
     }
     console.log('PASS pointercancel and lostpointercapture stop drag without further draft changes');
     const beforeTerrain = await evaluate('JSON.stringify(__checkedScene.draft.exportDraft())');
-    // The hydrant has moved during the drag/cancellation cases. Use a fixed
-    // clear point farther up the vertical path, and verify the precondition.
+    // O hidrante mudou de lugar nos casos de arraste e cancelamento. Use um ponto fixo
+    // e livre mais acima no caminho vertical e verifique a pré-condição.
     assert.equal(await evaluate('Boolean(__checkedScene.pick({x:800,y:600}))'), false, 'Path fixture has no editable object');
     const ground = await evaluate(`(() => {const e=__checkedScene,p=e.cameras.main.matrixCombined.transformPoint(800,600),r=e.game.canvas.getBoundingClientRect();return{x:r.left+p.x*r.width/e.scale.width,y:r.top+p.y*r.height/e.scale.height}})()`);
     await mouse('mousePressed',ground.x,ground.y,{button:'left',buttons:1,clickCount:1});

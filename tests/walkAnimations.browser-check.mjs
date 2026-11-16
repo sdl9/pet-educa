@@ -18,7 +18,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
@@ -119,9 +119,9 @@ try {
     const thaw = () => evaluate('__checkedScene.tutorPatrol.update=__checkedScene.tutorPatrol.realUpdate');
     const tick = delta => evaluate('__checkedScene.tutorPatrol.realUpdate(' + delta + ',false)');
     const reset = (x=544, direction=1, pauseMs=0) => evaluate('(()=>{const p=__checkedScene.tutorPatrol;p.sprite.setPosition(' + x + ',368);p.direction=' + direction + ';p.pauseRemaining=' + pauseMs + ';p.realUpdate(0,false);})()');
-    // Observe a fixed window of delivered scene deltas, not a Node wall-clock
-    // sleep. Phaser smooths/clamps delta, so a stalled browser advances less
-    // game time. Success still depends on the assertions after this window.
+    // Observa uma janela fixa dos intervalos de tempo recebidos pela cena, sem usar uma espera
+    // pelo relógio do Node. O Phaser suaviza e limita o delta, então um navegador travado avança menos
+    // tempo de jogo. O sucesso ainda depende das verificações após essa janela.
     const tutorWindow = milliseconds => evaluate(`new Promise((resolve,reject)=>{
         const s=__checkedScene,start=performance.now();let elapsed=0,count=0;
         const cleanup=()=>{clearTimeout(timer);s.events.off('postupdate',step);s.events.off('shutdown',shutdown);};
@@ -134,7 +134,7 @@ try {
                 cleanup();resolve({elapsed,frames:count,wallMs:performance.now()-start,state});
             }
         };
-        // Watchdog for a stopped scene, not extra allowed tutor movement time.
+        // Limite de espera para detectar uma cena parada; não dá tempo extra para o tutor se mover.
         const timer=setTimeout(()=>{cleanup();reject(new Error('Cena não entregou ${milliseconds} ms de atualizações para verificar a retomada'));},9000);
         s.events.on('postupdate',step);s.events.once('shutdown',shutdown);
     })`);
@@ -198,8 +198,8 @@ try {
         await frames(2);
     }
     for(const [x,mode,pauseMs] of [[640,'SPACE',320],[448,'SPACE',320],[640,'TOUCH',320],[544,'SPACE',0]]) {
-        // Reach endpoints through the controller: pending pause retains the
-        // incoming direction and flips it only when the 320 ms pause ends.
+        // Chega às extremidades pelo controlador: a pausa pendente mantém a
+        // direção de chegada e só a inverte quando a pausa de 320 ms termina.
         await reset(544,x===448?-1:1);
         if(pauseMs) await tick(2000);
         const arrival=await tutorState();

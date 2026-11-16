@@ -25,7 +25,7 @@ export class WalkVisualBuilder {
         registerWalkAnimations(this.scene);
         this.createModularTerrain(layout);
 
-        // Stable source-slot IDs distinguish repeated textures without changing source data.
+        // IDs estáveis das posições na origem distinguem texturas repetidas sem alterar os dados de origem.
         const ambientRecords = stageMap.ambientAssets.map((asset, index) => ({
             id: `ambient:${index}`,
             key: asset.key,

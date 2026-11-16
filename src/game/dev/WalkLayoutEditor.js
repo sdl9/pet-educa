@@ -71,7 +71,7 @@ export class WalkLayoutEditor extends Scene {
         this.refreshSelection();
     }
 
-    // CSS display size, Phaser canvas coordinates, then camera-to-world conversion.
+    // Tamanho de exibição em CSS, coordenadas do canvas do Phaser e, por fim, conversão da câmera para o mundo.
     eventPoint(event) {
         const rect = this.game.canvas.getBoundingClientRect();
         const x = (event.clientX - rect.left) * this.scale.width / rect.width;

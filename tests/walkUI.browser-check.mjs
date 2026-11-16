@@ -22,7 +22,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
