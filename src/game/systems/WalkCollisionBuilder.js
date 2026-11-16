@@ -112,7 +112,7 @@ export class WalkCollisionBuilder {
         const binding = this.objectZones.get(object);
         if (!binding) return;
         const { definition, zones } = binding;
-        // Manifest sizes describe one frame, never the full spritesheet.
+        // As dimensões do manifesto descrevem um quadro, nunca a folha de sprites inteira.
         const [sourceWidth, sourceHeight] = definition.size;
         const scaleX = Math.abs(object.scaleX);
         const scaleY = Math.abs(object.scaleY);
@@ -129,7 +129,7 @@ export class WalkCollisionBuilder {
             const x = sourceLeft + (shapeX * scaleX) + (width / 2);
             const y = sourceTop + (shapeY * scaleY) + (height / 2);
             zone.setPosition(x, y).setSize(width, height);
-            // Refresh both bounds and the Arcade static spatial index.
+            // Atualiza tanto os limites quanto o índice espacial estático do Arcade.
             zone.body.updateFromGameObject();
         });
     }

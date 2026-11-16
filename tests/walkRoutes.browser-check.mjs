@@ -1,5 +1,5 @@
-// Build, start dev on 8080 and `vite preview` on 8081, then npm run test:walk-routes.
-// Uses the real dev app and built distribution; no test globals in production source.
+// Compile, inicie o modo de desenvolvimento na porta 8080 e `vite preview` na 8081 e depois execute npm run test:walk-routes.
+// Usa a aplicação real de desenvolvimento e a distribuição compilada; sem variáveis globais de teste no código de produção.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -79,8 +79,8 @@ try {
     }
     async function attachGame(mode) {
         if (await evaluate('Boolean(window.__routeGame?.isBooted)')) return true;
-        // Dev exposes source modules. Production uses the exported Game constructor
-        // from the actual hashed Phaser chunk, independent of minified export names.
+        // O modo de desenvolvimento expõe os módulos de origem. A produção usa o construtor Game exportado
+        // pelo bloco real do Phaser com hash no nome, independentemente dos nomes de exportação minificados.
         const expression = mode === 'dev'
             ? "import('/src/game/scenes/Boot.js').then(m=>m.Boot.prototype)"
             : `import(${JSON.stringify('/assets/' + phaserChunk)}).then(module=>{

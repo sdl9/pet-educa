@@ -31,7 +31,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
@@ -369,7 +369,7 @@ try {
             s.events.on('postupdate',sample);s.events.once('shutdown',()=>s.events.off('postupdate',sample));
         })()`);
         const start=Date.now(),samples=[];
-        // Round is unaccelerated: actual 60 countdown ticks and normal 650 ms spawns.
+        // A rodada não é acelerada: usa os 60 passos reais da contagem regressiva e criações no intervalo normal de 650 ms.
         while(!await get('jogoFinalizado')) {
             if(Date.now()-start>120000)throw new Error('Rodada não completou 60 segundos de jogo');
             samples.push(await checkPlayingResources(true));await pause(1000);

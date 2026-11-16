@@ -1,5 +1,5 @@
-// Historical manual-v2 snapshot: node tools/legacy-checks/walk-manual-v2.browser-check.mjs
-// Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
+// Registro histórico manual-v2: node tools/legacy-checks/walk-manual-v2.browser-check.mjs
+// Usa o Edge instalado e a aplicação Vite real. Não usa renderizador substituto nem dependências adicionais.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -21,7 +21,7 @@ const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.m
 const originalFiles = await hashes();
 const output = path.resolve('tmp/legacy-checks/walk-manual-v2-validation');
 await fs.mkdir(output, { recursive: true });
-// Browser lock files must stay outside Vite's watched workspace (Windows EBUSY).
+// Os arquivos de bloqueio do navegador devem ficar fora da pasta monitorada pelo Vite (Windows EBUSY).
 const profile = await fs.mkdtemp(path.join(tmpdir(), 'walk-layout-editor-edge-'));
 const downloads = path.join(output, 'downloads');
 await fs.mkdir(downloads, { recursive: true });
@@ -34,7 +34,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
@@ -85,7 +85,7 @@ try {
         if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? JSON.stringify(result.exceptionDetails));
         return result.result.value;
     }
-    // Obtain the real scene instance without adding a test global to application source.
+    // Obtém a instância real da cena sem adicionar uma variável global de teste ao código da aplicação.
     async function attach(className, modulePath) {
         const result = await page.send('Runtime.evaluate', { expression: `import('/src/game/scenes/Intro.js').then(module => module.Intro.prototype)`, awaitPromise: true });
         if (!result.result.objectId) return false;

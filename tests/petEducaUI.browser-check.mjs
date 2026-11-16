@@ -1,5 +1,5 @@
-// Start npm run dev-nolog, then npm run test:menu from the repository root.
-// Uses the installed Edge and the actual Vite app. No replacement renderer or dependencies.
+// Execute npm run dev-nolog e depois npm run test:menu na raiz do repositório.
+// Usa o Edge instalado e a aplicação Vite real. Não usa renderizador substituto nem dependências adicionais.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -25,7 +25,7 @@ const hashes = async () => Object.fromEntries(await Promise.all(protectedFiles.m
     createHash('sha256').update(await fs.readFile(file)).digest('hex')])));
 const originalFiles = await hashes();
 const output = await fs.mkdtemp(path.resolve('tmp/pet-educa-check-'));
-// Browser lock files must stay outside Vite's watched workspace (Windows EBUSY).
+// Os arquivos de bloqueio do navegador devem ficar fora da pasta monitorada pelo Vite (Windows EBUSY).
 const profile = await fs.mkdtemp(path.join(tmpdir(), 'pet-educa-edge-'));
 const downloads = path.join(output, 'downloads');
 await fs.mkdir(downloads);
@@ -38,7 +38,7 @@ const pause = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function until(action, message) {
     const deadline = Date.now() + 30000;
     while (Date.now() < deadline) {
-        try { const value = await action(); if (value) return value; } catch { /* startup/navigation */ }
+        try { const value = await action(); if (value) return value; } catch { /* inicialização/navegação */ }
         await pause(200);
     }
     throw new Error(message);
@@ -99,7 +99,7 @@ try {
         if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description ?? JSON.stringify(result.exceptionDetails));
         return result.result.value;
     }
-    // Obtain the real scene instance without adding a test global to application source.
+    // Obtém a instância real da cena sem adicionar uma variável global de teste ao código da aplicação.
     async function attach(className, modulePath) {
         const result = await page.send('Runtime.evaluate', { expression: `import('${modulePath}').then(module => module.${className}.prototype)`, awaitPromise: true });
         if (!result.result.objectId) return false;
@@ -246,8 +246,8 @@ try {
         assert.equal((await geometry()).count,menu.count);
         assert.equal((await geometry()).keydown,menu.keydown);
     }
-    // Every reentry resets focus to the first card. Exercise all three choices,
-    // forward/backward wrapping, Enter and Space without programmatic starts.
+    // Cada nova entrada devolve o foco ao primeiro cartão. Testa as três opções,
+    // a navegação cíclica nos dois sentidos, Enter e Espaço sem iniciar por código.
     for (const [arrows, activation, target] of [
         [[], ['Space',' ',32], 'FoodGame'],
         [['ArrowDown'], ['Enter','Enter',13], 'WalkGame'],
@@ -269,8 +269,8 @@ try {
 
     await page.send('Emulation.setDeviceMetricsOverride',{width:740,height:360,deviceScaleFactor:2,mobile:true});
     await page.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:3});
-    // Phaser detects touch capabilities at startup; use a fresh page after
-    // enabling emulation instead of retaining a desktop-initialized game.
+    // O Phaser detecta o suporte a toque na inicialização; use uma página nova após
+    // ativar a emulação para evitar manter um jogo inicializado no modo de computador.
     await page.send('Page.navigate',{url:baseURL+'/'}); await waitScene('Intro');
     const mobileFrame = await assertFrame(); await screenshot('apresentacao-mobile-740x360.png');
     // Vários contatos simultâneos não podem iniciar o menu duas vezes.

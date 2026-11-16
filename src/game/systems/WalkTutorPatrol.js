@@ -24,7 +24,7 @@ export class WalkTutorPatrol {
             this.setPaused(true);
             return;
         }
-        // Consume travel and endpoint pauses separately, including overshoot.
+        // Consome separadamente o tempo de deslocamento e das pausas nas extremidades, incluindo o tempo excedente.
         let remaining = Math.max(0, delta);
         while (remaining > 0) {
             if (this.pauseRemaining > 0) {

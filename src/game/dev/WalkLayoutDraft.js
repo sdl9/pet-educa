@@ -1,4 +1,4 @@
-// Temporary Phase A state. No source JSON is mutated or written.
+// Estado temporário da Fase A. Nenhum JSON de origem é alterado ou gravado.
 export class WalkLayoutDraft {
     constructor(registry, world) {
         this.world = { ...world };

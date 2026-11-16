@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
-// Assigned by object identity in the real scene, never by texture prefixes,
-// visibility, depth, or a catch-all predicate. Unknown roles must fail.
+// Atribuídos pela identidade do objeto na cena real, nunca por prefixos de textura,
+// visibilidade, profundidade ou uma condição genérica. Papéis desconhecidos devem causar falha.
 const runtimeRoles = new Set(['player', 'saci', 'heart', 'hud']);
 const animatedScenery = new Map([
     ['plaza-fountain-water', { width: 160, height: 128, frames: 6 }],
@@ -22,7 +22,7 @@ export function sharedScenerySnapshot(snapshot, mode) {
             assert.equal(visual.height, animation.height, `${visual.key}: frame height`);
             assert.ok(Number.isInteger(visual.frame) && visual.frame >= 0 && visual.frame < animation.frames,
                 `${visual.key}: valid animation frame`);
-            // Time-dependent phase only; all geometry remains in the comparison.
+            // Apenas a fase depende do tempo; toda a geometria continua na comparação.
             visual.frame = 'animation-phase';
         }
         if (visual.key === 'npc-tutor-cachorro-guia') {
@@ -31,15 +31,15 @@ export function sharedScenerySnapshot(snapshot, mode) {
             } else {
                 assert.equal(visual.x, 544, 'Editor tutor starts at the official anchor');
             }
-            // Only X and facing change along this horizontal patrol. Y, depth,
-            // size, scale, origin and flipY still have to match the editor.
+            // Apenas X e a direção para a qual o personagem olha mudam nesta patrulha horizontal. Y, profundidade,
+            // tamanho, escala, origem e flipY ainda precisam coincidir com o editor.
             assert.equal(typeof visual.flipX, 'boolean', 'Tutor facing is boolean');
             visual.x = 544;
             visual.flipX = false;
         }
         scenery.push(visual);
     }
-    // Compare a multiset: render ordering may change between frames. Sorting
-    // retains every object, including duplicates and unexpected textures.
+    // Compara um multiconjunto: a ordem de renderização pode mudar entre quadros. A ordenação
+    // mantém todos os objetos, incluindo duplicados e texturas inesperadas.
     return scenery.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 }

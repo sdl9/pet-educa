@@ -1,4 +1,4 @@
-// Run after npm run build-nolog. Checks the current tree, not Git history.
+// Execute após npm run build-nolog. Verifica a árvore de arquivos atual, sem consultar o histórico do Git.
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -44,7 +44,7 @@ for (const file of publicFiles) {
     assert.equal(sha256(built), sha256(source), 'Public asset bytes differ in build: ' + file);
     assets.push({ file, bytes: source.length, sha256: sha256(source) });
 }
-// Deliberately retain extra catalog entries; verify all of them still resolve.
+// Mantém as entradas extras do catálogo de propósito; verifica se todas ainda apontam para recursos existentes.
 for (const { key, path: assetPath } of [...WALK_IMAGE_ASSETS, ...WALK_SPRITESHEETS, ...WALK_JSON_ASSETS]) {
     assert.ok(publicFiles.includes('assets/' + assetPath), 'Missing walk catalog entry: ' + key);
 }
