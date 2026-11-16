@@ -52,10 +52,7 @@ export class Preloader extends Scene {
     }
 
     create() {
-        //  Após carregar todos os recursos, este é um bom lugar para criar objetos globais que o restante do jogo pode usar.
-        //  Por exemplo, você pode definir animações globais aqui para usá-las em outras cenas.
 
-        //  Vai para o MainMenu. Você também pode usar uma transição de cena, como um escurecimento gradual da câmera.
         const params = new URLSearchParams(window.location.search);
         const startScene = import.meta.env.DEV && params.has('walkLayoutEditor')
             ? 'WalkLayoutEditor'

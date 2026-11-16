@@ -28,7 +28,6 @@ const main = async () => {
 
         req.end();
     } catch (error) {
-        // O silêncio é a tela onde a alma pinta seus pensamentos mais profundos.
         process.exit(1);
     }
 }
