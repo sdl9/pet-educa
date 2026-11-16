@@ -1,6 +1,8 @@
 # Pet Educa
 
-![Menu inicial](docs/media/menu.gif)
+<p align="center">
+  <img src="docs/media/menu.gif" alt="Menu" width="640">
+</p>
 
 **Pet Educa** é um jogo educativo para navegador sobre alimentação e cuidado responsável com os animais. O projeto foi desenvolvido por Laíssa Dornelles Salles em colaboração com o **FeevalePet**, da Universidade Feevale, usando JavaScript e Phaser.
 
@@ -10,19 +12,25 @@
 
 Ajude o Caramelo a pegar alimentos adequados e desviar dos que fazem mal. Você tem 60 segundos para somar pontos.
 
-![Caramelo coletando alimentos](docs/media/alimentacao.gif)
+<p align="center">
+  <img src="docs/media/alimentacao.gif" alt="Gameplay do Jogo da Alimentação" width="640">
+</p>
 
 ### Passeio Consciente
 
 Explore a praça, converse com os personagens e descubra sete cuidados importantes para os animais.
 
-GIF: ![Exploração e diálogo no Passeio Consciente](docs/media/passeio-consciente.gif)
+<p align="center">
+  <img src="docs/media/passeio-consciente.gif" alt="[Exploração e diálogo no Passeio Consciente" width="640">
+</p>
 
 ### Quiz do Saci
 
 Responda cinco perguntas sorteadas de um banco de 15 e receba feedback a cada resposta.
 
-GIF: ![Uma pergunta e o feedback do Quiz do Saci](docs/media/quiz-do-saci.gif)
+<p align="center">
+  <img src="docs/media/quiz-do-saci.gif" alt="Pergunta e o feedback do Quiz do Saci" width="640">
+</p>
 
 ## Desenvolvimento
 
